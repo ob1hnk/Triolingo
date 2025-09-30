@@ -1,7 +1,7 @@
 ## Team 16 트리오링고
 |항목|내용|
 |---|---|
-|프로젝트명|NPC와 다양한 방식으로 상호작용하여 함께 성장하며 스토리를 이어가는 어드벤처 게임|
+|프로젝트명|플레이어가 음성, 모션 인식, 텍스트를 활용해 NPC를 훈련시키고, 그를 마을의 수호자로 성장시키는 스토리형 어드벤처 게임|
 |프로젝트 키워드|멀티모달 AI, NPC와 다양한 상호작용, 성장 스토리 어드벤처 게임|
 |트랙| 산학 |
 |프로젝트멤버| 강한나, 박세은, 최은별|
@@ -12,4 +12,4 @@
 |사용할 소프트웨어 패키지의 명칭과 핵심기능/용도, 사용시나리오|<ul><li><strong>multimodal</strong>: 플레이어의 다양한 인풋 데이터 수집 및 학습<br>&nbsp;&nbsp;<strong>OpenCV</strong>: 컴퓨터비전 라이브러리 – 유저의 손동작을 웹캠으로 인식해 게임에 명령을 내릴 수 있게 함<br>&nbsp;&nbsp;<strong>GazeML</strong>: 실시간 시선 추적 –플레이어의 시선을 추적해 캐릭터 반응의 입력으로 사용<br>&nbsp;&nbsp;<strong>Whisper</strong>: 음성 인식 – 플레이어의 음성을 텍스트로 변환해 캐릭터에 명령을 내릴 수 있게 함<br> &nbsp;&nbsp;<strong>DeepFace</strong>: 얼굴·감정 분석 – 유저의 감정 상태를 데이터베이스에 저장해 게임 캐릭터 성격 업데이트에 반영</li>  <li><strong>Unity</strong>: 게임 엔진<br>&nbsp;&nbsp;<strong>Unity / Unity ML-Agents</strong>: 유니티 AI 모델 학습 연결 툴킷 – 캐릭터가 플레이어 성향 학습 <br> &nbsp;&nbsp; <strong>Unity NativeWebSocket</strong>: WebSocket 통신 – 유니티 <> AI 서버 백엔드 실시간 통신</li>  <li><strong>database</strong>: 플레이어 데이터 저장<br>&nbsp;&nbsp;<strong>PostgreSQL</strong>: 관계형 DB – 플레이어 성향 데이터 저장</li></ul>|
 |사용할 소프트웨어 패키지의 명칭과 URL|<ul><li><strong>OpenCV</strong><br>https://opencv.org/</li><li><strong>GazeML</strong><br>https://github.com/swook/GazeML</li><li><strong>Whisper</strong><br>https://github.com/openai/whisper</li><li><strong>DeepFace</strong><br>https://github.com/serengil/deepface</li><li><strong>Unity ML-Agents</strong><br>https://docs.unity3d.com/Packages/com.unity.ml-agents@3.0/manual/index.html</li><li><strong>Unity NativeWebSocket</strong><br>https://github.com/endel/NativeWebSocket</li><li><strong>FastAPI</strong><br>https://fastapi.tiangolo.com/</li><li><strong>PostgreSQL</strong><br>https://www.postgresql.org/</li></ul>|
 |팀그라운드룰|https://github.com/ob1hnk/Triolingo/blob/main/docs/GroundRules.MD|
-|최종수정일|2025.09.26|
+|최종수정일|2025.09.30|
