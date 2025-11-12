@@ -1,2 +1,4 @@
 .env
 .venv/*
+interaction/speech/tests/
+__pycache__/
