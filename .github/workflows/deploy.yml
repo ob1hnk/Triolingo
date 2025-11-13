@@ -42,8 +42,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=main-{{sha}},enable={{is_default_branch}}
+            type=raw,value=latest
+            type=raw,value=main-{{sha}}
 
       - name: Set up Docker layer caching
         uses: actions/cache@v4
