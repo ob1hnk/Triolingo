@@ -12,7 +12,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ob1hnk/gogo-golem-ai
+  IMAGE_NAME: ob1hnk/triolingo/gogo-golem-ai
 
 jobs:
   build-and-push:
@@ -49,7 +49,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ github.sha }}-v2
           restore-keys: |
             ${{ runner.os }}-buildx-
 
