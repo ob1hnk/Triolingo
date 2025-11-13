@@ -143,9 +143,34 @@ jobs:
               --env-file /home/${EC2_USER}/.env \
               ${IMAGE_TAG}
             
+            # 컨테이너 로그 확인
+            echo "Container logs:"
+            docker logs gogo-golem-ai-server || true
+            
             # 헬스체크
-            sleep 5
-            curl -f http://localhost:8000/health || exit 1
+            echo "Waiting for application to start..."
+            MAX_RETRIES=30
+            RETRY_COUNT=0
+            
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              if curl -f http://localhost:8000/health > /dev/null 2>&1; then
+                echo "Health check passed!"
+                break
+              fi
+              
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              echo "Health check attempt $RETRY_COUNT/$MAX_RETRIES failed, retrying in 2 seconds..."
+              sleep 2
+            done
+            
+            if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+              echo "Health check failed after $MAX_RETRIES attempts"
+              echo "Container logs:"
+              docker logs gogo-golem-ai-server
+              echo "Container status:"
+              docker ps -a | grep gogo-golem-ai-server
+              exit 1
+            fi
             
             echo "배포 완료!"
           EOF
