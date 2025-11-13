@@ -42,9 +42,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=main-{{sha}},enable={{is_default_branch}}
 
       - name: Set up Docker layer caching
         uses: actions/cache@v4
@@ -73,9 +72,12 @@ jobs:
       - name: Output image tag
         id: image-tag
         run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          echo "tag=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${SHORT_SHA}" >> $GITHUB_OUTPUT
-          echo "Image tag: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${SHORT_SHA}"
+          # metadata-action이 생성한 태그 형식: main-{full_sha}
+          # deploy 단계에서 동일한 형식 사용
+          FULL_SHA="${{ github.sha }}"
+          MAIN_TAG="main-${FULL_SHA}"
+          echo "tag=${MAIN_TAG}" >> $GITHUB_OUTPUT
+          echo "Image tag: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${MAIN_TAG}"
 
   deploy:
     name: Deploy to EC2
@@ -98,37 +100,46 @@ jobs:
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
-          IMAGE_TAG: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
         run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${SHORT_SHA}"
+          # build 단계에서 생성한 태그 형식 사용 (main-{full_sha})
+          FULL_SHA="${{ github.sha }}"
+          IMAGE_TAG="${REGISTRY}/${IMAGE_NAME}:main-${FULL_SHA}"
           
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          echo "Deploying image: ${IMAGE_TAG}"
+          
+          ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} \
+            IMAGE_TAG="${IMAGE_TAG}" \
+            REGISTRY="${REGISTRY}" \
+            GITHUB_TOKEN="${GITHUB_TOKEN}" \
+            GITHUB_ACTOR="${{ github.actor }}" \
+            EC2_USER="${EC2_USER}" \
+            bash -s << 'EOF'
             set -e
             
-            # 이미지 태그 설정
-            IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${SHORT_SHA}"
+            echo "Image tag: ${IMAGE_TAG}"
             
             # GitHub Container Registry 로그인
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            echo "${GITHUB_TOKEN}" | docker login ${REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
             
             # 기존 컨테이너 중지 및 제거
             docker stop gogo-golem-ai-server || true
             docker rm gogo-golem-ai-server || true
             
             # 새 이미지 pull
-            echo "Pulling image: \${IMAGE_TAG}"
-            docker pull \${IMAGE_TAG}
+            echo "Pulling image: ${IMAGE_TAG}"
+            docker pull ${IMAGE_TAG}
             
             # 컨테이너 실행
-            echo "Starting container with image: \${IMAGE_TAG}"
+            echo "Starting container with image: ${IMAGE_TAG}"
             docker run -d \
               --name gogo-golem-ai-server \
               --restart unless-stopped \
               -p 8000:8000 \
-              --env-file /home/${{ secrets.EC2_USER }}/.env \
-              \${IMAGE_TAG}
+              --env-file /home/${EC2_USER}/.env \
+              ${IMAGE_TAG}
             
             # 헬스체크
             sleep 5
