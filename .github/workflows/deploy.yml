@@ -12,7 +12,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/gogo-golem-ai
+  IMAGE_NAME: ob1hnk/gogo-golem-ai
 
 jobs:
   build-and-push:
@@ -107,6 +107,9 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             set -e
             
+            # 이미지 태그 설정
+            IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main-${SHORT_SHA}"
+            
             # GitHub Container Registry 로그인
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
             
@@ -115,15 +118,17 @@ jobs:
             docker rm gogo-golem-ai-server || true
             
             # 새 이미지 pull
-            docker pull ${IMAGE_TAG}
+            echo "Pulling image: \${IMAGE_TAG}"
+            docker pull \${IMAGE_TAG}
             
             # 컨테이너 실행
+            echo "Starting container with image: \${IMAGE_TAG}"
             docker run -d \
               --name gogo-golem-ai-server \
               --restart unless-stopped \
               -p 8000:8000 \
               --env-file /home/${{ secrets.EC2_USER }}/.env \
-              ${IMAGE_TAG}
+              \${IMAGE_TAG}
             
             # 헬스체크
             sleep 5
