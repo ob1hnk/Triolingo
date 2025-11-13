@@ -1,4 +1,6 @@
 .env
 .venv/*
 interaction/speech/tests/
+interaction/server/tests/
+datasets/
 __pycache__/
