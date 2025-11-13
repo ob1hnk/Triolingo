@@ -12,7 +12,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/gogo-golem-ai
+  IMAGE_NAME: ${{ github.repository_owner }}/gogo-golem-ai
 
 jobs:
   build-and-push:
@@ -90,28 +90,10 @@ jobs:
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
-          # Secrets 확인 (디버깅용 - 실제 값은 출력되지 않음)
-          if [ -z "${{ secrets.EC2_SSH_PRIVATE_KEY }}" ]; then
-            echo "❌ EC2_SSH_PRIVATE_KEY is empty"
-            exit 1
-          fi
-          if [ -z "${{ secrets.EC2_HOST }}" ]; then
-            echo "❌ EC2_HOST is empty"
-            exit 1
-          fi
-          if [ -z "${{ secrets.EC2_USER }}" ]; then
-            echo "❌ EC2_USER is empty"
-            exit 1
-          fi
-          
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-          
-          # 확인
-          echo "✅ SSH key configured"
-          ls -la ~/.ssh/
-          
+
       - name: Deploy to EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
