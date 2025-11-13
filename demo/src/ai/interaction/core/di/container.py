@@ -1,6 +1,6 @@
 from dependency_injector import containers, providers
-from ai.core.infra.model_router import ModelRouter
-from ai.interaction.core.di.config import CoreConfig
+from interaction.core.infra.model_router import ModelRouter
+from interaction.core.di.config import CoreConfig
 
 
 def create_router_client(
@@ -22,7 +22,7 @@ def create_router_client(
         num_retries=2,
         allowed_fails=1,
         cooldown_time=30.0,
-        timeout=30.0,
+        timeout=60.0,
         set_verbose=True,
     )
 
