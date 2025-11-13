@@ -42,14 +42,14 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
-            type=raw,value=main-{{sha}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=main-,format=short
 
       - name: Set up Docker layer caching
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}-v2
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
 
@@ -59,7 +59,6 @@ jobs:
           context: ./demo/src/ai
           file: ./demo/src/ai/Dockerfile
           push: true
-          no-cache: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -73,10 +72,9 @@ jobs:
       - name: Output image tag
         id: image-tag
         run: |
-          # metadata-action이 생성한 태그 형식: main-{full_sha}
-          # deploy 단계에서 동일한 형식 사용
-          FULL_SHA="${{ github.sha }}"
-          MAIN_TAG="main-${FULL_SHA}"
+          # metadata-action이 생성한 태그 형식: main-{short_sha} (7자리)
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          MAIN_TAG="main-${SHORT_SHA}"
           echo "tag=${MAIN_TAG}" >> $GITHUB_OUTPUT
           echo "Image tag: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${MAIN_TAG}"
 
@@ -105,9 +103,9 @@ jobs:
           REGISTRY: ${{ env.REGISTRY }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
         run: |
-          # build 단계에서 생성한 태그 형식 사용 (main-{full_sha})
-          FULL_SHA="${{ github.sha }}"
-          IMAGE_TAG="${REGISTRY}/${IMAGE_NAME}:main-${FULL_SHA}"
+          # build 단계에서 생성한 태그 형식 사용 (main-{short_sha})
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          IMAGE_TAG="${REGISTRY}/${IMAGE_NAME}:main-${SHORT_SHA}"
           
           echo "Deploying image: ${IMAGE_TAG}"
           
@@ -123,7 +121,10 @@ jobs:
             echo "Image tag: ${IMAGE_TAG}"
             
             # GitHub Container Registry 로그인
-            echo "${GITHUB_TOKEN}" | docker login ${REGISTRY} -u ${GITHUB_ACTOR} --password-stdin
+            echo "${GITHUB_TOKEN}" | docker login ${REGISTRY} -u ${GITHUB_ACTOR} --password-stdin || {
+              echo "Docker login failed"
+              exit 1
+            }
             
             # 기존 컨테이너 중지 및 제거
             docker stop gogo-golem-ai-server || true
