@@ -59,6 +59,7 @@ jobs:
           context: ./demo/src/ai
           file: ./demo/src/ai/Dockerfile
           push: true
+          no-cache: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
