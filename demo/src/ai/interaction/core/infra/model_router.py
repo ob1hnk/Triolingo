@@ -59,6 +59,7 @@ class ModelRouter:
         # OpenAI 모델 설정
         if self._has_openai_config():
             self._add_openai_models()
+            self._add_openai_speech_models()
 
         if not self.model_list:
             logger.warning("No models configured. Please check your API keys.")
@@ -68,7 +69,7 @@ class ModelRouter:
         return "openai_api_key" in self.config and self.config["openai_api_key"]
 
     def _add_openai_models(self):
-        """OpenAI 모델들을 추가합니다."""
+        """OpenAI LLM 모델들을 추가합니다."""
         for model_name in ModelConfigs.OPENAI_MODELS:
             model_config = ModelConfigs.get_model_config(model_name)
             if model_config:
@@ -77,6 +78,26 @@ class ModelRouter:
                         "model_name": model_name,
                         "litellm_params": {
                             "model": model_name,
+                            "api_key": self.config["openai_api_key"],
+                            "timeout": self.timeout,
+                        },
+                    }
+                )
+
+    def _add_openai_speech_models(self):
+        """OpenAI Speech-to-Text 모델들을 추가합니다."""
+        for model_name in ModelConfigs.SPEECH_MODELS:
+            model_config = ModelConfigs.get_model_config(model_name)
+            if model_config:
+                api_model_name = ModelConfigs.SPEECH_MODEL_MAPPING.get(
+                    model_name, model_name
+                )
+
+                self.model_list.append(
+                    {
+                        "model_name": model_name,
+                        "litellm_params": {
+                            "model": api_model_name,
                             "api_key": self.config["openai_api_key"],
                             "timeout": self.timeout,
                         },

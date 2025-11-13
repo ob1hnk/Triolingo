@@ -17,7 +17,7 @@ class ModelConfigs:
 
     # OpenAI Speech-to-Text 모델들
     SPEECH_MODELS = [
-        "whisper-1",
+        "whisper",
         "gpt-4o-transcribe",
         "gpt-4o-mini-transcribe",
         "gpt-4o-transcribe-diarize",
@@ -32,6 +32,14 @@ class ModelConfigs:
         "vtt",
         "diarized_json",
     ]
+
+    # Speech 모델명과 실제 API 모델명 매핑
+    SPEECH_MODEL_MAPPING = {
+        "whisper": "whisper-1",
+        "gpt-4o-transcribe": "gpt-4o-transcribe",
+        "gpt-4o-mini-transcribe": "gpt-4o-mini-transcribe",
+        "gpt-4o-transcribe-diarize": "gpt-4o-transcribe-diarize",
+    }
 
     # 모델별 상세 설정
     MODEL_CONFIGS = {
@@ -77,6 +85,12 @@ class ModelConfigs:
         },
         "gpt-4o-mini": {
             "max_tokens": 16384,
+            "fallbacks": [],
+            "cost_per_token": 0.00015,
+            "provider": "openai",
+        },
+        "whisper": {
+            "max_tokens": 4096,
             "fallbacks": [],
             "cost_per_token": 0.00015,
             "provider": "openai",
