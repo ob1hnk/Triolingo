@@ -10,7 +10,7 @@ from litellm import (
 )
 from pydantic import BaseModel
 
-from ai.core.utils.provider_utils import detect_provider
+from interaction.core.utils.provider_utils import detect_provider
 
 from .llm_component import LLMComponent
 
