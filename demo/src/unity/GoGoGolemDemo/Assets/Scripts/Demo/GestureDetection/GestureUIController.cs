@@ -83,13 +83,13 @@ namespace Demo.GestureDetection.UI
 
       switch (result.Type)
       {
-        case GestureType.BothHandsDetected:
+        /*case GestureType.BothHandsDetected:
           // 테스트: 양손 인디케이터 모두 켜기
           _isJangpoongActive = true;
           _isLiftUpActive = true;
           Debug.Log("[GestureUIController] ✅ Both hands detected - activating both indicators");
           break;
-
+        */
         case GestureType.Jangpoong:
           _isJangpoongActive = result.IsDetected;
           _isLiftUpActive = false;

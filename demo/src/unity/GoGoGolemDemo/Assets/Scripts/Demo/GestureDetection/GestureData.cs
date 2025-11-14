@@ -8,7 +8,6 @@ namespace Demo.GestureDetection
   public enum GestureType
   {
     None,
-    BothHandsDetected,  // 테스트: 양손만 감지되면 OK!
     Jangpoong,          // 장풍: 양손을 앞으로 밀어내는 동작
     LiftUp              // 들어올리기: 양팔을 위로 들어올리는 동작
   }
