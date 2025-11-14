@@ -25,7 +25,6 @@ namespace Demo.GestureDetection
       _detectionThreshold = detectionThreshold;
       _holdFrames = holdFrames;
       
-      _gestureFrameCount[GestureType.BothHandsDetected] = 0;
       _gestureFrameCount[GestureType.Jangpoong] = 0;
       _gestureFrameCount[GestureType.LiftUp] = 0;
     }
@@ -40,16 +39,6 @@ namespace Demo.GestureDetection
       Debug.Log($"  Hand landmarks count: {handResult.handLandmarks?.Count ?? 0}");
       Debug.Log($"  Pose landmarks count: {poseResult.poseLandmarks?.Count ?? 0}");
 
-      // 테스트 제스처는 Hand만 체크 (Pose 무관)
-      var testResult = DetectBothHands(handResult);
-      if (testResult.IsDetected)
-      {
-        Debug.Log("[GestureRecognizer] ✅ TEST GESTURE SUCCEEDED");
-        _gestureFrameCount[GestureType.Jangpoong] = 0;
-        _gestureFrameCount[GestureType.LiftUp] = 0;
-        return testResult;
-      }
-
       // 나머지 제스처는 Hand와 Pose 둘 다 필요
       if (handResult.handLandmarks == null || handResult.handLandmarks.Count == 0 ||
           poseResult.poseLandmarks == null || poseResult.poseLandmarks.Count == 0)
@@ -62,20 +51,18 @@ namespace Demo.GestureDetection
 
       Debug.Log("[GestureRecognizer] Landmarks detected! Checking complex gestures...");
 
-      // 장풍 제스처 검사 (우선순위 2)
+      // 장풍 제스처 검사 (우선순위 1)
       var jangpoongResult = DetectJangpoong(handResult, poseResult);
       if (jangpoongResult.IsDetected)
       {
-        _gestureFrameCount[GestureType.BothHandsDetected] = 0;
         _gestureFrameCount[GestureType.LiftUp] = 0;
         return jangpoongResult;
       }
 
-      // 들어올리기 제스처 검사 (우선순위 3)
+      // 들어올리기 제스처 검사 (우선순위 2)
       var liftUpResult = DetectLiftUp(poseResult);
       if (liftUpResult.IsDetected)
       {
-        _gestureFrameCount[GestureType.BothHandsDetected] = 0;
         _gestureFrameCount[GestureType.Jangpoong] = 0;
         return liftUpResult;
       }
@@ -83,39 +70,6 @@ namespace Demo.GestureDetection
       Debug.Log("[GestureRecognizer] No gesture detected this frame");
       _gestureFrameCount[GestureType.Jangpoong] = 0;
       _gestureFrameCount[GestureType.LiftUp] = 0;
-      return GestureResult.None;
-    }
-
-    /// <summary>
-    /// 테스트 제스처: 양손이 감지되기만 하면 성공
-    /// </summary>
-    private GestureResult DetectBothHands(HandLandmarkerResult handResult)
-    {
-      int handCount = handResult.handLandmarks?.Count ?? 0;
-      Debug.Log($"[DetectBothHands] Hand count: {handCount}, Frame counter: {_gestureFrameCount[GestureType.BothHandsDetected]}/{_holdFrames}");
-
-      // 양손이 감지되는지만 체크
-      if (handResult.handLandmarks != null && handResult.handLandmarks.Count >= 2)
-      {
-        _gestureFrameCount[GestureType.BothHandsDetected]++;
-        Debug.Log($"[DetectBothHands] ✅ Both hands detected! Counter: {_gestureFrameCount[GestureType.BothHandsDetected]}/{_holdFrames}");
-        
-        if (_gestureFrameCount[GestureType.BothHandsDetected] >= _holdFrames)
-        {
-          Debug.Log("TEST GESTURE DETECTED! Both hands visible");
-          float confidence = 1.0f;
-          return new GestureResult(GestureType.BothHandsDetected, confidence, true, Vector3.zero);
-        }
-      }
-      else
-      {
-        if (_gestureFrameCount[GestureType.BothHandsDetected] > 0)
-        {
-          Debug.Log($"[DetectBothHands] ❌ Lost hands! Resetting counter from {_gestureFrameCount[GestureType.BothHandsDetected]}");
-        }
-        _gestureFrameCount[GestureType.BothHandsDetected] = 0;
-      }
-
       return GestureResult.None;
     }
 
@@ -155,7 +109,7 @@ namespace Demo.GestureDetection
       // 손목 위치 (왼쪽: 15, 오른쪽: 16)
       var leftWrist = GetVector3(poseLandmarks.landmarks[15]);
       var rightWrist = GetVector3(poseLandmarks.landmarks[16]);
-
+      
       bool bothHandsForward = true;
       bool bothArmsExtended = true;
       bool handsAtChestHeight = true;
@@ -173,14 +127,14 @@ namespace Demo.GestureDetection
           bothHandsForward = false;
           break;
         }
-
+        
         // 손의 높이가 어깨 근처인지 확인
         if (Mathf.Abs(wrist.y - shoulderCenter.y) > 0.3f)
         {
           handsAtChestHeight = false;
         }
       }
-
+      
       // 팔이 펴져있는지 확인 (어깨-팔꿈치-손목이 거의 일직선)
       float leftArmAngle = Vector3.Angle(leftElbow - leftShoulder, leftWrist - leftElbow);
       float rightArmAngle = Vector3.Angle(rightElbow - rightShoulder, rightWrist - rightElbow);
@@ -189,6 +143,7 @@ namespace Demo.GestureDetection
       {
         bothArmsExtended = false;
       }
+      
 
       // 모든 조건이 충족되면 프레임 카운터 증가
       if (bothHandsForward && bothArmsExtended && handsAtChestHeight)
@@ -284,7 +239,6 @@ namespace Demo.GestureDetection
 
     private void ResetGestureCounters()
     {
-      _gestureFrameCount[GestureType.BothHandsDetected] = 0;
       _gestureFrameCount[GestureType.Jangpoong] = 0;
       _gestureFrameCount[GestureType.LiftUp] = 0;
     }
