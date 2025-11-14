@@ -25,6 +25,7 @@ namespace Demo.GestureDetection
       _detectionThreshold = detectionThreshold;
       _holdFrames = holdFrames;
       
+      _gestureFrameCount[GestureType.BothHandsDetected] = 0;
       _gestureFrameCount[GestureType.Jangpoong] = 0;
       _gestureFrameCount[GestureType.LiftUp] = 0;
     }
@@ -34,31 +35,87 @@ namespace Demo.GestureDetection
     /// </summary>
     public GestureResult RecognizeGesture(HandLandmarkerResult handResult, PoseLandmarkerResult poseResult)
     {
-      // HandLandmarker나 PoseLandmarker 결과가 비어있으면 리턴
+      // 디버그: 매개변수 체크
+      Debug.Log($"[GestureRecognizer] RecognizeGesture called!");
+      Debug.Log($"  Hand landmarks count: {handResult.handLandmarks?.Count ?? 0}");
+      Debug.Log($"  Pose landmarks count: {poseResult.poseLandmarks?.Count ?? 0}");
+
+      // 테스트 제스처는 Hand만 체크 (Pose 무관)
+      var testResult = DetectBothHands(handResult);
+      if (testResult.IsDetected)
+      {
+        Debug.Log("[GestureRecognizer] ✅ TEST GESTURE SUCCEEDED");
+        _gestureFrameCount[GestureType.Jangpoong] = 0;
+        _gestureFrameCount[GestureType.LiftUp] = 0;
+        return testResult;
+      }
+
+      // 나머지 제스처는 Hand와 Pose 둘 다 필요
       if (handResult.handLandmarks == null || handResult.handLandmarks.Count == 0 ||
           poseResult.poseLandmarks == null || poseResult.poseLandmarks.Count == 0)
       {
-        ResetGestureCounters();
+        Debug.Log("[GestureRecognizer] No landmarks detected for complex gestures - resetting");
+        _gestureFrameCount[GestureType.Jangpoong] = 0;
+        _gestureFrameCount[GestureType.LiftUp] = 0;
         return GestureResult.None;
       }
 
-      // 장풍 제스처 검사 (우선순위 1)
+      Debug.Log("[GestureRecognizer] Landmarks detected! Checking complex gestures...");
+
+      // 장풍 제스처 검사 (우선순위 2)
       var jangpoongResult = DetectJangpoong(handResult, poseResult);
       if (jangpoongResult.IsDetected)
       {
-        _gestureFrameCount[GestureType.LiftUp] = 0; // 다른 제스처 카운터 리셋
+        _gestureFrameCount[GestureType.BothHandsDetected] = 0;
+        _gestureFrameCount[GestureType.LiftUp] = 0;
         return jangpoongResult;
       }
 
-      // 들어올리기 제스처 검사 (우선순위 2)
+      // 들어올리기 제스처 검사 (우선순위 3)
       var liftUpResult = DetectLiftUp(poseResult);
       if (liftUpResult.IsDetected)
       {
+        _gestureFrameCount[GestureType.BothHandsDetected] = 0;
         _gestureFrameCount[GestureType.Jangpoong] = 0;
         return liftUpResult;
       }
 
-      ResetGestureCounters();
+      Debug.Log("[GestureRecognizer] No gesture detected this frame");
+      _gestureFrameCount[GestureType.Jangpoong] = 0;
+      _gestureFrameCount[GestureType.LiftUp] = 0;
+      return GestureResult.None;
+    }
+
+    /// <summary>
+    /// 테스트 제스처: 양손이 감지되기만 하면 성공
+    /// </summary>
+    private GestureResult DetectBothHands(HandLandmarkerResult handResult)
+    {
+      int handCount = handResult.handLandmarks?.Count ?? 0;
+      Debug.Log($"[DetectBothHands] Hand count: {handCount}, Frame counter: {_gestureFrameCount[GestureType.BothHandsDetected]}/{_holdFrames}");
+
+      // 양손이 감지되는지만 체크
+      if (handResult.handLandmarks != null && handResult.handLandmarks.Count >= 2)
+      {
+        _gestureFrameCount[GestureType.BothHandsDetected]++;
+        Debug.Log($"[DetectBothHands] ✅ Both hands detected! Counter: {_gestureFrameCount[GestureType.BothHandsDetected]}/{_holdFrames}");
+        
+        if (_gestureFrameCount[GestureType.BothHandsDetected] >= _holdFrames)
+        {
+          Debug.Log("TEST GESTURE DETECTED! Both hands visible");
+          float confidence = 1.0f;
+          return new GestureResult(GestureType.BothHandsDetected, confidence, true, Vector3.zero);
+        }
+      }
+      else
+      {
+        if (_gestureFrameCount[GestureType.BothHandsDetected] > 0)
+        {
+          Debug.Log($"[DetectBothHands] ❌ Lost hands! Resetting counter from {_gestureFrameCount[GestureType.BothHandsDetected]}");
+        }
+        _gestureFrameCount[GestureType.BothHandsDetected] = 0;
+      }
+
       return GestureResult.None;
     }
 
@@ -227,6 +284,7 @@ namespace Demo.GestureDetection
 
     private void ResetGestureCounters()
     {
+      _gestureFrameCount[GestureType.BothHandsDetected] = 0;
       _gestureFrameCount[GestureType.Jangpoong] = 0;
       _gestureFrameCount[GestureType.LiftUp] = 0;
     }

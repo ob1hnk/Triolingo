@@ -36,21 +36,21 @@ namespace Demo.GestureDetection
 #endif
 
     public ImageReadMode ImageReadMode { get; set; } = ImageReadMode.CPUAsync;
-    public Tasks.Vision.Core.RunningMode RunningMode { get; set; } = Tasks.Vision.Core.RunningMode.LIVE_STREAM;
+    public Tasks.Vision.Core.RunningMode RunningMode { get; set; } = Tasks.Vision.Core.RunningMode.IMAGE;
 
     // ========== Hand Landmarker 설정 ==========
     public int NumHands { get; set; } = 2; // 양손 감지를 위해 2로 설정
-    public float MinHandDetectionConfidence { get; set; } = 0.5f;
-    public float MinHandPresenceConfidence { get; set; } = 0.5f;
-    public float HandMinTrackingConfidence { get; set; } = 0.5f;
+    public float MinHandDetectionConfidence { get; set; } = 0.3f;
+    public float MinHandPresenceConfidence { get; set; } = 0.3f;
+    public float HandMinTrackingConfidence { get; set; } = 0.3f;
     public string HandModelPath => "hand_landmarker.bytes";
 
     // ========== Pose Landmarker 설정 ==========
     public PoseModelType PoseModel { get; set; } = PoseModelType.Full;
     public int NumPoses { get; set; } = 1;
-    public float MinPoseDetectionConfidence { get; set; } = 0.5f;
-    public float MinPosePresenceConfidence { get; set; } = 0.5f;
-    public float PoseMinTrackingConfidence { get; set; } = 0.5f;
+    public float MinPoseDetectionConfidence { get; set; } = 0.3f;
+    public float MinPosePresenceConfidence { get; set; } = 0.3f;
+    public float PoseMinTrackingConfidence { get; set; } = 0.3f;
     public bool OutputSegmentationMasks { get; set; } = false;
 
     public string PoseModelName

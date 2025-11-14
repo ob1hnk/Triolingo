@@ -31,6 +31,7 @@ namespace Demo.GestureDetection
     [SerializeField] private UI.GestureUIController _gestureUIController;
 
     private Experimental.TextureFramePool _textureFramePool;
+    private Experimental.TextureFramePool _textureFramePoolForPose;  // Pose 전용 추가
     
     // 두 개의 taskApi
     private HandLandmarker _handLandmarker;
@@ -51,12 +52,34 @@ namespace Demo.GestureDetection
       base.Stop();
       _textureFramePool?.Dispose();
       _textureFramePool = null;
+      _textureFramePoolForPose?.Dispose();
+      _textureFramePoolForPose = null;
       
-      _handLandmarker?.Close();
-      _handLandmarker = null;
+      try
+      {
+        if (_handLandmarker != null)
+        {
+          _handLandmarker.Close();
+          _handLandmarker = null;
+        }
+      }
+      catch (System.Exception e)
+      {
+        Debug.LogWarning($"Error closing HandLandmarker: {e.Message}");
+      }
       
-      _poseLandmarker?.Close();
-      _poseLandmarker = null;
+      try
+      {
+        if (_poseLandmarker != null)
+        {
+          _poseLandmarker.Close();
+          _poseLandmarker = null;
+        }
+      }
+      catch (System.Exception e)
+      {
+        Debug.LogWarning($"Error closing PoseLandmarker: {e.Message}");
+      }
     }
 
     protected override IEnumerator Run()
@@ -73,12 +96,17 @@ namespace Demo.GestureDetection
         config.GestureDetectionThreshold,
         config.GestureHoldFrames
       );
+      Debug.Log("GestureRecognizer initialized");
 
       // Hand 모델 로드
+      Debug.Log("Loading Hand model...");
       yield return Mediapipe.Unity.Sample.AssetLoader.PrepareAssetAsync(config.HandModelPath);
+      Debug.Log("Hand model loaded!");
       
       // Pose 모델 로드
+      Debug.Log("Loading Pose model...");
       yield return Mediapipe.Unity.Sample.AssetLoader.PrepareAssetAsync(config.PoseModelPath);
+      Debug.Log("Pose model loaded!");
 
       // HandLandmarker 생성
       var handOptions = config.GetHandLandmarkerOptions(
@@ -95,7 +123,11 @@ namespace Demo.GestureDetection
       // taskApi는 HandLandmarker로 설정 (부모 클래스 호환성)
       taskApi = _handLandmarker;
 
+      Debug.Log("Getting ImageSource...");
       var imageSource = Mediapipe.Unity.Sample.ImageSourceProvider.ImageSource;
+      Debug.Log($"ImageSource obtained: {imageSource != null}");
+      
+      Debug.Log("Starting ImageSource...");
       yield return imageSource.Play();
 
       if (!imageSource.isPrepared)
@@ -103,9 +135,17 @@ namespace Demo.GestureDetection
         Debug.LogError("Failed to start ImageSource, exiting...");
         yield break;
       }
+      Debug.Log("ImageSource started successfully!");
 
-      // TextureFramePool 초기화
+      // TextureFramePool 초기화 (Hand용, Pose용 각각)
       _textureFramePool = new Experimental.TextureFramePool(
+        imageSource.textureWidth,
+        imageSource.textureHeight,
+        TextureFormat.RGBA32,
+        10
+      );
+      
+      _textureFramePoolForPose = new Experimental.TextureFramePool(
         imageSource.textureWidth,
         imageSource.textureHeight,
         TextureFormat.RGBA32,
@@ -113,12 +153,16 @@ namespace Demo.GestureDetection
       );
 
       // 화면 초기화
+      Debug.Log($"Initializing screen... Size: {imageSource.textureWidth}x{imageSource.textureHeight}");
       screen.Initialize(imageSource);
+      Debug.Log("Screen initialized!");
 
       // Annotation Controller 설정
+      Debug.Log("Setting up annotation controllers...");
       SetupAnnotationController(_handLandmarkerResultAnnotationController, imageSource);
       SetupAnnotationController(_poseLandmarkerResultAnnotationController, imageSource);
       _poseLandmarkerResultAnnotationController.InitScreen(imageSource.textureWidth, imageSource.textureHeight);
+      Debug.Log("Annotation controllers ready!");
 
       var transformationOptions = imageSource.GetTransformationOptions();
       var flipHorizontally = transformationOptions.flipHorizontally;
@@ -139,6 +183,8 @@ namespace Demo.GestureDetection
       var canUseGpuImage = SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3 && GpuManager.GpuResources != null;
       using var glContext = canUseGpuImage ? GpuManager.GetGlContext() : null;
 
+      Debug.Log("=== Entering main detection loop ===");
+
       // 메인 루프
       while (true)
       {
@@ -147,14 +193,23 @@ namespace Demo.GestureDetection
           yield return new WaitWhile(() => isPaused);
         }
 
+        // Hand용 TextureFrame
         if (!_textureFramePool.TryGetTextureFrame(out var textureFrame))
         {
           yield return new WaitForEndOfFrame();
           continue;
         }
 
-        // 이미지 빌드
-        Image image;
+        // Pose용 TextureFrame
+        if (!_textureFramePoolForPose.TryGetTextureFrame(out var textureFrameForPose))
+        {
+          textureFrame.Release();
+          yield return new WaitForEndOfFrame();
+          continue;
+        }
+
+        // Hand용 이미지 빌드
+        Image imageForHand;
         switch (config.ImageReadMode)
         {
           case ImageReadMode.GPU:
@@ -163,14 +218,14 @@ namespace Demo.GestureDetection
               throw new System.Exception("ImageReadMode.GPU is not supported");
             }
             textureFrame.ReadTextureOnGPU(imageSource.GetCurrentTexture(), flipHorizontally, flipVertically);
-            image = textureFrame.BuildGPUImage(glContext);
+            imageForHand = textureFrame.BuildGPUImage(glContext);
             yield return waitForEndOfFrame;
             break;
           
           case ImageReadMode.CPU:
             yield return waitForEndOfFrame;
             textureFrame.ReadTextureOnCPU(imageSource.GetCurrentTexture(), flipHorizontally, flipVertically);
-            image = textureFrame.BuildCPUImage();
+            imageForHand = textureFrame.BuildCPUImage();
             textureFrame.Release();
             break;
           
@@ -182,10 +237,41 @@ namespace Demo.GestureDetection
             if (req.hasError)
             {
               Debug.LogWarning("Failed to read texture from the image source");
+              textureFrameForPose.Release();
               continue;
             }
-            image = textureFrame.BuildCPUImage();
+            imageForHand = textureFrame.BuildCPUImage();
             textureFrame.Release();
+            break;
+        }
+
+        // Pose용 이미지 빌드
+        Image imageForPose;
+        switch (config.ImageReadMode)
+        {
+          case ImageReadMode.GPU:
+            textureFrameForPose.ReadTextureOnGPU(imageSource.GetCurrentTexture(), flipHorizontally, flipVertically);
+            imageForPose = textureFrameForPose.BuildGPUImage(glContext);
+            break;
+          
+          case ImageReadMode.CPU:
+            textureFrameForPose.ReadTextureOnCPU(imageSource.GetCurrentTexture(), flipHorizontally, flipVertically);
+            imageForPose = textureFrameForPose.BuildCPUImage();
+            textureFrameForPose.Release();
+            break;
+          
+          case ImageReadMode.CPUAsync:
+          default:
+            req = textureFrameForPose.ReadTextureAsync(imageSource.GetCurrentTexture(), flipHorizontally, flipVertically);
+            yield return waitUntilReqDone;
+
+            if (req.hasError)
+            {
+              Debug.LogWarning("Failed to read texture from the image source (Pose)");
+              continue;
+            }
+            imageForPose = textureFrameForPose.BuildCPUImage();
+            textureFrameForPose.Release();
             break;
         }
 
@@ -195,15 +281,15 @@ namespace Demo.GestureDetection
         switch (config.RunningMode)
         {
           case Tasks.Vision.Core.RunningMode.IMAGE:
-            ProcessImageMode(image, imageProcessingOptions, ref handResult, ref poseResult);
+            ProcessImageMode(imageForHand, imageForPose, imageProcessingOptions, ref handResult, ref poseResult);
             break;
           
           case Tasks.Vision.Core.RunningMode.VIDEO:
-            ProcessVideoMode(image, timestamp, imageProcessingOptions, ref handResult, ref poseResult);
+            ProcessVideoMode(imageForHand, imageForPose, timestamp, imageProcessingOptions, ref handResult, ref poseResult);
             break;
           
           case Tasks.Vision.Core.RunningMode.LIVE_STREAM:
-            ProcessLiveStreamMode(image, timestamp, imageProcessingOptions);
+            ProcessLiveStreamMode(imageForHand, imageForPose, timestamp, imageProcessingOptions);
             break;
         }
 
@@ -215,26 +301,30 @@ namespace Demo.GestureDetection
     /// IMAGE 모드 처리
     /// </summary>
     private void ProcessImageMode(
-      Image image,
+      Image imageForHand,
+      Image imageForPose,
       Tasks.Vision.Core.ImageProcessingOptions imageProcessingOptions,
       ref HandLandmarkerResult handResult,
       ref PoseLandmarkerResult poseResult)
     {
-      bool handDetected = _handLandmarker.TryDetect(image, imageProcessingOptions, ref handResult);
-      bool poseDetected = _poseLandmarker.TryDetect(image, imageProcessingOptions, ref poseResult);
+      bool handDetected = _handLandmarker.TryDetect(imageForHand, imageProcessingOptions, ref handResult);
+      bool poseDetected = _poseLandmarker.TryDetect(imageForPose, imageProcessingOptions, ref poseResult);
 
       // Annotation 그리기
       _handLandmarkerResultAnnotationController.DrawNow(handDetected ? handResult : default);
       _poseLandmarkerResultAnnotationController.DrawNow(poseDetected ? poseResult : default);
 
       // 제스처 인식
+      Debug.Log($"[ProcessImageMode] Calling RecognizeGesture... Hand: {handDetected}, Pose: {poseDetected}");
       if (handDetected && poseDetected)
       {
         var gestureResult = _gestureRecognizer.RecognizeGesture(handResult, poseResult);
+        Debug.Log($"[ProcessImageMode] Gesture result: {gestureResult.Type}, IsDetected: {gestureResult.IsDetected}");
         _gestureUIController?.UpdateGestureResult(gestureResult);
       }
       else
       {
+        Debug.Log("[ProcessImageMode] Hand or Pose not detected - no gesture check");
         _gestureUIController?.UpdateGestureResult(GestureResult.None);
       }
     }
@@ -243,14 +333,15 @@ namespace Demo.GestureDetection
     /// VIDEO 모드 처리
     /// </summary>
     private void ProcessVideoMode(
-      Image image,
+      Image imageForHand,
+      Image imageForPose,
       long timestamp,
       Tasks.Vision.Core.ImageProcessingOptions imageProcessingOptions,
       ref HandLandmarkerResult handResult,
       ref PoseLandmarkerResult poseResult)
     {
-      bool handDetected = _handLandmarker.TryDetectForVideo(image, timestamp, imageProcessingOptions, ref handResult);
-      bool poseDetected = _poseLandmarker.TryDetectForVideo(image, timestamp, imageProcessingOptions, ref poseResult);
+      bool handDetected = _handLandmarker.TryDetectForVideo(imageForHand, timestamp, imageProcessingOptions, ref handResult);
+      bool poseDetected = _poseLandmarker.TryDetectForVideo(imageForPose, timestamp, imageProcessingOptions, ref poseResult);
 
       _handLandmarkerResultAnnotationController.DrawNow(handDetected ? handResult : default);
       _poseLandmarkerResultAnnotationController.DrawNow(poseDetected ? poseResult : default);
@@ -270,13 +361,14 @@ namespace Demo.GestureDetection
     /// LIVE_STREAM 모드 처리
     /// </summary>
     private void ProcessLiveStreamMode(
-      Image image,
+      Image imageForHand,
+      Image imageForPose,
       long timestamp,
       Tasks.Vision.Core.ImageProcessingOptions imageProcessingOptions)
     {
       // 비동기로 두 가지 감지 동시 실행
-      _handLandmarker.DetectAsync(image, timestamp, imageProcessingOptions);
-      _poseLandmarker.DetectAsync(image, timestamp, imageProcessingOptions);
+      _handLandmarker.DetectAsync(imageForHand, timestamp, imageProcessingOptions);
+      _poseLandmarker.DetectAsync(imageForPose, timestamp, imageProcessingOptions);
     }
 
     /// <summary>

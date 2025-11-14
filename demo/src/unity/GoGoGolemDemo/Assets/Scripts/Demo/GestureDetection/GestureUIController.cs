@@ -79,16 +79,27 @@ namespace Demo.GestureDetection.UI
     /// </summary>
     public void UpdateGestureResult(GestureResult result)
     {
+      Debug.Log($"[GestureUIController] UpdateGestureResult called: {result.Type}, IsDetected: {result.IsDetected}");
+
       switch (result.Type)
       {
+        case GestureType.BothHandsDetected:
+          // 테스트: 양손 인디케이터 모두 켜기
+          _isJangpoongActive = true;
+          _isLiftUpActive = true;
+          Debug.Log("[GestureUIController] ✅ Both hands detected - activating both indicators");
+          break;
+
         case GestureType.Jangpoong:
           _isJangpoongActive = result.IsDetected;
           _isLiftUpActive = false;
+          Debug.Log($"[GestureUIController] Jangpoong: {_isJangpoongActive}");
           break;
         
         case GestureType.LiftUp:
           _isLiftUpActive = result.IsDetected;
           _isJangpoongActive = false;
+          Debug.Log($"[GestureUIController] LiftUp: {_isLiftUpActive}");
           break;
         
         case GestureType.None:
@@ -96,8 +107,11 @@ namespace Demo.GestureDetection.UI
           // 제스처가 없으면 모두 비활성화 (단, 부드럽게 페이드 아웃)
           _isJangpoongActive = false;
           _isLiftUpActive = false;
+          Debug.Log("[GestureUIController] No gesture - deactivating indicators");
           break;
       }
+
+      Debug.Log($"[GestureUIController] Final state - Jangpoong: {_isJangpoongActive}, LiftUp: {_isLiftUpActive}");
     }
 
     /// <summary>
@@ -164,9 +178,3 @@ namespace Demo.GestureDetection.UI
     }
   }
 }
-
-
-
-
-
-
