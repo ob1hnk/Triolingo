@@ -71,7 +71,10 @@ async def handle_websocket(
 
                     # 세션 생성
                     session_manager.create_session(
-                        request.session_id, request.audio_format or "wav"
+                        request.session_id,
+                        request.audio_format or "wav",
+                        request.sample_rate or 16000,
+                        request.channels or 1,
                     )
 
                     # ACK 응답
