@@ -31,6 +31,7 @@ public class SpeechWebSocketClient : MonoBehaviour
     [Header("테스트 설정")]
     [SerializeField] private bool enableDebugLog = true; // 디버그 로그 활성화
     [SerializeField] private float debugLogInterval = 0.5f; // 디버그 로그 출력 간격 (초)
+    [SerializeField] private bool includeWavHeader = false; // WAV 헤더 포함 여부 (서버가 순수 PCM을 원하면 false)
     private float lastDebugLogTime = 0f;
 
     async void Start()
@@ -43,6 +44,18 @@ public class SpeechWebSocketClient : MonoBehaviour
         await Disconnect();
     }
 
+    void Update()
+    {
+        if (ws == null)
+        {
+            return;
+        }
+
+#if !UNITY_WEBGL || UNITY_EDITOR
+        ws.DispatchMessageQueue();
+#endif
+    }
+
     async Task Connect()
     {
         ws = new WebSocket(serverUrl);
@@ -52,7 +65,10 @@ public class SpeechWebSocketClient : MonoBehaviour
         };
 
         ws.OnMessage += (bytes) => {
-            HandleMessage(Encoding.UTF8.GetString(bytes));
+            string message = Encoding.UTF8.GetString(bytes);
+            Debug.Log($"[WS<-Server] 수신 메시지 (길이: {bytes.Length} bytes):");
+            Debug.Log(message);
+            HandleMessage(message);
         };
 
         ws.OnError += (error) => {
@@ -235,40 +251,65 @@ public class SpeechWebSocketClient : MonoBehaviour
 
     IEnumerator SendSessionStart()
     {
-        var startMsg = new {
-            type = "session_start",
-            session_id = sessionId,
-            audio_format = "wav",
-            sample_rate = sampleRate,
-            channels = channels
-        };
-
-        string json = JsonUtility.ToJson(startMsg);
-        Debug.Log($"[WS 준비] session_start payload: {json}");
+        // JSON 직접 구성 (JsonUtility는 anonymous type을 지원하지 않음)
+        string json = $"{{\"type\":\"session_start\",\"session_id\":\"{sessionId}\",\"audio_format\":\"wav\",\"sample_rate\":{sampleRate},\"channels\":{channels}}}";
+        
+        Debug.Log($"[WS 준비] session_start 전체 JSON:");
+        Debug.Log(json);
+        Debug.Log($"[WS 준비] session_start 상세 - session_id: {sessionId}, sample_rate: {sampleRate}, channels: {channels}");
 
         yield return StartCoroutine(SendMessageCoroutine("session_start", json));
     }
 
     IEnumerator SendAudioChunk(float[] samples)
     {
-        // WAV 형식으로 변환 (PCM 데이터)
+        // PCM 데이터 변환
         byte[] pcmData = ConvertToPCM16(samples);
+        
+        // WAV 헤더 포함 여부에 따라 데이터 준비
+        byte[] audioData;
+        if (includeWavHeader)
+        {
+            // WAV 헤더 + PCM 데이터
+            byte[] wavHeader = CreateWavHeader(pcmData.Length, sampleRate, channels);
+            audioData = new byte[wavHeader.Length + pcmData.Length];
+            Array.Copy(wavHeader, 0, audioData, 0, wavHeader.Length);
+            Array.Copy(pcmData, 0, audioData, wavHeader.Length, pcmData.Length);
+            Debug.Log($"[오디오] WAV 헤더 포함 - 헤더: {wavHeader.Length} bytes, PCM: {pcmData.Length} bytes, 총: {audioData.Length} bytes");
+        }
+        else
+        {
+            // 순수 PCM 데이터만
+            audioData = pcmData;
+            Debug.Log($"[오디오] 순수 PCM 데이터 - {pcmData.Length} bytes");
+        }
 
         // Base64 인코딩
-        string base64Audio = Convert.ToBase64String(pcmData);
+        string base64Audio = Convert.ToBase64String(audioData);
         int currentChunkIndex = chunkIndex++;
 
-        // 청크 전송
-        var chunkMsg = new {
-            type = "audio_chunk",
-            session_id = sessionId,
-            chunk_index = currentChunkIndex,
-            audio_data = base64Audio,
-            is_last_chunk = false
-        };
-
-        string json = JsonUtility.ToJson(chunkMsg);
-        Debug.Log($"[WS 준비] audio_chunk #{currentChunkIndex} | PCM bytes: {pcmData.Length} | Base64 length: {base64Audio.Length}");
+        // JSON 직접 구성 (JsonUtility는 anonymous type을 지원하지 않음)
+        // Base64 문자열에 특수문자가 있을 수 있으므로 이스케이프 처리
+        string escapedBase64 = base64Audio.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        string json = $"{{\"type\":\"audio_chunk\",\"session_id\":\"{sessionId}\",\"chunk_index\":{currentChunkIndex},\"audio_data\":\"{escapedBase64}\",\"is_last_chunk\":false}}";
+        
+        Debug.Log($"[WS 준비] audio_chunk #{currentChunkIndex} 상세:");
+        Debug.Log($"  - session_id: {sessionId}");
+        Debug.Log($"  - chunk_index: {currentChunkIndex}");
+        Debug.Log($"  - 샘플 수: {samples.Length}");
+        Debug.Log($"  - PCM bytes: {pcmData.Length}");
+        Debug.Log($"  - 오디오 데이터 bytes: {audioData.Length} (WAV 헤더 포함: {includeWavHeader})");
+        Debug.Log($"  - Base64 length: {base64Audio.Length}");
+        Debug.Log($"  - 샘플 레이트: {sampleRate}Hz, 채널: {channels}");
+        
+        // PCM 데이터 검증 (처음 몇 바이트 확인)
+        if (pcmData.Length >= 4)
+        {
+            Debug.Log($"  - PCM 데이터 시작 (hex): {pcmData[0]:X2} {pcmData[1]:X2} {pcmData[2]:X2} {pcmData[3]:X2}");
+        }
+        
+        Debug.Log($"[WS 준비] audio_chunk #{currentChunkIndex} 전체 JSON (처음 500자):");
+        Debug.Log(json.Substring(0, Mathf.Min(500, json.Length)) + (json.Length > 500 ? "..." : ""));
 
         yield return StartCoroutine(SendMessageCoroutine($"audio_chunk #{currentChunkIndex}", json));
     }
@@ -338,42 +379,75 @@ public class SpeechWebSocketClient : MonoBehaviour
 
     IEnumerator SendSessionEndRoutine()
     {
-        var endMsg = new {
-            type = "session_end",
-            session_id = sessionId
-        };
-
-        string json = JsonUtility.ToJson(endMsg);
-        Debug.Log($"[WS 준비] session_end payload: {json}");
+        // JSON 직접 구성 (JsonUtility는 anonymous type을 지원하지 않음)
+        string json = $"{{\"type\":\"session_end\",\"session_id\":\"{sessionId}\"}}";
+        
+        Debug.Log($"[WS 준비] session_end 전체 JSON:");
+        Debug.Log(json);
+        Debug.Log($"[WS 준비] session_end 상세 - session_id: {sessionId}");
 
         yield return StartCoroutine(SendMessageCoroutine("session_end", json));
     }
 
     void HandleMessage(string message)
     {
-        var response = JsonUtility.FromJson<WebSocketResponse>(message);
-
-        switch (response.type)
+        try
         {
-            case "ack":
-                Debug.Log($"ACK 수신: {response.message}");
-                break;
+            var response = JsonUtility.FromJson<WebSocketResponse>(message);
 
-            case "processing":
-                Debug.Log($"처리 중: {response.status}");
-                break;
+            if (string.IsNullOrEmpty(response.type))
+            {
+                Debug.LogWarning($"[WS<-Server] 메시지 타입이 없습니다. 원본: {message}");
+                return;
+            }
 
-            case "result":
-                Debug.Log($"결과 수신:");
-                Debug.Log($"  인식: {response.transcription}");
-                Debug.Log($"  응답: {response.text}");
-                OnResultReceived(response.text, response.transcription);
-                break;
+            Debug.Log($"[WS<-Server] 메시지 타입: {response.type}");
 
-            case "error":
-                Debug.LogError($"에러: {response.error_code} - {response.error_message}");
-                OnErrorReceived(response.error_code, response.error_message);
-                break;
+            switch (response.type)
+            {
+                case "ack":
+                    Debug.Log($"[WS<-Server] ✅ ACK 수신");
+                    Debug.Log($"  - session_id: {response.session_id ?? "없음"}");
+                    Debug.Log($"  - message: {response.message ?? "없음"}");
+                    break;
+
+                case "processing":
+                    Debug.Log($"[WS<-Server] ⚙️ 처리 중");
+                    Debug.Log($"  - session_id: {response.session_id ?? "없음"}");
+                    Debug.Log($"  - status: {response.status ?? "없음"}");
+                    if (response.progress.HasValue)
+                    {
+                        Debug.Log($"  - progress: {response.progress.Value * 100:F1}%");
+                    }
+                    break;
+
+                case "result":
+                    Debug.Log($"[WS<-Server] ✅ 결과 수신");
+                    Debug.Log($"  - session_id: {response.session_id ?? "없음"}");
+                    Debug.Log($"  - 인식(transcription): {response.transcription ?? "없음"}");
+                    Debug.Log($"  - 응답(text): {response.text ?? "없음"}");
+                    OnResultReceived(response.text, response.transcription);
+                    break;
+
+                case "error":
+                    Debug.LogError($"[WS<-Server] ❌ 에러 수신");
+                    Debug.LogError($"  - session_id: {response.session_id ?? "없음"}");
+                    Debug.LogError($"  - error_code: {response.error_code ?? "없음"}");
+                    Debug.LogError($"  - error_message: {response.error_message ?? "없음"}");
+                    OnErrorReceived(response.error_code, response.error_message);
+                    break;
+
+                default:
+                    Debug.LogWarning($"[WS<-Server] 알 수 없는 메시지 타입: {response.type}");
+                    Debug.LogWarning($"  원본 메시지: {message}");
+                    break;
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[WS<-Server] 메시지 파싱 오류: {e.Message}");
+            Debug.LogError($"  원본 메시지: {message}");
+            Debug.LogError($"  스택 트레이스: {e.StackTrace}");
         }
     }
 
@@ -392,6 +466,9 @@ public class SpeechWebSocketClient : MonoBehaviour
         }
 
         Debug.Log($"[WS->Server] {messageLabel} 전송 시작");
+        Debug.Log($"[WS->Server] {messageLabel} 전송할 JSON 길이: {json.Length} bytes");
+        Debug.Log($"[WS->Server] {messageLabel} 전송할 전체 JSON:");
+        Debug.Log(json);
 
         var sendTask = ws.SendText(json);
         while (!sendTask.IsCompleted)
@@ -409,24 +486,108 @@ public class SpeechWebSocketClient : MonoBehaviour
         }
         else
         {
-            Debug.Log($"[WS->Server] {messageLabel} 전송 완료");
+            Debug.Log($"[WS->Server] {messageLabel} 전송 완료 (상태: {ws.State})");
         }
     }
 
-    // Float 배열을 16-bit PCM 바이트 배열로 변환
+    // Float 배열을 16-bit PCM 바이트 배열로 변환 (Little-endian)
     byte[] ConvertToPCM16(float[] samples)
     {
         byte[] pcmData = new byte[samples.Length * 2];
 
         for (int i = 0; i < samples.Length; i++)
         {
-            // -1.0 ~ 1.0 범위를 -32768 ~ 32767로 변환
-            short sample = (short)(samples[i] * 32767f);
+            // -1.0 ~ 1.0 범위를 클리핑하고 -32768 ~ 32767로 변환
+            float clampedSample = Mathf.Clamp(samples[i], -1.0f, 1.0f);
+            short sample = (short)(clampedSample * 32767f);
+            
+            // Little-endian으로 변환 (낮은 바이트가 먼저)
             pcmData[i * 2] = (byte)(sample & 0xFF);
             pcmData[i * 2 + 1] = (byte)((sample >> 8) & 0xFF);
         }
 
         return pcmData;
+    }
+
+    // WAV 헤더 생성 (44 bytes)
+    byte[] CreateWavHeader(int dataSize, int sampleRate, int channels, int bitsPerSample = 16)
+    {
+        byte[] header = new byte[44];
+        int byteRate = sampleRate * channels * bitsPerSample / 8;
+        int blockAlign = channels * bitsPerSample / 8;
+
+        // RIFF 헤더
+        header[0] = (byte)'R';
+        header[1] = (byte)'I';
+        header[2] = (byte)'F';
+        header[3] = (byte)'F';
+        
+        // 파일 크기 - 8 (RIFF 헤더 크기)
+        int fileSize = 36 + dataSize;
+        header[4] = (byte)(fileSize & 0xFF);
+        header[5] = (byte)((fileSize >> 8) & 0xFF);
+        header[6] = (byte)((fileSize >> 16) & 0xFF);
+        header[7] = (byte)((fileSize >> 24) & 0xFF);
+        
+        // WAVE
+        header[8] = (byte)'W';
+        header[9] = (byte)'A';
+        header[10] = (byte)'V';
+        header[11] = (byte)'E';
+        
+        // fmt 청크
+        header[12] = (byte)'f';
+        header[13] = (byte)'m';
+        header[14] = (byte)'t';
+        header[15] = (byte)' ';
+        
+        // fmt 청크 크기 (16)
+        header[16] = 16;
+        header[17] = 0;
+        header[18] = 0;
+        header[19] = 0;
+        
+        // 오디오 포맷 (1 = PCM)
+        header[20] = 1;
+        header[21] = 0;
+        
+        // 채널 수
+        header[22] = (byte)channels;
+        header[23] = 0;
+        
+        // 샘플 레이트
+        header[24] = (byte)(sampleRate & 0xFF);
+        header[25] = (byte)((sampleRate >> 8) & 0xFF);
+        header[26] = (byte)((sampleRate >> 16) & 0xFF);
+        header[27] = (byte)((sampleRate >> 24) & 0xFF);
+        
+        // 바이트 레이트
+        header[28] = (byte)(byteRate & 0xFF);
+        header[29] = (byte)((byteRate >> 8) & 0xFF);
+        header[30] = (byte)((byteRate >> 16) & 0xFF);
+        header[31] = (byte)((byteRate >> 24) & 0xFF);
+        
+        // 블록 정렬
+        header[32] = (byte)(blockAlign & 0xFF);
+        header[33] = (byte)((blockAlign >> 8) & 0xFF);
+        
+        // 비트당 샘플
+        header[34] = (byte)(bitsPerSample & 0xFF);
+        header[35] = (byte)((bitsPerSample >> 8) & 0xFF);
+        
+        // data 청크
+        header[36] = (byte)'d';
+        header[37] = (byte)'a';
+        header[38] = (byte)'t';
+        header[39] = (byte)'a';
+        
+        // 데이터 크기
+        header[40] = (byte)(dataSize & 0xFF);
+        header[41] = (byte)((dataSize >> 8) & 0xFF);
+        header[42] = (byte)((dataSize >> 16) & 0xFF);
+        header[43] = (byte)((dataSize >> 24) & 0xFF);
+
+        return header;
     }
 
     // 결과 수신 콜백
