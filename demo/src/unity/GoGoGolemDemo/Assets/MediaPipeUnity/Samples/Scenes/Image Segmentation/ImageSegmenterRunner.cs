@@ -5,20 +5,19 @@
 // https://opensource.org/licenses/MIT.
 
 using System.Collections;
-using Mediapipe.Tasks.Vision.FaceLandmarker;
+using Mediapipe.Tasks.Vision.ImageSegmenter;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
+namespace Mediapipe.Unity.Sample.ImageSegmentation
 {
-  public class FaceLandmarkerRunner : VisionTaskApiRunner<FaceLandmarker>
+  public class ImageSegmenterRunner : VisionTaskApiRunner<ImageSegmenter>
   {
-    [SerializeField] private FaceLandmarkerResultAnnotationController _faceLandmarkerResultAnnotationController;
-    [SerializeField] private GazePointAnnotationController _gazePointAnnotationController;
+    [SerializeField] private ImageSegmenterResultAnnotationController _imageSegmenterResultAnnotationController;
 
     private Experimental.TextureFramePool _textureFramePool;
 
-    public readonly FaceLandmarkDetectionConfig config = new FaceLandmarkDetectionConfig();
+    public readonly ImageSegmentationConfig config = new ImageSegmentationConfig();
 
     public override void Stop()
     {
@@ -31,25 +30,21 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     {
       Debug.Log($"Delegate = {config.Delegate}");
       Debug.Log($"Image Read Mode = {config.ImageReadMode}");
+      Debug.Log($"Model = {config.ModelName}");
       Debug.Log($"Running Mode = {config.RunningMode}");
-      Debug.Log($"NumFaces = {config.NumFaces}");
-      Debug.Log($"MinFaceDetectionConfidence = {config.MinFaceDetectionConfidence}");
-      Debug.Log($"MinFacePresenceConfidence = {config.MinFacePresenceConfidence}");
-      Debug.Log($"MinTrackingConfidence = {config.MinTrackingConfidence}");
-      Debug.Log($"OutputFaceBlendshapes = {config.OutputFaceBlendshapes}");
-      Debug.Log($"OutputFacialTransformationMatrixes = {config.OutputFacialTransformationMatrixes}");
+      Debug.Log($"Category Index = {config.CategoryIndex}");
 
       yield return AssetLoader.PrepareAssetAsync(config.ModelPath);
 
-      var options = config.GetFaceLandmarkerOptions(config.RunningMode == Tasks.Vision.Core.RunningMode.LIVE_STREAM ? OnFaceLandmarkDetectionOutput : null);
-      taskApi = FaceLandmarker.CreateFromOptions(options, GpuManager.GpuResources);
+      var options = config.GetImageSegmenterOptions(config.RunningMode == Tasks.Vision.Core.RunningMode.LIVE_STREAM ? OnImageSegmentationOutput : null);
+      taskApi = ImageSegmenter.CreateFromOptions(options, GpuManager.GpuResources);
       var imageSource = ImageSourceProvider.ImageSource;
 
       yield return imageSource.Play();
 
       if (!imageSource.isPrepared)
       {
-        Debug.LogError("Failed to start ImageSource, exiting...");
+        Logger.LogError(TAG, "Failed to start ImageSource, exiting...");
         yield break;
       }
 
@@ -57,24 +52,25 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       // TODO: When using GpuBuffer, MediaPipe assumes that the input format is BGRA, so maybe the following code needs to be fixed.
       _textureFramePool = new Experimental.TextureFramePool(imageSource.textureWidth, imageSource.textureHeight, TextureFormat.RGBA32, 10);
 
-      // NOTE: The screen will be resized later, keeping the aspect ratio.
       screen.Initialize(imageSource);
+      yield return null; // Wait a frame for the screen to be resized, keeping the aspect ratio.
 
-      SetupAnnotationController(_faceLandmarkerResultAnnotationController, imageSource);
-      if (_gazePointAnnotationController != null)
-      {
-        SetupAnnotationController(_gazePointAnnotationController, imageSource);
-      }
+      SetupAnnotationController(_imageSegmenterResultAnnotationController, imageSource);
+      _imageSegmenterResultAnnotationController.InitScreen(imageSource.textureWidth, imageSource.textureHeight);
+      _imageSegmenterResultAnnotationController.SelectMask(config.CategoryIndex);
 
       var transformationOptions = imageSource.GetTransformationOptions();
       var flipHorizontally = transformationOptions.flipHorizontally;
       var flipVertically = transformationOptions.flipVertically;
-      var imageProcessingOptions = new Tasks.Vision.Core.ImageProcessingOptions(rotationDegrees: (int)transformationOptions.rotationAngle);
+
+      // Always setting rotationDegrees to 0 to avoid the issue that the output mask is rotated when the model is SelfieSegmenter.
+      // NOTE: Depending on the rotation degrees, the accuracy may significantly decrease.
+      var imageProcessingOptions = new Tasks.Vision.Core.ImageProcessingOptions(rotationDegrees: 0);
 
       AsyncGPUReadbackRequest req = default;
       var waitUntilReqDone = new WaitUntil(() => req.done);
       var waitForEndOfFrame = new WaitForEndOfFrame();
-      var result = FaceLandmarkerResult.Alloc(options.numFaces);
+      var result = ImageSegmenterResult.Alloc();
 
       // NOTE: we can share the GL context of the render thread with MediaPipe (for now, only on Android)
       var canUseGpuImage = SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3 && GpuManager.GpuResources != null;
@@ -89,7 +85,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
         if (!_textureFramePool.TryGetTextureFrame(out var textureFrame))
         {
-          yield return null;
+          yield return new WaitForEndOfFrame();
           continue;
         }
 
@@ -132,36 +128,47 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
         switch (taskApi.runningMode)
         {
           case Tasks.Vision.Core.RunningMode.IMAGE:
-            DrawSyncResult(() => taskApi.TryDetect(image, imageProcessingOptions, ref result), result);
+            if (taskApi.TrySegment(image, imageProcessingOptions, ref result))
+            {
+              _imageSegmenterResultAnnotationController.DrawNow(result);
+            }
+            else
+            {
+              _imageSegmenterResultAnnotationController.DrawNow(default);
+            }
+            DisposeAllMasks(result);
             break;
           case Tasks.Vision.Core.RunningMode.VIDEO:
-            DrawSyncResult(() => taskApi.TryDetectForVideo(image, GetCurrentTimestampMillisec(), imageProcessingOptions, ref result), result);
+            if (taskApi.TrySegmentForVideo(image, GetCurrentTimestampMillisec(), imageProcessingOptions, ref result))
+            {
+              _imageSegmenterResultAnnotationController.DrawNow(result);
+            }
+            else
+            {
+              _imageSegmenterResultAnnotationController.DrawNow(default);
+            }
+            DisposeAllMasks(result);
             break;
           case Tasks.Vision.Core.RunningMode.LIVE_STREAM:
-            taskApi.DetectAsync(image, GetCurrentTimestampMillisec(), imageProcessingOptions);
+            taskApi.SegmentAsync(image, GetCurrentTimestampMillisec(), imageProcessingOptions);
             break;
         }
       }
     }
 
-    private void OnFaceLandmarkDetectionOutput(FaceLandmarkerResult result, Image image, long timestamp)
+    private void OnImageSegmentationOutput(ImageSegmenterResult result, Image image, long timestamp)
     {
-      _faceLandmarkerResultAnnotationController.DrawLater(result);
-      _gazePointAnnotationController?.DrawLater(result);
+      _imageSegmenterResultAnnotationController.DrawLater(result);
+      DisposeAllMasks(result);
     }
 
-    private void DrawSyncResult(System.Func<bool> detector, FaceLandmarkerResult result)
+    private void DisposeAllMasks(ImageSegmenterResult result)
     {
-      if (detector())
+      foreach (var mask in result.confidenceMasks)
       {
-        _faceLandmarkerResultAnnotationController.DrawNow(result);
-        _gazePointAnnotationController?.DrawNow(result);
+        mask.Dispose();
       }
-      else
-      {
-        _faceLandmarkerResultAnnotationController.DrawNow(default);
-        _gazePointAnnotationController?.DrawNow(default);
-      }
+      result.categoryMask?.Dispose();
     }
   }
 }
