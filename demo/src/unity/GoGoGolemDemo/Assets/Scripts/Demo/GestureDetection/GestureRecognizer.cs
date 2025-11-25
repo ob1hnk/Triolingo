@@ -37,7 +37,7 @@ namespace Demo.GestureDetection
     private int _jangpoongMinFingers = 5;            // 최소 펴진 손가락 수
 
     // ==== LiftUp 제스처 임계값 ====
-    private float _liftUpRisingThreshold = 0.005f; // 상승 감지 임계값
+    private float _liftUpRisingThreshold = 0.01f; // 상승 감지 임계값
     private const int _liftUpRisingMemory = 10; // 10프레임 동안 상승 상태 기억
 
     public GestureRecognizer(float detectionThreshold = 0.7f, int holdFrames = 5)

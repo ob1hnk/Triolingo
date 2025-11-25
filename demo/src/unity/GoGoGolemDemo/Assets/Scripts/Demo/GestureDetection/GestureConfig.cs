@@ -36,7 +36,7 @@ namespace Demo.GestureDetection
 #endif
 
     public ImageReadMode ImageReadMode { get; set; } = ImageReadMode.CPUAsync;
-    public Tasks.Vision.Core.RunningMode RunningMode { get; set; } = Tasks.Vision.Core.RunningMode.IMAGE;
+    public Tasks.Vision.Core.RunningMode RunningMode { get; set; } = Tasks.Vision.Core.RunningMode.LIVE_STREAM;
 
     // ========== Hand Landmarker 설정 ==========
     public int NumHands { get; set; } = 2; // 양손 감지를 위해 2로 설정
