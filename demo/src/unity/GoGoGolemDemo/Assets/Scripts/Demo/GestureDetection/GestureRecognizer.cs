@@ -22,16 +22,23 @@ namespace Demo.GestureDetection
     // 몇 프레임까지 실패를 봐줄 것인가 (이 값이 작을수록 민감함)
     private readonly int _maxLostFrames = 3;
 
+    // LiftUp 제스처 상승 상태 기억
+    private int _liftUpRisingFramesRemaining = 0;
+
     // 이전 프레임 landmark 저장 (모션 감지용)
     private NormalizedLandmark[] _previousPoseLandmarks;
 
-    // ==== 장풍 제스처 임계값 ====
+    // ==== Jangpoong 제스처 임계값 ====
     private float _jangpoongForwardThreshold = 0.0f; // Z 방향 (카메라 향함)
     private float _jangpoongMinHandsAngle = 100;     // 두 손 최소 2D 각도
     private float _jangpoongMaxHandsAngle = 180;     // 두 손 최대 2D 각도
     private float _jangpoongMaxWristDistance = 0.1f; // 최대 손목 거리
     private float _jangpoongFingerRatio = 1.2f;      // 손가락 펴짐 비율
     private int _jangpoongMinFingers = 5;            // 최소 펴진 손가락 수
+
+    // ==== LiftUp 제스처 임계값 ====
+    private float _liftUpRisingThreshold = 0.01f; // 상승 감지 임계값
+    private const int _liftUpRisingMemory = 10; // 10프레임 동안 상승 상태 기억
 
     public GestureRecognizer(float detectionThreshold = 0.7f, int holdFrames = 5)
     {
@@ -159,8 +166,6 @@ namespace Demo.GestureDetection
 
     /// <summary>
     /// 들어올리기 제스처 감지: 양팔을 위로 들어올리는 동작
-    /// - 양 손목의 Y 좌표가 어깨보다 위에 있음
-    /// - 팔꿈치도 어깨 높이 이상
     /// - 이전 프레임보다 Y 좌표가 증가 (상승 모션)
     /// </summary>
     private GestureResult DetectLiftUp(PoseLandmarkerResult poseResult)
@@ -168,40 +173,28 @@ namespace Demo.GestureDetection
       if (poseResult.poseLandmarks == null || poseResult.poseLandmarks.Count == 0)
       {
         _gestureFrameCount[GestureType.LiftUp] = 0;
+        _gestureLostCount[GestureType.LiftUp] = 0;
+        _liftUpRisingFramesRemaining = 0;
         return GestureResult.None;
       }
 
       var poseLandmarks = poseResult.poseLandmarks[0];
       
-      // 어깨 위치 (왼쪽: 11, 오른쪽: 12)
-      var leftShoulder = GetVector3(poseLandmarks.landmarks[11]);
-      var rightShoulder = GetVector3(poseLandmarks.landmarks[12]);
-      
-      // 팔꿈치 위치 (왼쪽: 13, 오른쪽: 14)
-      var leftElbow = GetVector3(poseLandmarks.landmarks[13]);
-      var rightElbow = GetVector3(poseLandmarks.landmarks[14]);
-      
       // 손목 위치 (왼쪽: 15, 오른쪽: 16)
       var leftWrist = GetVector3(poseLandmarks.landmarks[15]);
       var rightWrist = GetVector3(poseLandmarks.landmarks[16]);
 
-      // 양 손목이 어깨보다 위에 있는지
-      bool wristsAboveShoulders = leftWrist.y < leftShoulder.y && rightWrist.y < rightShoulder.y; // Y축은 위가 작은 값
-      
-      // 양 팔꿈치가 어깨 높이 이상인지
-      bool elbowsRaised = leftElbow.y <= leftShoulder.y && rightElbow.y <= rightShoulder.y;
-
-      // 상승 모션 감지 (이전 프레임과 비교)
+      // 조건 1. 상승 모션인가? (이전 프레임과 비교)
       bool isRisingMotion = false;
       if (_previousPoseLandmarks != null && _previousPoseLandmarks.Length > 16)
       {
         var prevLeftWrist = GetVector3(_previousPoseLandmarks[15]);
         var prevRightWrist = GetVector3(_previousPoseLandmarks[16]);
         
-        float leftWristDelta = prevLeftWrist.y - leftWrist.y; // Y축 증가량 (위로 = 음수 -> 양수)
+        float leftWristDelta = prevLeftWrist.y - leftWrist.y; // Y축 증가량 (위로 = 양수)
         float rightWristDelta = prevRightWrist.y - rightWrist.y;
         
-        isRisingMotion = leftWristDelta > 0.01f && rightWristDelta > 0.01f;
+        isRisingMotion = leftWristDelta > _liftUpRisingThreshold && rightWristDelta > _liftUpRisingThreshold;
       }
 
       // 현재 프레임을 이전 프레임으로 저장
@@ -211,10 +204,26 @@ namespace Demo.GestureDetection
         _previousPoseLandmarks[i] = poseLandmarks.landmarks[i];
       }
 
-      // 모든 조건이 충족되면 프레임 카운터 증가
-      if (wristsAboveShoulders && elbowsRaised)
+      // 상승 모션 감지 시 정해진 프레임 동안 '상승 상태' 유지
+      if (isRisingMotion) 
+      {
+        _liftUpRisingFramesRemaining = _liftUpRisingMemory; // 카운터 리셋
+      }
+      else if (_liftUpRisingFramesRemaining > 0)
+      {
+        _liftUpRisingFramesRemaining--; // 카운터 감소
+      }
+
+      // 최종 조건: 상승 상태 프레임 내이면
+      bool liftUpDetected = _liftUpRisingFramesRemaining > 0;
+
+      Debug.Log($"[LiftUp] 손목: L({leftWrist.y:F3}) R({rightWrist.y:F3}) | 상승모션={isRisingMotion}, 기억={_liftUpRisingFramesRemaining}, 최종={liftUpDetected} | COUNT: {_gestureFrameCount[GestureType.LiftUp]}");
+
+      // 카운터 로직 (유예 기간 적용)
+      if (liftUpDetected)
       {
         _gestureFrameCount[GestureType.LiftUp]++;
+        _gestureLostCount[GestureType.LiftUp] = 0; // 성공 시, '잃음' 카운터 리셋
         
         if (_gestureFrameCount[GestureType.LiftUp] >= _holdFrames)
         {
@@ -222,9 +231,15 @@ namespace Demo.GestureDetection
           return new GestureResult(GestureType.LiftUp, confidence, true, Vector3.up);
         }
       }
-      else
+      else // 실패 시
       {
-        _gestureFrameCount[GestureType.LiftUp] = 0;
+        _gestureLostCount[GestureType.LiftUp]++; // '잃음' 카운터 증가
+
+        // 유예 기간(_maxLostFrames)을 초과해서 실패했을 때만 '성공' 카운터를 리셋
+        if (_gestureLostCount[GestureType.LiftUp] > _maxLostFrames)
+        {
+          _gestureFrameCount[GestureType.LiftUp] = 0;
+        }
       }
 
       return GestureResult.None;
