@@ -32,7 +32,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       // 시선 포인트는 화면 내 특정 위치에 표시되므로 anchor를 중앙으로 설정
       _rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
       _rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-      _rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        _rectTransform.pivot = new Vector2(0.5f, 0.5f);
       
       // Scale이 1이 아니면 위치 계산이 왜곡되므로 강제로 1로 설정
       transform.localScale = Vector3.one;
@@ -111,7 +111,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       }
       else
       {
-        transform.localPosition = position;
+      transform.localPosition = position;
       }
     }
 
