@@ -14,12 +14,9 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
   public class EventToggleButton : MonoBehaviour
   {
     [Header("References")]
-    [SerializeField] private EventDetector _eventDetector;
+    [SerializeField] private EventDetector[] _eventDetectors; // 여러 EventDetector 지원
     
-    [Header("Button Text")]
-    [SerializeField] private TMPro.TextMeshProUGUI _buttonText;
-    [SerializeField] private string _activeText = "감지 활성화";
-    [SerializeField] private string _inactiveText = "감지 비활성화";
+
 
     private Button _button;
 
@@ -32,8 +29,6 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       {
         _button.onClick.AddListener(OnButtonClick);
       }
-
-      UpdateButtonText();
     }
 
     private void OnDestroy()
@@ -46,22 +41,24 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
     private void OnButtonClick()
     {
-      if (_eventDetector != null)
+      if (_eventDetectors == null || _eventDetectors.Length == 0)
       {
-        _eventDetector.Toggle();
-        UpdateButtonText();
+        Debug.LogWarning("[EventToggleButton] ⚠️ EventDetectors array is empty!");
+        return;
       }
-      else
-      {
-        Debug.LogWarning("[EventToggleButton] ⚠️ EventDetector not found!");
-      }
-    }
 
-    private void UpdateButtonText()
-    {
-      if (_buttonText != null && _eventDetector != null)
+      // 모든 EventDetector를 토글
+      bool allActive = true;
+      foreach (var detector in _eventDetectors)
       {
-        _buttonText.text = _eventDetector.IsActive ? _inactiveText : _activeText;
+        if (detector != null)
+        {
+          detector.Toggle();
+          if (!detector.IsActive)
+          {
+            allActive = false;
+          }
+        }
       }
     }
   }

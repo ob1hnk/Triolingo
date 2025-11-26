@@ -15,8 +15,9 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     [SerializeField] private Animator _animator;
 
     [Header("Trigger Names")]
-    [SerializeField] private string _laughTriggerName = "LaughTrigger";
-    [SerializeField] private string _stopLaughTriggerName = "StopLaughTrigger";
+
+    [SerializeField] private string _runTriggerName = "Run";
+    [SerializeField] private string _idleTriggerName = "Idle";
 
     [Header("Debug")]
     [SerializeField] private bool _logAnimationEvents = true;
@@ -33,20 +34,21 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       }
     }
 
+
     /// <summary>
-    ///   LaughTrigger를 실행합니다. 왼쪽 영역 EventDetector의 이벤트에 연결하세요.
+    ///   Run 트리거를 실행합니다. 왼쪽 영역 EventDetector의 이벤트에 연결하세요.
     /// </summary>
-    public void TriggerLaugh()
+    public void TriggerRun()
     {
-      PlayTrigger(_laughTriggerName);
+      PlayTrigger(_runTriggerName);
     }
 
     /// <summary>
-    ///   StopLaughTrigger를 실행합니다. 오른쪽 영역 EventDetector의 이벤트에 연결하세요.
+    ///   Idle 트리거를 실행합니다. 오른쪽 영역 EventDetector의 이벤트에 연결하세요.
     /// </summary>
-    public void TriggerStopLaugh()
+    public void TriggerIdle()
     {
-      PlayTrigger(_stopLaughTriggerName);
+      PlayTrigger(_idleTriggerName);
     }
 
     private void PlayTrigger(string triggerName)

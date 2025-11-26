@@ -21,8 +21,8 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     [SerializeField] private UnityColor _overlayColor = new UnityColor(1f, 0f, 0f, 0.2f); // 반투명 빨간색
     
     [Header("Target Region")]
-    [SerializeField] private Vector2 _regionMin = new Vector2(0f, 0f); // 정규화된 좌표 (0~1)
-    [SerializeField] private Vector2 _regionMax = new Vector2(0.5f, 1f); // 정규화된 좌표 (0~1)
+    [SerializeField] private Vector2 _regionMin; // 정규화된 좌표 (0~1) - Inspector에서 설정 필요
+    [SerializeField] private Vector2 _regionMax; // 정규화된 좌표 (0~1) - Inspector에서 설정 필요
     
     [Header("References")]
     [SerializeField] private GazePointAnnotationController _gazeController;
@@ -51,9 +51,18 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
       if (_canvas == null)
       {
-        Debug.LogError("[EventDetector] Canvas reference is required!");
+        Debug.LogError($"[EventDetector] ❌ {gameObject.name}: Canvas reference is required!");
         enabled = false;
         return;
+      }
+
+      // Region 값이 유효한지 확인
+      if (_regionMin.x >= _regionMax.x || _regionMin.y >= _regionMax.y)
+      {
+        Debug.LogWarning($"[EventDetector] ⚠️ {gameObject.name}: Region values may be invalid! " +
+                        $"RegionMin: ({_regionMin.x:F2}, {_regionMin.y:F2}), " +
+                        $"RegionMax: ({_regionMax.x:F2}, {_regionMax.y:F2}). " +
+                        "Please set appropriate values in Inspector.");
       }
 
       _canvasRect = _canvas.GetComponent<RectTransform>();
@@ -131,17 +140,20 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
         return;
       }
 
+      // 각 EventDetector마다 고유한 overlay 이름 사용
+      string overlayName = $"EventOverlay_{gameObject.name}";
+
       // 이미 존재하면 재사용
       if (_overlay == null)
       {
-        var existing = _canvas.transform.Find("EventOverlay");
+        var existing = _canvas.transform.Find(overlayName);
         if (existing != null)
         {
           _overlay = existing.gameObject;
         }
         else
         {
-          _overlay = new GameObject("EventOverlay");
+          _overlay = new GameObject(overlayName);
           _overlay.transform.SetParent(_canvas.transform, false);
           var rectTransform = _overlay.AddComponent<RectTransform>();
           rectTransform.anchorMin = _regionMin;
@@ -155,7 +167,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
         }
       }
 
-      // 재사용 시에도 초기 region/색상 설정
+      // 재사용 시에도 초기 region/색상 설정 (매번 업데이트)
       var overlayRect = _overlay.GetComponent<RectTransform>();
       if (overlayRect != null)
       {
@@ -175,7 +187,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
       if (_logGazeDetection)
       {
-        Debug.Log($"[EventDetector] ✅ Overlay created - Region: ({_regionMin.x:F2}, {_regionMin.y:F2}) ~ ({_regionMax.x:F2}, {_regionMax.y:F2}), Active: {_isActive}");
+        Debug.Log($"[EventDetector] ✅ Overlay created - Name: {overlayName}, Region: ({_regionMin.x:F2}, {_regionMin.y:F2}) ~ ({_regionMax.x:F2}, {_regionMax.y:F2}), Active: {_isActive}");
       }
     }
 
