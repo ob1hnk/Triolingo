@@ -465,7 +465,6 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       if (_logCalibration && _calibrationSamples.Count % 10 == 0)
       {
         var remainingTime = _calibrationSampleDuration - timeUntilNextPoint;
-        // Debug.Log($"[Calibration] Point {_currentCalibrationPointIndex + 1}/{_calibrationTargets.Length} -> {_calibrationSamples.Count} samples (remaining: {remainingTime:F2}s)");
       }
     }
 
@@ -508,14 +507,6 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
         _calibrationScale = new Vector2(scaleX, scaleY);
         _calibrationBias = new Vector2(biasX, biasY);
         _hasCalibrationResult = true;
-
-        if (_logCalibration)
-        {
-          // Debug.Log($"[Calibration] ✅ Calibration completed successfully!");
-          // Debug.Log($"[Calibration] 📊 Scale=({_calibrationScale.x:F4},{_calibrationScale.y:F4}) Bias=({_calibrationBias.x:F4},{_calibrationBias.y:F4})");
-          // Debug.Log($"[Calibration] 📈 Total samples collected: {_calibrationSamples.Count}");
-          Debug.Log($"[GazeTracking] 🎯 Now using calibrated gaze tracking with improved accuracy.");
-        }
       }
       else
       {

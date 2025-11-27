@@ -15,9 +15,8 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
   {
     [Header("References")]
     [SerializeField] private EventDetector[] _eventDetectors; // 여러 EventDetector 지원
+    [SerializeField] private GameObject _avatar; // 버튼 클릭 시 나타날 avatar GameObject
     
-
-
     private Button _button;
 
     private void Awake()
@@ -28,6 +27,12 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       if (_button != null)
       {
         _button.onClick.AddListener(OnButtonClick);
+      }
+
+      // avatar를 처음에는 비활성화 상태로 설정
+      if (_avatar != null)
+      {
+        _avatar.SetActive(false);
       }
     }
 
@@ -41,6 +46,13 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
     private void OnButtonClick()
     {
+      // avatar를 활성화 (처음 클릭 시에만 나타나도록)
+      if (_avatar != null && !_avatar.activeSelf)
+      {
+        _avatar.SetActive(true);
+        Debug.Log("[EventToggleButton] ✅ Avatar activated");
+      }
+
       if (_eventDetectors == null || _eventDetectors.Length == 0)
       {
         Debug.LogWarning("[EventToggleButton] ⚠️ EventDetectors array is empty!");
