@@ -27,6 +27,9 @@ public class SpeechWebSocketClient : MonoBehaviour
     private float silenceTimeout = 1.5f; // 무음 지속 시간 제한 (초) - 이 시간 동안 무음이면 세션 종료
     private bool hasDetectedSpeech = false; // 한 번이라도 음성이 감지되었는지
 
+    [Header("UI Controller")]
+    [SerializeField] private TextUIController textUIController;
+
     // 테스트/디버깅 설정
     [Header("테스트 설정")]
     [SerializeField] private bool enableDebugLog = true; // 디버그 로그 활성화
@@ -426,6 +429,13 @@ public class SpeechWebSocketClient : MonoBehaviour
                     Debug.Log($"  - session_id: {response.session_id ?? "없음"}");
                     Debug.Log($"  - 인식(transcription): {response.transcription ?? "없음"}");
                     Debug.Log($"  - 응답(text): {response.text ?? "없음"}");
+
+                    // UI 업데이트
+                    if (textUIController != null && !string.IsNullOrEmpty(response.text))
+                    {
+                        textUIController.UpdateText(response.text);
+                    }
+
                     OnResultReceived(response.text, response.transcription);
                     break;
 
