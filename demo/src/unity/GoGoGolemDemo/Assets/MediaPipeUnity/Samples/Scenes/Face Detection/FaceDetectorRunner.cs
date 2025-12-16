@@ -5,20 +5,20 @@
 // https://opensource.org/licenses/MIT.
 
 using System.Collections;
-using Mediapipe.Tasks.Vision.FaceLandmarker;
+using Mediapipe.Tasks.Vision.FaceDetector;
 using UnityEngine;
 using UnityEngine.Rendering;
+using FaceDetectionResult = Mediapipe.Tasks.Components.Containers.DetectionResult;
 
-namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
+namespace Mediapipe.Unity.Sample.FaceDetection
 {
-  public class FaceLandmarkerRunner : VisionTaskApiRunner<FaceLandmarker>
+  public class FaceDetectorRunner : VisionTaskApiRunner<FaceDetector>
   {
-    [SerializeField] private FaceLandmarkerResultAnnotationController _faceLandmarkerResultAnnotationController;
-    [SerializeField] private GazePointAnnotationController _gazePointAnnotationController;
+    [SerializeField] private DetectionResultAnnotationController _detectionResultAnnotationController;
 
     private Experimental.TextureFramePool _textureFramePool;
 
-    public readonly FaceLandmarkDetectionConfig config = new FaceLandmarkDetectionConfig();
+    public readonly FaceDetectionConfig config = new FaceDetectionConfig();
 
     public override void Stop()
     {
@@ -31,18 +31,16 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
     {
       Debug.Log($"Delegate = {config.Delegate}");
       Debug.Log($"Image Read Mode = {config.ImageReadMode}");
+      Debug.Log($"Model = {config.ModelName}");
       Debug.Log($"Running Mode = {config.RunningMode}");
+      Debug.Log($"MinDetectionConfidence = {config.MinDetectionConfidence}");
+      Debug.Log($"MinSuppressionThreshold = {config.MinSuppressionThreshold}");
       Debug.Log($"NumFaces = {config.NumFaces}");
-      Debug.Log($"MinFaceDetectionConfidence = {config.MinFaceDetectionConfidence}");
-      Debug.Log($"MinFacePresenceConfidence = {config.MinFacePresenceConfidence}");
-      Debug.Log($"MinTrackingConfidence = {config.MinTrackingConfidence}");
-      Debug.Log($"OutputFaceBlendshapes = {config.OutputFaceBlendshapes}");
-      Debug.Log($"OutputFacialTransformationMatrixes = {config.OutputFacialTransformationMatrixes}");
 
       yield return AssetLoader.PrepareAssetAsync(config.ModelPath);
 
-      var options = config.GetFaceLandmarkerOptions(config.RunningMode == Tasks.Vision.Core.RunningMode.LIVE_STREAM ? OnFaceLandmarkDetectionOutput : null);
-      taskApi = FaceLandmarker.CreateFromOptions(options, GpuManager.GpuResources);
+      var options = config.GetFaceDetectorOptions(config.RunningMode == Tasks.Vision.Core.RunningMode.LIVE_STREAM ? OnFaceDetectionsOutput : null);
+      taskApi = FaceDetector.CreateFromOptions(options, GpuManager.GpuResources);
       var imageSource = ImageSourceProvider.ImageSource;
 
       yield return imageSource.Play();
@@ -60,11 +58,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       // NOTE: The screen will be resized later, keeping the aspect ratio.
       screen.Initialize(imageSource);
 
-      SetupAnnotationController(_faceLandmarkerResultAnnotationController, imageSource);
-      if (_gazePointAnnotationController != null)
-      {
-        SetupAnnotationController(_gazePointAnnotationController, imageSource);
-      }
+      SetupAnnotationController(_detectionResultAnnotationController, imageSource);
 
       var transformationOptions = imageSource.GetTransformationOptions();
       var flipHorizontally = transformationOptions.flipHorizontally;
@@ -74,7 +68,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       AsyncGPUReadbackRequest req = default;
       var waitUntilReqDone = new WaitUntil(() => req.done);
       var waitForEndOfFrame = new WaitForEndOfFrame();
-      var result = FaceLandmarkerResult.Alloc(options.numFaces);
+      var result = FaceDetectionResult.Alloc(options.numFaces);
 
       // NOTE: we can share the GL context of the render thread with MediaPipe (for now, only on Android)
       var canUseGpuImage = SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3 && GpuManager.GpuResources != null;
@@ -132,10 +126,26 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
         switch (taskApi.runningMode)
         {
           case Tasks.Vision.Core.RunningMode.IMAGE:
-            DrawSyncResult(() => taskApi.TryDetect(image, imageProcessingOptions, ref result), result);
+            if (taskApi.TryDetect(image, imageProcessingOptions, ref result))
+            {
+              _detectionResultAnnotationController.DrawNow(result);
+            }
+            else
+            {
+              // clear the annotation
+              _detectionResultAnnotationController.DrawNow(default);
+            }
             break;
           case Tasks.Vision.Core.RunningMode.VIDEO:
-            DrawSyncResult(() => taskApi.TryDetectForVideo(image, GetCurrentTimestampMillisec(), imageProcessingOptions, ref result), result);
+            if (taskApi.TryDetectForVideo(image, GetCurrentTimestampMillisec(), imageProcessingOptions, ref result))
+            {
+              _detectionResultAnnotationController.DrawNow(result);
+            }
+            else
+            {
+              // clear the annotation
+              _detectionResultAnnotationController.DrawNow(default);
+            }
             break;
           case Tasks.Vision.Core.RunningMode.LIVE_STREAM:
             taskApi.DetectAsync(image, GetCurrentTimestampMillisec(), imageProcessingOptions);
@@ -144,24 +154,9 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       }
     }
 
-    private void OnFaceLandmarkDetectionOutput(FaceLandmarkerResult result, Image image, long timestamp)
+    private void OnFaceDetectionsOutput(FaceDetectionResult result, Image image, long timestamp)
     {
-      _faceLandmarkerResultAnnotationController.DrawLater(result);
-      _gazePointAnnotationController?.DrawLater(result);
-    }
-
-    private void DrawSyncResult(System.Func<bool> detector, FaceLandmarkerResult result)
-    {
-      if (detector())
-      {
-        _faceLandmarkerResultAnnotationController.DrawNow(result);
-        _gazePointAnnotationController?.DrawNow(result);
-      }
-      else
-      {
-        _faceLandmarkerResultAnnotationController.DrawNow(default);
-        _gazePointAnnotationController?.DrawNow(default);
-      }
+      _detectionResultAnnotationController.DrawLater(result);
     }
   }
 }
