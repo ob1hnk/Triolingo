@@ -28,6 +28,7 @@ class SessionStartRequest(BaseModel):
     """세션 시작 요청"""
 
     type: MessageType = MessageType.SESSION_START
+    trace_id: str = Field(..., description="분산 추적용 Trace ID")
     session_id: str = Field(..., description="고유 세션 ID")
     audio_format: Optional[str] = Field(
         default="wav", description="오디오 포맷 (wav, mp3, ogg 등)"
@@ -40,6 +41,7 @@ class AudioChunkRequest(BaseModel):
     """오디오 청크 전송 요청"""
 
     type: MessageType = MessageType.AUDIO_CHUNK
+    trace_id: str = Field(..., description="분산 추적용 Trace ID")
     session_id: str = Field(..., description="세션 ID")
     chunk_index: int = Field(..., description="청크 인덱스 (0부터 시작)")
     audio_data: str = Field(..., description="Base64로 인코딩된 오디오 데이터")
@@ -50,6 +52,7 @@ class SessionEndRequest(BaseModel):
     """세션 종료 요청"""
 
     type: MessageType = MessageType.SESSION_END
+    trace_id: str = Field(..., description="분산 추적용 Trace ID")
     session_id: str = Field(..., description="세션 ID")
 
 

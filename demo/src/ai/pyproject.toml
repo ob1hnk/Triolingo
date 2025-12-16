@@ -17,4 +17,8 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "dependency-injector>=4.41.0",
     "ruff>=0.14.4",
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp>=1.20.0",
+    "opentelemetry-instrumentation-fastapi>=0.42b0",
 ]

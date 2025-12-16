@@ -10,11 +10,15 @@ public class SpeechWebSocketClient : MonoBehaviour
 {
     private WebSocket ws;
     private string sessionId;
+    private string traceId; // 분산 추적용 Trace ID
     private int chunkIndex = 0;
     private AudioClip recordingClip;
     private bool isRecording = false;
     private bool isSessionStarted = false; // 세션이 시작되었는지 여부
     private string serverUrl = "ws://44.210.134.73:8000/api/v1/ws/speech/v1";
+    
+    // OpenTelemetry 설정
+    private string otlpEndpoint = "http://localhost:4318"; // Tempo OTLP endpoint
 
     // 오디오 설정
     private int sampleRate = 16000;
@@ -111,10 +115,13 @@ public class SpeechWebSocketClient : MonoBehaviour
         isRecording = true;
         chunkIndex = 0;
         sessionId = Guid.NewGuid().ToString();
+        traceId = Guid.NewGuid().ToString(); // Trace ID 생성
         isSessionStarted = false;
         hasDetectedSpeech = false;
         silenceDuration = 0f;
         lastDebugLogTime = 0f;
+        
+        Debug.Log($"[trace_id={traceId}] Recording started");
 
         // 마이크에서 녹음 시작
         recordingClip = Microphone.Start(null, true, 10, sampleRate);
@@ -255,11 +262,12 @@ public class SpeechWebSocketClient : MonoBehaviour
     IEnumerator SendSessionStart()
     {
         // JSON 직접 구성 (JsonUtility는 anonymous type을 지원하지 않음)
-        string json = $"{{\"type\":\"session_start\",\"session_id\":\"{sessionId}\",\"audio_format\":\"wav\",\"sample_rate\":{sampleRate},\"channels\":{channels}}}";
+        // trace_id 추가
+        string json = $"{{\"type\":\"session_start\",\"trace_id\":\"{traceId}\",\"session_id\":\"{sessionId}\",\"audio_format\":\"wav\",\"sample_rate\":{sampleRate},\"channels\":{channels}}}";
         
-        Debug.Log($"[WS 준비] session_start 전체 JSON:");
+        Debug.Log($"[trace_id={traceId}] [WS 준비] session_start 전체 JSON:");
         Debug.Log(json);
-        Debug.Log($"[WS 준비] session_start 상세 - session_id: {sessionId}, sample_rate: {sampleRate}, channels: {channels}");
+        Debug.Log($"[trace_id={traceId}] [WS 준비] session_start 상세 - trace_id: {traceId}, session_id: {sessionId}, sample_rate: {sampleRate}, channels: {channels}");
 
         yield return StartCoroutine(SendMessageCoroutine("session_start", json));
     }
@@ -294,9 +302,11 @@ public class SpeechWebSocketClient : MonoBehaviour
         // JSON 직접 구성 (JsonUtility는 anonymous type을 지원하지 않음)
         // Base64 문자열에 특수문자가 있을 수 있으므로 이스케이프 처리
         string escapedBase64 = base64Audio.Replace("\\", "\\\\").Replace("\"", "\\\"");
-        string json = $"{{\"type\":\"audio_chunk\",\"session_id\":\"{sessionId}\",\"chunk_index\":{currentChunkIndex},\"audio_data\":\"{escapedBase64}\",\"is_last_chunk\":false}}";
+        // trace_id 추가
+        string json = $"{{\"type\":\"audio_chunk\",\"trace_id\":\"{traceId}\",\"session_id\":\"{sessionId}\",\"chunk_index\":{currentChunkIndex},\"audio_data\":\"{escapedBase64}\",\"is_last_chunk\":false}}";
         
-        Debug.Log($"[WS 준비] audio_chunk #{currentChunkIndex} 상세:");
+        Debug.Log($"[trace_id={traceId}] [WS 준비] audio_chunk #{currentChunkIndex} 상세:");
+        Debug.Log($"  - trace_id: {traceId}");
         Debug.Log($"  - session_id: {sessionId}");
         Debug.Log($"  - chunk_index: {currentChunkIndex}");
         Debug.Log($"  - 샘플 수: {samples.Length}");
@@ -383,11 +393,12 @@ public class SpeechWebSocketClient : MonoBehaviour
     IEnumerator SendSessionEndRoutine()
     {
         // JSON 직접 구성 (JsonUtility는 anonymous type을 지원하지 않음)
-        string json = $"{{\"type\":\"session_end\",\"session_id\":\"{sessionId}\"}}";
+        // trace_id 추가
+        string json = $"{{\"type\":\"session_end\",\"trace_id\":\"{traceId}\",\"session_id\":\"{sessionId}\"}}";
         
-        Debug.Log($"[WS 준비] session_end 전체 JSON:");
+        Debug.Log($"[trace_id={traceId}] [WS 준비] session_end 전체 JSON:");
         Debug.Log(json);
-        Debug.Log($"[WS 준비] session_end 상세 - session_id: {sessionId}");
+        Debug.Log($"[trace_id={traceId}] [WS 준비] session_end 상세 - trace_id: {traceId}, session_id: {sessionId}");
 
         yield return StartCoroutine(SendMessageCoroutine("session_end", json));
     }
@@ -436,7 +447,11 @@ public class SpeechWebSocketClient : MonoBehaviour
                         textUIController.UpdateText(response.text);
                     }
 
-                    OnResultReceived(response.text, response.transcription);
+                    // 이벤트 null 체크
+                    if (OnResultReceived != null)
+                    {
+                        OnResultReceived(response.text, response.transcription);
+                    }
                     break;
 
                 case "error":
@@ -444,7 +459,12 @@ public class SpeechWebSocketClient : MonoBehaviour
                     Debug.LogError($"  - session_id: {response.session_id ?? "없음"}");
                     Debug.LogError($"  - error_code: {response.error_code ?? "없음"}");
                     Debug.LogError($"  - error_message: {response.error_message ?? "없음"}");
-                    OnErrorReceived(response.error_code, response.error_message);
+                    
+                    // 이벤트 null 체크
+                    if (OnErrorReceived != null)
+                    {
+                        OnErrorReceived(response.error_code, response.error_message);
+                    }
                     break;
 
                 default:
