@@ -70,7 +70,7 @@ namespace Demo.GestureDetection.UI
         return;
       }
 
-      var gestureRunner = solutionObject.GetComponent<GestureRunner>();
+      var gestureRunner = solutionObject.GetComponent<SingleGestureRunner>();
       if (gestureRunner == null)
       {
         Debug.LogError("[GestureConfigWindow] GestureRunner component not found on Solution GameObject!");
