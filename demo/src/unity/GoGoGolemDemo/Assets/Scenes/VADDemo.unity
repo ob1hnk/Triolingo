@@ -2173,7 +2173,7 @@ MonoBehaviour:
     \uBB54\uC9C0 \uC54C\uB824\uC904 \uC218 \uC788\uB098\uC694?"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8410a4b45c9a442cb9565097a38b2042, type: 2}
-  m_sharedMaterial: {fileID: 5686445744362067356, guid: 8410a4b45c9a442cb9565097a38b2042, type: 2}
+  m_sharedMaterial: {fileID: -7868165811503773369, guid: 8410a4b45c9a442cb9565097a38b2042, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2197,8 +2197,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -3008,7 +3008,7 @@ MonoBehaviour:
   adjustBackgroundScale: 0
   backgroundScaleFactor: 1
   defaultText: "\uC548\uB155\uD558\uC138\uC694!"
-  visibleDuration: 3
+  visibleDuration: 5
 --- !u!4 &1623409934
 Transform:
   m_ObjectHideFlags: 0
