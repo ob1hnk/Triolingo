@@ -18,6 +18,7 @@ class ModelConfigs:
     # OpenAI Speech-to-Text 모델들
     SPEECH_MODELS = [
         "whisper",
+        # "whisper-tiny", # huggingface only supported
         "gpt-4o-transcribe",
         "gpt-4o-mini-transcribe",
         "gpt-4o-transcribe-diarize",
@@ -36,8 +37,9 @@ class ModelConfigs:
     # Speech 모델명과 실제 API 모델명 매핑
     SPEECH_MODEL_MAPPING = {
         "whisper": "whisper-1",
+        # "whisper-tiny": "whisper-tiny", # huggingface only supported
         "gpt-4o-transcribe": "gpt-4o-transcribe",
-        "gpt-4o-mini-transcribe": "gpt-4o-mini-transcribe",
+        "gpt-4o-mini-transcribe": "openai/gpt-4o-mini-transcribe",
         "gpt-4o-transcribe-diarize": "gpt-4o-transcribe-diarize",
     }
 
@@ -90,6 +92,12 @@ class ModelConfigs:
             "provider": "openai",
         },
         "whisper": {
+            "max_tokens": 4096,
+            "fallbacks": [],
+            "cost_per_token": 0.00015,
+            "provider": "openai",
+        },
+        "gpt-4o-mini-transcribe": {
             "max_tokens": 4096,
             "fallbacks": [],
             "cost_per_token": 0.00015,

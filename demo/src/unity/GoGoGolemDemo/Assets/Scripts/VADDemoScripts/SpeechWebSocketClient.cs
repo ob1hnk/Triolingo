@@ -15,7 +15,7 @@ public class SpeechWebSocketClient : MonoBehaviour
     private AudioClip recordingClip;
     private bool isRecording = false;
     private bool isSessionStarted = false; // 세션이 시작되었는지 여부
-    private string serverUrl = "ws://44.210.134.73:8000/api/v1/ws/speech/v1";
+    private string serverUrl = "ws://localhost:8000/api/v1/ws/speech/v1";
     
     // OpenTelemetry 설정
     private string otlpEndpoint = "http://localhost:4318"; // Tempo OTLP endpoint
