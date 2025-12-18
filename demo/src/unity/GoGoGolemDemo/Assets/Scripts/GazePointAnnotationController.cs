@@ -289,7 +289,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
       if (_logProjection)
       {
-        // Debug.Log($"[Gaze] 📊 Projected=({projected.x:F4},{projected.y:F4})");
+        // Debug.Log($"[Gaze] Projected=({projected.x:F4},{projected.y:F4})");
       }
 
       return projected;
@@ -497,7 +497,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       if (_calibrationSamples.Count < minTotalSamples)
       {
         _hasCalibrationResult = false;
-        // Debug.LogWarning($"[Calibration] ⚠️ Not enough samples. Need at least {minTotalSamples}, got {_calibrationSamples.Count}.");
+        // Debug.LogWarning($"[Calibration] Not enough samples. Need at least {minTotalSamples}, got {_calibrationSamples.Count}.");
         return;
       }
 
