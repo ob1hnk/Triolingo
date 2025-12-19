@@ -116,7 +116,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       }
       else
       {
-        Debug.LogWarning("[GazeTracking] ⚠️ Canvas not found! Direct control disabled.");
+        Debug.LogWarning("[GazeTracking] Canvas not found! Direct control disabled.");
         _useDirectPositionControl = false;
       }
     }
@@ -130,7 +130,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       }
       else if (_hasCalibrationResult && _logCalibration)
       {
-        Debug.Log($"[GazeTracking] ✅ Using existing calibration: Scale=({_calibrationScale.x:F4},{_calibrationScale.y:F4}) Bias=({_calibrationBias.x:F4},{_calibrationBias.y:F4})");
+        Debug.Log($"[GazeTracking] Using existing calibration: Scale=({_calibrationScale.x:F4},{_calibrationScale.y:F4}) Bias=({_calibrationBias.x:F4},{_calibrationBias.y:F4})");
       }
     }
 
@@ -171,7 +171,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
             // 모든 포인트 완료
             if (_logCalibration)
             {
-              // Debug.Log($"[Calibration] ✅ All points completed. Total samples: {_calibrationSamples.Count}");
+              // Debug.Log($"[Calibration] All points completed. Total samples: {_calibrationSamples.Count}");
             }
             StopCalibration(applyResults: true);
           }
@@ -180,7 +180,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
             if (_logCalibration)
             {
               var point = _calibrationTargets[_currentCalibrationPointIndex];
-              // Debug.Log($"[Calibration] 📍 Point {_currentCalibrationPointIndex + 1}/{_calibrationTargets.Length}: ({point.x:F2}, {point.y:F2})");
+              // Debug.Log($"[Calibration] Point {_currentCalibrationPointIndex + 1}/{_calibrationTargets.Length}: ({point.x:F2}, {point.y:F2})");
             }
           }
         }
@@ -318,7 +318,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
           if (_logProjection && logDirectControl)
           {
-            // Debug.Log($"[GazeTracking] 📍 DIRECT CONTROL: normalized=({normalized.x:F4},{normalized.y:F4}) canvas=({x:F1},{-y:F1})");
+            // Debug.Log($"[GazeTracking] DIRECT CONTROL: normalized=({normalized.x:F4},{normalized.y:F4}) canvas=({x:F1},{-y:F1})");
           }
         }
         return;
@@ -369,20 +369,20 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       {
         if (_logCalibration)
         {
-          // Debug.Log("[Calibration] ℹ️ Calibration already completed. Skipping.");
+          // Debug.Log("[Calibration] Calibration already completed. Skipping.");
         }
         return;
       }
 
       if (!_enableCalibration)
       {
-        // Debug.LogWarning("[Calibration] ⚠️ Calibration is disabled. Enable it in the inspector.");
+        // Debug.LogWarning("[Calibration] Calibration is disabled. Enable it in the inspector.");
         return;
       }
 
       if (_calibrationTargets == null || _calibrationTargets.Length == 0)
       {
-        // Debug.LogWarning("[Calibration] ⚠️ Calibration targets are not configured.");
+        // Debug.LogWarning("[Calibration] Calibration targets are not configured.");
         return;
       }
 
@@ -395,9 +395,9 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
       _smoothedGaze = null;
 
       var firstPoint = _calibrationTargets[0];
-      // Debug.Log($"[Calibration] 🎯 Calibration started!");
-      // Debug.Log($"[Calibration] 📊 {_calibrationTargets.Length} points, {_calibrationPointDisplayDuration}s per point, collecting last {_calibrationSampleDuration}s");
-      // Debug.Log($"[Calibration] 📍 Point 1/{_calibrationTargets.Length}: ({firstPoint.x:F2}, {firstPoint.y:F2}) - Look at the RED point");
+      // Debug.Log($"[Calibration] Calibration started!");
+      // Debug.Log($"[Calibration] {_calibrationTargets.Length} points, {_calibrationPointDisplayDuration}s per point, collecting last {_calibrationSampleDuration}s");
+      // Debug.Log($"[Calibration] Point 1/{_calibrationTargets.Length}: ({firstPoint.x:F2}, {firstPoint.y:F2}) - Look at the RED point");
     }
 
     public void StopCalibration(bool applyResults = true)
@@ -409,7 +409,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
       if (_logCalibration)
       {
-        // Debug.Log($"[Calibration] ⏹️ Stopped. Collected {_calibrationSamples.Count} samples.");
+        // Debug.Log($"[Calibration] Stopped. Collected {_calibrationSamples.Count} samples.");
       }
 
       if (applyResults && _calibrationSamples.Count > 0)
@@ -421,7 +421,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
         _hasCalibrationResult = false;
         if (_logCalibration)
         {
-          // Debug.LogWarning("[Calibration] ⚠️ No samples collected. Calibration not applied.");
+          // Debug.LogWarning("[Calibration] No samples collected. Calibration not applied.");
         }
       }
     }
@@ -613,7 +613,7 @@ namespace Mediapipe.Unity.Sample.FaceLandmarkDetection
 
       if (_logIrisSample && irisCenter.HasValue)
       {
-        // Debug.Log($"[Gaze] 👁️ Iris offset=({horizontal:F4},{vertical:F4}) [upper boost: {_upperHalfSensitivityBoost}]");
+        // Debug.Log($"[Gaze] Iris offset=({horizontal:F4},{vertical:F4}) [upper boost: {_upperHalfSensitivityBoost}]");
       }
 
       return new Vector2(horizontal, vertical);
