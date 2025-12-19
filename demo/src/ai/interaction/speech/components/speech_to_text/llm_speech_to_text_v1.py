@@ -48,7 +48,7 @@ class LLMSpeechToTextV1(SpeechToTextPort, SpeechLLMComponent):
             # SpeechLLMComponent를 사용하여 음성을 텍스트로 변환
             transcription_result = await self.transcribe(
                 file=audio_file,
-                model="openai/gpt-4o-mini-transcribe",
+                model="gpt-4o-mini-transcribe",
                 response_format="json",
                 language=language,
             )
