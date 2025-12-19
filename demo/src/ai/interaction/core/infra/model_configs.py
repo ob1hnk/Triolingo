@@ -36,9 +36,9 @@ class ModelConfigs:
     # Speech 모델명과 실제 API 모델명 매핑
     SPEECH_MODEL_MAPPING = {
         "whisper": "whisper-1",
-        "gpt-4o-transcribe": "gpt-4o-transcribe",
-        "gpt-4o-mini-transcribe": "gpt-4o-mini-transcribe",
-        "gpt-4o-transcribe-diarize": "gpt-4o-transcribe-diarize",
+        "gpt-4o-transcribe": "openai/gpt-4o-transcribe",
+        "gpt-4o-mini-transcribe": "openai/gpt-4o-mini-transcribe",
+        "gpt-4o-transcribe-diarize": "openai/gpt-4o-transcribe-diarize",
     }
 
     # 모델별 상세 설정
