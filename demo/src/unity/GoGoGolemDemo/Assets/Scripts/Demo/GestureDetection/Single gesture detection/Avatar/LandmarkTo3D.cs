@@ -9,44 +9,26 @@ namespace Demo.GestureDetection
   public static class LandmarkTo3D
   {
     // 좌표계 변환 설정
-    private static readonly float _worldScale = 1.0f; // 월드 스케일 (조정 가능)
+    private static readonly float _worldScale = 1.0f; // 월드 스케일
     private static readonly Vector3 _worldOffset = new Vector3(0, 0, 0); // 카메라로부터의 거리
-    private static readonly float _shoulderWidthOffset = 0.0f; // 어깨 너비 offset
-    
+
+
     /// <summary>
-    /// Normalized Landmark를 Unity World Position으로 변환
+    /// ⭐ Normalized Landmark를 Unity World Position으로 변환
     /// MediaPipe: (x: 0~1 left→right, y: 0~1 top→bottom, z: depth in meters)
     /// Unity: (x: left→right, y: bottom→top, z: near→far)
     /// </summary>
-    public static Vector3 PoseLandmarkToWorldPosition(NormalizedLandmark landmark, int landmarkIndex = -1)
-    {
-      // X축: 그대로 사용하되 중앙을 0으로 (-0.5 ~ 0.5 범위로 변환)
-      float x = (landmark.x - 0.5f) * _worldScale;
-      
-      // Y축: 반전 필요 (MediaPipe는 top=0, Unity는 bottom=0)
-      float y = (0.5f - landmark.y) * _worldScale;
-      
-      // Z축: depth 값 사용 (음수 = 카메라에 가까움)
-      float z = -landmark.z * _worldScale; // 부호 반전으로 앞뒤 맞춤
-
-      // 어깨 landmark에 오프셋 적용 (11: 왼쪽 어깨, 12: 오른쪽 어깨)
-      if (landmarkIndex == 11) // 왼쪽 어깨
-      {
-        x -= _shoulderWidthOffset;
-      }
-      else if (landmarkIndex == 12) // 오른쪽 어깨  
-      {
-        x += _shoulderWidthOffset;
-      }
-      
-      return new Vector3(x, y, z) + _worldOffset;
-    }
-
     public static Vector3 LandmarkToWorldPosition(NormalizedLandmark landmark)
     {
+      // x: 그대로 사용, 중앙을 0으로 (-0.5 ~ 0.5 범위로 변환)
       float x = (landmark.x - 0.5f) * _worldScale;
+
+      // y: 반전 (MediaPipe는 top=0, Unity는 bottom=0)
       float y = (0.5f - landmark.y) * _worldScale;
-      float z = -landmark.z * _worldScale;
+
+      // z: depth 값 사용 (음수 = 카메라에 가까움)
+      float z = -landmark.z * _worldScale; // 부호 반전으로 앞뒤 맞춤
+
       return new Vector3(x, y, z) + _worldOffset;
     }
     

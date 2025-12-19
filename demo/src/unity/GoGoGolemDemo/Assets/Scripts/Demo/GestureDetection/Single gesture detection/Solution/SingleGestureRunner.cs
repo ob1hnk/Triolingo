@@ -19,7 +19,7 @@ using Experimental = Mediapipe.Unity.Experimental;
 namespace Demo.GestureDetection
 {
   /// <summary>
-  /// 단일 제스처 감지용 Runner
+  /// 제스처 감지 Runner
   /// </summary>
   public class SingleGestureRunner : Mediapipe.Unity.Sample.VisionTaskApiRunner<HandLandmarker>
   {
@@ -88,6 +88,7 @@ namespace Demo.GestureDetection
         config.GestureHoldFrames
       );
       
+      // ⭐ 기존 플러그인 제공 코드 (Pose + Hand 합침)
       // 모델 로드
       yield return Mediapipe.Unity.Sample.AssetLoader.PrepareAssetAsync(config.HandModelPath);
       yield return Mediapipe.Unity.Sample.AssetLoader.PrepareAssetAsync(config.PoseModelPath);
@@ -274,6 +275,7 @@ namespace Demo.GestureDetection
             break;
         }
 
+        // ⭐ 제스처 인식 & 아바타 및 UI 업데이트
         // 1. 비동기 데이터 확인 및 복사
         bool updateHand = false;
         bool updatePose = false;
@@ -282,7 +284,7 @@ namespace Demo.GestureDetection
         {
           if (_isHandResultDirty)
           {
-            // 락 안에서 안전하게 UI용 변수로 복사
+            // UI용 변수로 사용하기 위해 복사
             _latestHandResult.CloneTo(ref handResultForUI);
             updateHand = true;
             _isHandResultDirty = false;
@@ -307,6 +309,15 @@ namespace Demo.GestureDetection
           UpdateAvatar(poseResultForUI, handResultForUI);
           Debug.Log("Avatar updated - both hands detected");
 
+          /* ⭐ 
+          [SingleGestureRunner]
+                    ↓
+          MediaPipe Hand, Pose 감지 수행
+          - Hand Data (21 point 좌표 * 2)
+          - Pose Data (33 point 좌표)
+                    ↓
+          [GestureRecognizer]
+          */
           // 3. 제스처 인식
           var gestureResult = _gestureRecognizer.RecognizeGesture(handResultForUI, poseResultForUI);
 
@@ -315,7 +326,6 @@ namespace Demo.GestureDetection
             _lastDetectedTime = Time.time; // 마지막 감지 시간 갱신
             _gestureUIController?.UpdateGestureResult(gestureResult);
             isDetectedNow = true;
-            // Debug.Log($"Gesture {_targetGesture} detected");
           }
         }
         else if (hasHandData && !hasPoseData)
@@ -325,21 +335,26 @@ namespace Demo.GestureDetection
           Debug.Log("Hands missing - avatar reset");
         }
 
-        // 4. UI 업데이트 - 쿨다운 로직 (ui 자주 깜빡이는 것 방지)
-        // 지금 감지가 안 됐더라도, 마지막 감지로부터 0.2초가 안 지났으면 끄지 않고 기다림
+        /* ⭐
+          [GestureRecognizer]
+                  ↓
+            gesture Result
+                  ↓
+          [SingleGestureUIController]
+        */
+        // 4. UI 업데이트 - 유예 로직 (ui 자주 깜빡이는 것 방지)
         if (!isDetectedNow)
         {
           if (Time.time - _lastDetectedTime > _debounceDuration)
           {
-            // 0.2초가 지났는데 감지X -> UI 끄기
+            // 설정 시간 지났는데 감지X -> UI 끄기
             _gestureUIController?.UpdateGestureResult(GestureResult.None);
           }
         }
 
-        // 5. 웹캠 위에 annotation 그리기 (UI용 변수 사용)
+        // 5. 웹캠 위에 annotation 그리기 (복사해둔 UI용 변수 사용)
         if (_showAnnotations)
         {
-          // Debug.Log($"[SingleGestureRunner] Drawing annotations - Hand: {updateHand}, Pose: {updatePose}");
           if (updateHand) _handAnnotationController?.DrawNow(handResultForUI);
           if (updatePose) _poseAnnotationController?.DrawNow(poseResultForUI);
         }
