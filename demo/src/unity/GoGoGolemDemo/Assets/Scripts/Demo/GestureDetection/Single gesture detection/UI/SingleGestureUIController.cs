@@ -13,8 +13,8 @@ namespace Demo.GestureDetection.UI
 
     [Header("Indicator Colors")]
     [SerializeField] private Color _inactiveColor = new Color(0.3f, 0.3f, 0.3f, 0.5f); // 비활성 색상 (어두운 회색)
-    [SerializeField] private Color _activeColor = new Color(0f, 1f, 0f, 1f);           // 활성 색상 (밝은 녹색)
-    [SerializeField] private Color _detectingColor = new Color(1f, 1f, 0f, 1f);        // 감지 중 색상 (노란색)
+    [SerializeField] private Color _activeColor = new Color(1f, 0.85f, 0.4f, 1f);      // 활성 색상 (진한 노란색)
+    [SerializeField] private Color _detectingColor = new Color(1f, 1f, 0f, 1f);        // 감지 중 색상 (밝은 노란색)
 
     [Header("Animation Settings")]
     [SerializeField] private float _fadeSpeed = 5f;        // 페이드 속도
@@ -22,7 +22,7 @@ namespace Demo.GestureDetection.UI
     [SerializeField] private float _pulseIntensity = 0.2f; // 펄스 강도
 
     [Header("Target Gesture")]
-    [SerializeField] private GestureType _targetGesture = GestureType.Jangpoong; // 이 씬의 타겟 제스처
+    [SerializeField] private GestureType _targetGesture = GestureType.Jangpoong; // 이 씬의 타겟 제스처 (설정 가능)
 
     private Color _currentColor;
     private bool _isActive;
@@ -58,7 +58,7 @@ namespace Demo.GestureDetection.UI
     }
 
     /// <summary>
-    /// 제스처 인식 결과 업데이트
+    /// ⭐ 제스처 인식 결과 UI 반영 [Trigger]
     /// </summary>
     public void UpdateGestureResult(GestureResult result)
     {
@@ -66,7 +66,7 @@ namespace Demo.GestureDetection.UI
       if (result.Type == _targetGesture && result.IsDetected)
       {
         _isActive = true;
-        Debug.Log($"[GestureUIController] ✅ {_targetGesture} detected - activating indicator");
+        Debug.Log($"[GestureUIController] {_targetGesture} detected - activating indicator");
       }
       else
       {

@@ -90,7 +90,7 @@ namespace Demo.GestureDetection
     }
 
     /// <summary>
-    /// 장풍 제스처 감지
+    /// ⭐ 장풍 제스처 감지
     /// - 양손 감지
     /// - 양손의 손바닥이 앞(카메라)을 향함
     /// - 양손의 2D 방향 벡터가 반대 (100~180도)
@@ -138,11 +138,15 @@ namespace Demo.GestureDetection
         Debug.Log($"[Jangpoong] 조건: 앞={bothHandsForward}, 반대={angleIsOpposite_2D}, 가까움={wristsClose}, 손가락={bothHandsFingerExtended} | COUNT: {_gestureFrameCount[GestureType.Jangpoong]}");
       }
 
-      // 카운터 로직 (유예 기간 적용)
+      /* ⭐ MediaPipe 이용 시 카운터 로직의 필요성
+        현재 설정된 값(GestureHoldFrames으로는 5 frame 동안 제스처 인식이 되어야 제스처로 인정
+        mediapipe가 중간에 1-2 frame 놓치면 끊김
+      */
+      // 실패 유예 로직
       if (allConditionsMet)
       {
         _gestureFrameCount[GestureType.Jangpoong]++;
-        _gestureLostCount[GestureType.Jangpoong] = 0; // 성공 시, '잃음' 카운터 리셋
+        _gestureLostCount[GestureType.Jangpoong] = 0; // 성공 -> Lost 카운터 리셋
         
         if (_gestureFrameCount[GestureType.Jangpoong] >= _holdFrames)
         {
@@ -152,9 +156,9 @@ namespace Demo.GestureDetection
       }
       else // 실패 시
       {
-        _gestureLostCount[GestureType.Jangpoong]++; // '잃음' 카운터 증가
+        _gestureLostCount[GestureType.Jangpoong]++; // Lost 카운터 증가
 
-        // 유예 기간(_maxLostFrames)을 초과해서 실패했을 때만 '성공' 카운터를 리셋
+        // 설정한 유예 프레임을 초과해서 실패 -> Frame 카운터 리셋
         if (_gestureLostCount[GestureType.Jangpoong] > _maxLostFrames)
         {
           _gestureFrameCount[GestureType.Jangpoong] = 0;
@@ -165,7 +169,7 @@ namespace Demo.GestureDetection
     }
 
     /// <summary>
-    /// 들어올리기 제스처 감지: 양팔을 위로 들어올리는 동작
+    /// ⭐ 들어올리기 제스처 감지: 양팔을 위로 들어올리는 동작
     /// - 이전 프레임보다 Y 좌표가 증가 (상승 모션)
     /// </summary>
     private GestureResult DetectLiftUp(PoseLandmarkerResult poseResult)
@@ -219,7 +223,7 @@ namespace Demo.GestureDetection
 
       Debug.Log($"[LiftUp] 손목: L({leftWrist.y:F3}) R({rightWrist.y:F3}) | 상승모션={isRisingMotion}, 기억={_liftUpRisingFramesRemaining}, 최종={liftUpDetected} | COUNT: {_gestureFrameCount[GestureType.LiftUp]}");
 
-      // 카운터 로직 (유예 기간 적용)
+      // 실패 유예 로직
       if (liftUpDetected)
       {
         _gestureFrameCount[GestureType.LiftUp]++;
