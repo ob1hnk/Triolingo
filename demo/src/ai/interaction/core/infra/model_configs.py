@@ -13,6 +13,7 @@ class ModelConfigs:
         "gpt-4o",
         "gpt-4o-2024-05-13",
         "gpt-4o-mini",
+        "gpt-4o-audio-preview",  # Speech-to-Speech 모델 (audio input, text/audio output)
     ]
 
     # OpenAI Speech-to-Text 모델들
@@ -93,6 +94,13 @@ class ModelConfigs:
             "max_tokens": 4096,
             "fallbacks": [],
             "cost_per_token": 0.00015,
+            "provider": "openai",
+        },
+        # Speech-to-Speech 모델 (audio input → text/audio output)
+        "gpt-4o-audio-preview": {
+            "max_tokens": 16384,
+            "fallbacks": ["gpt-4o"],  # audio 지원 안되면 일반 모델로 폴백
+            "cost_per_token": 0.005,  # TODO: 실제 pricing 확인 필요
             "provider": "openai",
         },
     }
