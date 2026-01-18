@@ -51,5 +51,11 @@ namespace MyAssets.FinalCharacterController
                 SprintToggledOn = !holdToSprint && SprintToggledOn;
             }
         }
+
+        public void OnScrollCamera(InputAction.CallbackContext context)
+        {
+            // Scroll camera input is handled in CameraFollow script
+            // This method is required to implement the interface
+        }
     }
 }
