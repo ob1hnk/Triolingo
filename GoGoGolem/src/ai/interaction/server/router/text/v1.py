@@ -1,12 +1,14 @@
 """
 텍스트 처리 API 라우터 (v1)
 
-편지 응답 생성 API 엔드포인트
+편지 응답 생성 API 엔드포인트 (비동기 Job Queue 패턴)
 """
 
+import asyncio
 import logging
+import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from interaction.server.dto.text import (
     GenerateLetterRequest,
@@ -20,47 +22,51 @@ router = APIRouter()
 
 
 @router.post(
-    "/letter/generate",
+    "/generate-letter",
     response_model=GenerateLetterResponse,
-    summary="편지 응답 생성",
-    description="사용자의 편지를 받아 부모 캐릭터의 응답을 생성합니다.",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="편지 응답 생성 (비동기)",
+    description="사용자의 편지를 받아 백그라운드에서 부모 캐릭터의 응답을 생성합니다.",
 )
-async def generate_letter_response(request: GenerateLetterRequest):
+async def generate_letter(request: GenerateLetterRequest):
     """
-    편지 응답 생성 API
+    편지 응답 생성 API (비동기)
 
-    사용자가 작성한 편지를 받아서 부모 캐릭터의 응답을 LLM으로 생성하고,
-    Firebase에 저장한 후 결과를 반환합니다.
+    요청을 받으면 accepted를 반환하고,
+    백그라운드에서 usecase가 LLM 응답을 생성하여 Firebase에 저장합니다.
     """
     import interaction.server.app as app_module
 
     app = app_module.app
 
     text_container: TextContainer = app.state.text_container
-
     usecase = text_container.generate_letter_response_usecase()
 
-    try:
-        logger.info(f"Generating letter response for user: {request.user_id}")
+    task_id = str(uuid.uuid4())
 
-        result = await usecase.execute(
-            {
-                "user_id": request.user_id,
-                "user_letter": request.user_letter,
-            }
+    try:
+        logger.info(
+            f"Received letter generation request for user: {request.user_id}, task: {task_id}"
         )
 
-        logger.info(f"Letter response generated: {result['letter_id']}")
+        # 백그라운드에서 usecase 실행
+        asyncio.create_task(
+            usecase.execute(
+                {
+                    "user_id": request.user_id,
+                    "user_letter": request.user_letter,
+                }
+            )
+        )
 
         return GenerateLetterResponse(
-            letter_id=result["letter_id"],
-            user_letter=result["user_letter"],
-            generated_response_letter=result["generated_response_letter"],
+            status="accepted",
+            task_id=task_id,
         )
 
     except Exception as e:
-        logger.error(f"Error generating letter response: {e}", exc_info=True)
+        logger.error(f"Error creating letter task: {e}", exc_info=True)
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate letter response: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create letter task: {str(e)}",
         )
