@@ -15,7 +15,9 @@ from interaction.core.di.container import CoreContainer
 from interaction.core.di.config import CoreConfig
 from interaction.server.router.speech.v1 import router as speech_router_v1
 from interaction.server.router.speech.v2 import router as speech_router_v2
+from interaction.server.router.text.v1 import router as text_router_v1
 from interaction.speech.di.container import SpeechContainer
+from interaction.text.di.container import TextContainer
 
 # 환경 변수 로드
 load_dotenv(override=True)
@@ -45,6 +47,14 @@ def create_app() -> FastAPI:
         ]
     )
 
+    text_container = TextContainer()
+    text_container.core_container().config.from_pydantic(core_config)
+    text_container.wire(
+        modules=[
+            "interaction.server.router.text.v1",
+        ]
+    )
+
     app = FastAPI(
         title="GoGo Golem AI Server",
         description="음성 처리 및 대화 생성 API",
@@ -61,11 +71,13 @@ def create_app() -> FastAPI:
 
     app.state.core_container = core_container
     app.state.speech_container = speech_container
+    app.state.text_container = text_container
     app.state.config = core_config
 
     # 라우터 등록
     app.include_router(speech_router_v1, prefix="/api/v1", tags=["speech-v1"])
     app.include_router(speech_router_v2, prefix="/api/v2", tags=["speech-v2"])
+    app.include_router(text_router_v1, prefix="/api/v1/text", tags=["text-v1"])
 
     @app.get("/")
     async def root():
