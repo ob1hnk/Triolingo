@@ -1,7 +1,7 @@
 """
 Firebase 클라이언트
 
-Firebase Realtime Database 또는 Firestore에 접근하기 위한 클라이언트입니다.
+Firebase Firestore에 접근하기 위한 클라이언트입니다.
 """
 
 import logging
@@ -23,17 +23,14 @@ class FirebaseClient:
     def __init__(
         self,
         credentials_path: Optional[str] = None,
-        database_url: Optional[str] = None,
     ):
         """
         Firebase 클라이언트 초기화
 
         Args:
             credentials_path: Firebase 서비스 계정 키 파일 경로
-            database_url: Firebase Realtime Database URL (Firestore 사용 시 선택적)
         """
         self.credentials_path = credentials_path
-        self.database_url = database_url
         self._db: Optional[AsyncClient] = None
 
         self._initialize()
@@ -49,8 +46,6 @@ class FirebaseClient:
             if self.credentials_path:
                 cred = credentials.Certificate(self.credentials_path)
                 options = {}
-                if self.database_url:
-                    options["databaseURL"] = self.database_url
 
                 firebase_admin.initialize_app(cred, options)
                 logger.info(
@@ -75,7 +70,9 @@ class FirebaseClient:
             raise RuntimeError("Firebase client not initialized")
         return self._db
 
-    async def get_document(self, collection: str, document_id: str) -> Optional[Dict[str, Any]]:
+    async def get_document(
+        self, collection: str, document_id: str
+    ) -> Optional[Dict[str, Any]]:
         """
         문서 조회
 
@@ -183,21 +180,14 @@ class FirebaseClient:
             raise
 
 
-def create_firebase_client(
-    credentials_path: Optional[str] = None,
-    database_url: Optional[str] = None,
-) -> FirebaseClient:
+def create_firebase_client(credentials_path: Optional[str] = None) -> FirebaseClient:
     """
     Firebase 클라이언트 팩토리 함수
 
     Args:
         credentials_path: Firebase 서비스 계정 키 파일 경로
-        database_url: Firebase Database URL
 
     Returns:
         FirebaseClient 인스턴스
     """
-    return FirebaseClient(
-        credentials_path=credentials_path,
-        database_url=database_url,
-    )
+    return FirebaseClient(credentials_path=credentials_path)

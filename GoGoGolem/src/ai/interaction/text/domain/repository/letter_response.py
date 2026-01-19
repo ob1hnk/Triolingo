@@ -8,7 +8,7 @@ Letter Response Repository 추상 인터페이스
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from GoGoGolem.src.ai.interaction.text.domain.entity.letter import Letter
+from interaction.text.domain.entity.letter import Letter
 
 
 class LetterResponseRepositoryPort(ABC):

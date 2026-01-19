@@ -120,7 +120,7 @@ Your response should:
     """
 
     MODEL_CONFIG: ClassVar[dict] = {
-        "model": "gpt-4.1",
+        "model": "gpt-4.1-mini",
         "temperature": 0.7,
         "max_tokens": 1000,
     }

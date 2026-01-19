@@ -5,9 +5,8 @@ Generate Letter Response UseCase
 """
 
 import logging
-from typing import Optional
 
-from GoGoGolem.src.ai.interaction.text.domain.entity.letter import Letter
+from interaction.text.domain.entity.letter import Letter
 from interaction.text.domain.ports.text_to_text import TextToTextPort
 from interaction.text.domain.repository.letter_response import (
     LetterResponseRepositoryPort,
@@ -54,11 +53,13 @@ class GenerateLetterResponseUseCase:
             생성된 편지 ID, 원본 편지, 부모 응답이 포함된 출력 데이터
         """
         try:
-            logger.info(f"Generating letter response for user: {input_data["user_id"]}")
+            logger.info(f"Generating letter response for user: {input_data['user_id']}")
 
             # Step 1: LLM을 사용하여 부모 캐릭터의 응답 생성
-            generated_response_letter = await self.text_to_text.generate_letter_content_from_user_input(
-                text=input_data["user_letter"]
+            generated_response_letter = (
+                await self.text_to_text.generate_letter_content_from_user_input(
+                    text=input_data["user_letter"]
+                )
             )
 
             logger.info("Parent response generated successfully")

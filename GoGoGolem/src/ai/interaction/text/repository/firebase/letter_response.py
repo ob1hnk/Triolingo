@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from interaction.core.infra.firebase_client import FirebaseClient
-from GoGoGolem.src.ai.interaction.text.domain.entity.letter import Letter
+from interaction.text.domain.entity.letter import Letter
 from interaction.text.domain.repository.letter_response import (
     LetterResponseRepositoryPort,
 )
@@ -87,7 +87,9 @@ class FirebaseLetterResponseRepository(LetterResponseRepositoryPort):
             return Letter.from_dict(data)
 
         except Exception as e:
-            logger.error(f"Error getting letter response {letter_id}: {e}", exc_info=True)
+            logger.error(
+                f"Error getting letter response {letter_id}: {e}", exc_info=True
+            )
             raise
 
     async def get_by_user_id(self, user_id: str) -> List[Letter]:
@@ -148,7 +150,9 @@ class FirebaseLetterResponseRepository(LetterResponseRepositoryPort):
             logger.info(f"Letter response updated: {letter_id}")
 
         except Exception as e:
-            logger.error(f"Error updating letter response {letter_id}: {e}", exc_info=True)
+            logger.error(
+                f"Error updating letter response {letter_id}: {e}", exc_info=True
+            )
             raise
 
     async def delete(self, letter_id: str) -> None:
@@ -167,5 +171,7 @@ class FirebaseLetterResponseRepository(LetterResponseRepositoryPort):
             logger.info(f"Letter response deleted: {letter_id}")
 
         except Exception as e:
-            logger.error(f"Error deleting letter response {letter_id}: {e}", exc_info=True)
+            logger.error(
+                f"Error deleting letter response {letter_id}: {e}", exc_info=True
+            )
             raise

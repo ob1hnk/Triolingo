@@ -1,5 +1,5 @@
-from GoGoGolem.src.ai.interaction.text.domain.entity.letter import LetterResponse
+from interaction.text.domain.entity.letter import Letter
 
 __all__ = [
-    "LetterResponse",
+    "Letter",
 ]
