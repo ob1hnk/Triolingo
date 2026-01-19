@@ -1,5 +1,6 @@
 from dependency_injector import containers, providers
 from interaction.core.infra.model_router import ModelRouter
+from interaction.core.infra.firebase_client import create_firebase_client
 from interaction.core.di.config import CoreConfig
 
 
@@ -42,4 +43,10 @@ class CoreContainer(containers.DeclarativeContainer):
         aws_access_key_id=config.aws_access_key_id,
         aws_secret_access_key=config.aws_secret_access_key,
         aws_region_name=config.aws_region_name,
+    )
+
+    # Firebase Client
+    firebase_client = providers.Singleton(
+        create_firebase_client,
+        credentials_path=config.firebase_credentials_path,
     )
