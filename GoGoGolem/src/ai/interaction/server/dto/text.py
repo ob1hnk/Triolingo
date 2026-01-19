@@ -15,8 +15,7 @@ class GenerateLetterRequest(BaseModel):
 
 
 class GenerateLetterResponse(BaseModel):
-    """편지 응답 생성 결과"""
+    """편지 응답 생성 결과 (비동기)"""
 
-    letter_id: str = Field(..., description="생성된 편지 ID")
-    user_letter: str = Field(..., description="원본 사용자 편지")
-    generated_response_letter: str = Field(..., description="생성된 부모 응답")
+    status: str = Field(default="accepted", description="요청 상태")
+    task_id: str = Field(..., description="태스크 ID")
