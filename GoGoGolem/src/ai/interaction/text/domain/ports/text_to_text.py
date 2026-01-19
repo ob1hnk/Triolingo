@@ -12,5 +12,4 @@ class TextToTextPort(ABC):
 
     @abstractmethod
     async def generate_letter_content_from_user_input(self, text: str) -> str:
-       
         pass

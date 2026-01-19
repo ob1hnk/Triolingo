@@ -68,7 +68,7 @@ async def generate_letter_response(
     print(result["user_letter"])
     print("Parent Response:")
     print(result["generated_response_letter"])
-    print(f"Letter ID: {result["letter_id"]}")
+    print(f"Letter ID: {result['letter_id']}")
 
     return result
 
@@ -81,5 +81,5 @@ if __name__ == "__main__":
 
     # 컨테이너 초기화
     main_container = init_container()
-    
+
     asyncio.run(generate_letter_response(main_container, args.user_id, args.letter))

@@ -1,4 +1,4 @@
-from GoGoGolem.src.ai.interaction.text.repository.firebase.letter_response import (
+from interaction.text.repository.firebase.letter_response import (
     FirebaseLetterResponseRepository,
 )
 

@@ -49,5 +49,4 @@ class CoreContainer(containers.DeclarativeContainer):
     firebase_client = providers.Singleton(
         create_firebase_client,
         credentials_path=config.firebase_credentials_path,
-        database_url=config.firebase_database_url,
     )

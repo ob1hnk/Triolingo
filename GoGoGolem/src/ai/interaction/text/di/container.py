@@ -6,11 +6,11 @@ from dependency_injector import containers, providers
 
 from interaction.core.di.container import CoreContainer
 from interaction.text.components.text_to_text.llm_text_to_text_v1 import LLMTextToTextV1
-from GoGoGolem.src.ai.interaction.text.repository.firebase.letter_response import (
+from interaction.text.repository.firebase.letter_response import (
     FirebaseLetterResponseRepository,
 )
 from interaction.text.domain.usecases.generate_letter_response import (
-    GenerateLetterResponseUseCase
+    GenerateLetterResponseUseCase,
 )
 
 
