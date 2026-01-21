@@ -125,8 +125,18 @@ namespace MyAssets.FinalCharacterController
                                           isWalking ? walkSpeed :
                                           isSprinting ? sprintSpeed : runSpeed;
             
+            // 입력 방향 계산
             Vector3 movementDirection = new Vector3(_playerLocomotionInput.MovementInput.x, 0f, _playerLocomotionInput.MovementInput.y).normalized;
 
+        // 입력이 있을 때만 회전 처리
+        if (movementDirection != Vector3.zero)
+                        {
+                                // 이동 방향을 바라보는 Quaternion 계산
+                                Quaternion targetRotation = Quaternion.LookRotation(movementDirection);
+
+                                // 현재 회전에서 목표 회전으로 부드럽게 회전
+                                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                        }
             Vector3 movementDelta = movementDirection * lateralAcceleration * Time.deltaTime;
             Vector3 newVelocity = _characterController.velocity + movementDelta;
 
@@ -152,13 +162,6 @@ namespace MyAssets.FinalCharacterController
             return velocity;
         }
 
-        #endregion
-
-        #region Late Update Logic
-        private void LateUpdate()
-        {
-            transform.rotation = Quaternion.Euler(0f, _playerTargetRotation.x, 0f);
-        }
         #endregion
 
         #region State Checks
