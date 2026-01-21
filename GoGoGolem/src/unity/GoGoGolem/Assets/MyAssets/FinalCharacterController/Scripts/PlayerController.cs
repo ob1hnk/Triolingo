@@ -23,6 +23,7 @@ namespace MyAssets.FinalCharacterController
         public float drag = 20f;
         public float gravity = 25f;
         public float movingThreshold = 0.01f;
+        public float rotationSpeed = 10f;
 
         [Header("Ground Details")]
         [SerializeField] private LayerMask _groundLayers;
