@@ -13,7 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from interaction.core.di.container import CoreContainer
 from interaction.core.di.config import CoreConfig
-from interaction.server.router.speech.v1 import router as speech_router
+from interaction.server.router.speech.v1 import router as speech_router_v1
+from interaction.server.router.speech.v2 import router as speech_router_v2
 from interaction.speech.di.container import SpeechContainer
 from interaction.core.utils.tracing import setup_tracing
 
@@ -41,7 +42,12 @@ def create_app() -> FastAPI:
 
     speech_container = SpeechContainer()
     speech_container.core_container().config.from_pydantic(core_config)
-    speech_container.wire(modules=["interaction.server.router.speech.v1"])
+    speech_container.wire(
+        modules=[
+            "interaction.server.router.speech.v1",
+            "interaction.server.router.speech.v2",
+        ]
+    )
 
     app = FastAPI(
         title="GoGo Golem AI Server",
@@ -62,7 +68,8 @@ def create_app() -> FastAPI:
     app.state.config = core_config
 
     # 라우터 등록
-    app.include_router(speech_router, prefix="/api/v1", tags=["speech"])
+    app.include_router(speech_router_v1, prefix="/api/v1", tags=["speech-v1"])
+    app.include_router(speech_router_v2, prefix="/api/v2", tags=["speech-v2"])
 
     @app.get("/")
     async def root():

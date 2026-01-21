@@ -13,6 +13,7 @@ class ModelConfigs:
         "gpt-4o",
         "gpt-4o-2024-05-13",
         "gpt-4o-mini",
+        "gpt-4o-audio-preview",  # Speech-to-Speech 모델 (audio input, text/audio output)
     ]
 
     # OpenAI Speech-to-Text 모델들
@@ -37,10 +38,9 @@ class ModelConfigs:
     # Speech 모델명과 실제 API 모델명 매핑
     SPEECH_MODEL_MAPPING = {
         "whisper": "whisper-1",
-        # "whisper-tiny": "whisper-tiny", # huggingface only supported
-        "gpt-4o-transcribe": "gpt-4o-transcribe",
+        "gpt-4o-transcribe": "openai/gpt-4o-transcribe",
         "gpt-4o-mini-transcribe": "openai/gpt-4o-mini-transcribe",
-        "gpt-4o-transcribe-diarize": "gpt-4o-transcribe-diarize",
+        "gpt-4o-transcribe-diarize": "openai/gpt-4o-transcribe-diarize",
     }
 
     # 모델별 상세 설정
@@ -97,10 +97,11 @@ class ModelConfigs:
             "cost_per_token": 0.00015,
             "provider": "openai",
         },
-        "gpt-4o-mini-transcribe": {
-            "max_tokens": 4096,
-            "fallbacks": [],
-            "cost_per_token": 0.00015,
+        # Speech-to-Speech 모델 (audio input → text/audio output)
+        "gpt-4o-audio-preview": {
+            "max_tokens": 16384,
+            "fallbacks": ["gpt-4o"],  # audio 지원 안되면 일반 모델로 폴백
+            "cost_per_token": 0.005,  # TODO: 실제 pricing 확인 필요
             "provider": "openai",
         },
     }
