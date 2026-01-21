@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from interaction.core.di.container import CoreContainer
 from interaction.core.di.config import CoreConfig
+from interaction.core.utils.tracing import setup_tracing
 from interaction.server.router.speech.v1 import router as speech_router_v1
 from interaction.server.router.speech.v2 import router as speech_router_v2
 from interaction.server.router.text.v1 import router as text_router_v1
@@ -21,6 +22,9 @@ from interaction.text.di.container import TextContainer
 
 # 환경 변수 로드
 load_dotenv(override=True)
+
+# OpenTelemetry tracing 초기화
+setup_tracing()
 
 # 로깅 설정
 logging.basicConfig(

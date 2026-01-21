@@ -4,3 +4,4 @@ interaction/speech/tests/
 interaction/server/tests/
 datasets/
 __pycache__/
+test/

@@ -8,9 +8,15 @@ Speech-to-Speech API를 사용하여 단일 API 호출로 응답을 생성합니
 
 import logging
 from typing import Dict, Any, BinaryIO, Optional
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
 from interaction.speech.domain.ports.speech_to_speech import SpeechToSpeechPort
+from interaction.core.utils.trace_context import get_trace_id
+from interaction.core.utils.tracing import get_tracer
 
 logger = logging.getLogger(__name__)
+tracer = get_tracer(__name__)
 
 
 class GenerateConversationResponseUseCaseV2:
@@ -58,15 +64,24 @@ class GenerateConversationResponseUseCaseV2:
         """
         try:
             logger.info("Starting conversation response generation (v2 - single step)")
+            trace_id = get_trace_id()
 
             # Speech-to-Speech: 음성에서 직접 응답 생성
-            response_text = await self.speech_to_speech.generate_response_from_audio(
-                audio_file=audio_file,
-                language=language,
-                system_prompt=system_prompt,
-            )
+            with tracer.start_as_current_span("speech_to_speech") as s2s_span:
+                if trace_id:
+                    s2s_span.set_attribute("trace_id", trace_id)
+                s2s_span.set_attribute("language", language)
+                if system_prompt:
+                    s2s_span.set_attribute("has_system_prompt", True)
 
-            logger.info("Conversation response generation completed successfully (v2)")
+                response_text = await self.speech_to_speech.generate_response_from_audio(
+                    audio_file=audio_file,
+                    language=language,
+                    system_prompt=system_prompt,
+                )
+
+                s2s_span.set_attribute("response_length", len(response_text))
+                logger.info("Conversation response generation completed successfully (v2)")
 
             return {
                 "response": response_text,
@@ -76,4 +91,8 @@ class GenerateConversationResponseUseCaseV2:
             logger.error(
                 f"Error in generate_conversation_response (v2): {e}", exc_info=True
             )
+            current_span = trace.get_current_span()
+            if current_span:
+                current_span.record_exception(e)
+                current_span.set_status(Status(StatusCode.ERROR, str(e)))
             raise
