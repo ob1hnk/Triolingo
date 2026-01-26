@@ -19,6 +19,7 @@ class ModelConfigs:
     # OpenAI Speech-to-Text 모델들
     SPEECH_MODELS = [
         "whisper",
+        # "whisper-tiny", # huggingface only supported
         "gpt-4o-transcribe",
         "gpt-4o-mini-transcribe",
         "gpt-4o-transcribe-diarize",

@@ -1,0 +1,23 @@
+apiVersion: 1
+
+datasources:
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    isDefault: true
+    jsonData:
+      httpMethod: GET
+      # Disable all features that might use gRPC
+      nodeGraph:
+        enabled: false
+      search:
+        hide: false
+      spanBar:
+        type: 'Tag'
+        tag: 'http.path'
+      # Force HTTP only, no gRPC
+    secureJsonData: {}
+    version: 1
+    editable: true
+

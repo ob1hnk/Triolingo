@@ -16,6 +16,7 @@ from interaction.core.di.config import CoreConfig
 from interaction.server.router.speech.v1 import router as speech_router_v1
 from interaction.server.router.speech.v2 import router as speech_router_v2
 from interaction.speech.di.container import SpeechContainer
+from interaction.core.utils.tracing import setup_tracing
 
 # 환경 변수 로드
 load_dotenv(override=True)
@@ -26,6 +27,9 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# OpenTelemetry Tracing 초기화
+setup_tracing()
 
 
 def create_app() -> FastAPI:

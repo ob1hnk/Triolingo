@@ -10,6 +10,8 @@ import io
 import base64
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
 
 from interaction.server.dto.speech import (
     MessageType,
@@ -26,8 +28,11 @@ from interaction.speech.domain.usecases.generate_conversation_response import (
 )
 from interaction.speech.di.container import SpeechContainer
 from interaction.server.core.session_manager import session_manager
+from interaction.core.utils.trace_context import set_trace_id, get_trace_id
+from interaction.core.utils.tracing import get_tracer
 
 logger = logging.getLogger(__name__)
+tracer = get_tracer(__name__)
 
 router = APIRouter()
 
@@ -58,189 +63,227 @@ async def handle_websocket(
     try:
         while True:
             # 클라이언트로부터 메시지 수신
-            data = await websocket.receive_json()
-            logger.debug(f"Received message: {data}")
+            with tracer.start_as_current_span("ws_receive") as span:
+                data = await websocket.receive_json()
+                logger.debug(f"Received message: {data}")
 
-            try:
+                # trace_id 추출 및 Context 설정
+                trace_id = data.get("trace_id")
+                if trace_id:
+                    set_trace_id(trace_id)
+                    span.set_attribute("trace_id", trace_id)
+
                 # 메시지 타입에 따라 파싱
                 message_type = data.get("type")
+                span.set_attribute("message_type", message_type)
 
-                if message_type == MessageType.SESSION_START:
-                    request = SessionStartRequest(**data)
-                    current_session_id = request.session_id
+                try:
+                    if message_type == MessageType.SESSION_START:
+                        request = SessionStartRequest(**data)
+                        current_session_id = request.session_id
+                        span.set_attribute("session_id", request.session_id)
 
-                    # 세션 생성
-                    session_manager.create_session(
-                        request.session_id,
-                        request.audio_format or "wav",
-                        request.sample_rate or 16000,
-                        request.channels or 1,
-                    )
+                        # 세션 생성
+                        session_manager.create_session(
+                            request.session_id,
+                            request.audio_format or "wav",
+                            request.sample_rate or 16000,
+                            request.channels or 1,
+                        )
 
-                    # ACK 응답
-                    await websocket.send_json(
-                        AckResponse(
-                            type=MessageType.ACK,
-                            session_id=request.session_id,
-                            message="Session started",
-                        ).model_dump()
-                    )
-                    logger.info(f"Session started: {request.session_id}")
+                        # ACK 응답
+                        with tracer.start_as_current_span("ws_send") as send_span:
+                            send_span.set_attribute("trace_id", trace_id or "")
+                            send_span.set_attribute("response_type", "ack")
+                            await websocket.send_json(
+                                AckResponse(
+                                    type=MessageType.ACK,
+                                    session_id=request.session_id,
+                                    message="Session started",
+                                ).model_dump()
+                            )
+                        logger.info(f"Session started: {request.session_id}")
 
-                elif message_type == MessageType.AUDIO_CHUNK:
-                    request = AudioChunkRequest(**data)
-                    current_session_id = request.session_id
+                    elif message_type == MessageType.AUDIO_CHUNK:
+                        request = AudioChunkRequest(**data)
+                        current_session_id = request.session_id
+                        span.set_attribute("session_id", request.session_id)
+                        span.set_attribute("chunk_index", request.chunk_index)
 
-                    # 세션 존재 확인
-                    if not session_manager.has_session(request.session_id):
+                        # 세션 존재 확인
+                        if not session_manager.has_session(request.session_id):
+                            await websocket.send_json(
+                                ErrorResponse(
+                                    type=MessageType.ERROR,
+                                    session_id=request.session_id,
+                                    error_code="SESSION_NOT_FOUND",
+                                    error_message="Session not found. Please start a session first.",
+                                ).model_dump()
+                            )
+                            continue
+
+                        # Base64 디코딩
+                        try:
+                            audio_bytes = base64.b64decode(request.audio_data)
+                            span.set_attribute("audio_size_bytes", len(audio_bytes))
+                        except Exception as e:
+                            logger.error(f"Failed to decode audio data: {e}")
+                            span.record_exception(e)
+                            span.set_status(Status(StatusCode.ERROR, str(e)))
+                            await websocket.send_json(
+                                ErrorResponse(
+                                    type=MessageType.ERROR,
+                                    session_id=request.session_id,
+                                    error_code="DECODE_ERROR",
+                                    error_message=f"Failed to decode audio data: {str(e)}",
+                                ).model_dump()
+                            )
+                            continue
+
+                        # 청크 저장
+                        session_manager.add_chunk(
+                            request.session_id, request.chunk_index, audio_bytes
+                        )
+
+                        # ACK 응답
+                        with tracer.start_as_current_span("ws_send") as send_span:
+                            send_span.set_attribute("trace_id", trace_id or "")
+                            send_span.set_attribute("response_type", "ack")
+                            await websocket.send_json(
+                                AckResponse(
+                                    type=MessageType.ACK,
+                                    session_id=request.session_id,
+                                    message="Chunk received",
+                                    chunk_index=request.chunk_index,
+                                ).model_dump()
+                            )
+                        logger.debug(
+                            f"Chunk {request.chunk_index} received for session {request.session_id}"
+                        )
+
+                    elif message_type == MessageType.SESSION_END:
+                        request = SessionEndRequest(**data)
+                        current_session_id = request.session_id
+                        span.set_attribute("session_id", request.session_id)
+
+                        # 세션 존재 확인
+                        if not session_manager.has_session(request.session_id):
+                            await websocket.send_json(
+                                ErrorResponse(
+                                    type=MessageType.ERROR,
+                                    session_id=request.session_id,
+                                    error_code="SESSION_NOT_FOUND",
+                                    error_message="Session not found.",
+                                ).model_dump()
+                            )
+                            continue
+
+                        # 처리 시작 알림
+                        with tracer.start_as_current_span("ws_send") as send_span:
+                            send_span.set_attribute("trace_id", trace_id or "")
+                            send_span.set_attribute("response_type", "processing")
+                            await websocket.send_json(
+                                ProcessingResponse(
+                                    type=MessageType.PROCESSING,
+                                    session_id=request.session_id,
+                                    status="Processing audio and generating response...",
+                                    progress=0.5,
+                                ).model_dump()
+                            )
+
+                        try:
+                            # 모든 청크를 합쳐서 오디오 파일 생성
+                            with tracer.start_as_current_span("session_merge") as merge_span:
+                                merge_span.set_attribute("trace_id", trace_id or "")
+                                merge_span.set_attribute("session_id", request.session_id)
+                                audio_bytes = session_manager.get_audio(request.session_id)
+                                merge_span.set_attribute("merged_audio_size_bytes", len(audio_bytes))
+
+                            if len(audio_bytes) == 0:
+                                raise ValueError("No audio data received")
+
+                            # BytesIO로 변환 (generate_conversation_response가 파일 객체를 받을 수 있도록)
+                            audio_file = io.BytesIO(audio_bytes)
+                            audio_file.name = f"audio_{request.session_id}.wav"
+
+                            # UseCase 호출 (의존성 주입으로 받은 usecase 사용)
+                            result = await usecase.execute(audio_file)
+
+                            # 세션 완료 표시 및 제거
+                            session_manager.mark_complete(request.session_id)
+                            session_manager.remove_session(request.session_id)
+
+                            # 결과 응답
+                            with tracer.start_as_current_span("ws_send") as send_span:
+                                send_span.set_attribute("trace_id", trace_id or "")
+                                send_span.set_attribute("response_type", "result")
+                                send_span.set_attribute("response_length", len(result.get("response", "")))
+                                await websocket.send_json(
+                                    ResultResponse(
+                                        type=MessageType.RESULT,
+                                        session_id=request.session_id,
+                                        text=result.get("response", ""),
+                                        transcription=result.get("transcription"),
+                                    ).model_dump()
+                                )
+                            logger.info(
+                                f"Session completed successfully: {request.session_id}"
+                            )
+
+                        except Exception as e:
+                            logger.error(
+                                f"Error processing session {request.session_id}: {e}",
+                                exc_info=True,
+                            )
+                            span.record_exception(e)
+                            span.set_status(Status(StatusCode.ERROR, str(e)))
+                            await websocket.send_json(
+                                ErrorResponse(
+                                    type=MessageType.ERROR,
+                                    session_id=request.session_id,
+                                    error_code="PROCESSING_ERROR",
+                                    error_message=f"Failed to process audio: {str(e)}",
+                                ).model_dump()
+                            )
+                            # 에러 발생 시 세션 제거
+                            session_manager.remove_session(request.session_id)
+
+                    else:
+                        # 알 수 없는 메시지 타입
                         await websocket.send_json(
                             ErrorResponse(
                                 type=MessageType.ERROR,
-                                session_id=request.session_id,
-                                error_code="SESSION_NOT_FOUND",
-                                error_message="Session not found. Please start a session first.",
+                                session_id=current_session_id or "unknown",
+                                error_code="UNKNOWN_MESSAGE_TYPE",
+                                error_message=f"Unknown message type: {message_type}",
                             ).model_dump()
                         )
-                        continue
 
-                    # Base64 디코딩
-                    try:
-                        audio_bytes = base64.b64decode(request.audio_data)
-                    except Exception as e:
-                        logger.error(f"Failed to decode audio data: {e}")
-                        await websocket.send_json(
-                            ErrorResponse(
-                                type=MessageType.ERROR,
-                                session_id=request.session_id,
-                                error_code="DECODE_ERROR",
-                                error_message=f"Failed to decode audio data: {str(e)}",
-                            ).model_dump()
-                        )
-                        continue
-
-                    # 청크 저장
-                    session_manager.add_chunk(
-                        request.session_id, request.chunk_index, audio_bytes
-                    )
-
-                    # ACK 응답
-                    await websocket.send_json(
-                        AckResponse(
-                            type=MessageType.ACK,
-                            session_id=request.session_id,
-                            message="Chunk received",
-                            chunk_index=request.chunk_index,
-                        ).model_dump()
-                    )
-                    logger.debug(
-                        f"Chunk {request.chunk_index} received for session {request.session_id}"
-                    )
-
-                elif message_type == MessageType.SESSION_END:
-                    request = SessionEndRequest(**data)
-                    current_session_id = request.session_id
-
-                    # 세션 존재 확인
-                    if not session_manager.has_session(request.session_id):
-                        await websocket.send_json(
-                            ErrorResponse(
-                                type=MessageType.ERROR,
-                                session_id=request.session_id,
-                                error_code="SESSION_NOT_FOUND",
-                                error_message="Session not found.",
-                            ).model_dump()
-                        )
-                        continue
-
-                    # 처리 시작 알림
-                    await websocket.send_json(
-                        ProcessingResponse(
-                            type=MessageType.PROCESSING,
-                            session_id=request.session_id,
-                            status="Processing audio and generating response...",
-                            progress=0.5,
-                        ).model_dump()
-                    )
-
-                    try:
-                        # 모든 청크를 합쳐서 오디오 파일 생성
-                        audio_bytes = session_manager.get_audio(request.session_id)
-
-                        if len(audio_bytes) == 0:
-                            raise ValueError("No audio data received")
-
-                        # BytesIO로 변환 (generate_conversation_response가 파일 객체를 받을 수 있도록)
-                        audio_file = io.BytesIO(audio_bytes)
-                        audio_file.name = f"audio_{request.session_id}.wav"
-
-                        # UseCase 호출 (의존성 주입으로 받은 usecase 사용)
-                        result = await usecase.execute(audio_file)
-
-                        # 세션 완료 표시 및 제거
-                        session_manager.mark_complete(request.session_id)
-                        session_manager.remove_session(request.session_id)
-
-                        # 결과 응답
-                        await websocket.send_json(
-                            ResultResponse(
-                                type=MessageType.RESULT,
-                                session_id=request.session_id,
-                                text=result.get("response", ""),
-                                transcription=result.get("transcription"),
-                            ).model_dump()
-                        )
-                        logger.info(
-                            f"Session completed successfully: {request.session_id}"
-                        )
-
-                    except Exception as e:
-                        logger.error(
-                            f"Error processing session {request.session_id}: {e}",
-                            exc_info=True,
-                        )
-                        await websocket.send_json(
-                            ErrorResponse(
-                                type=MessageType.ERROR,
-                                session_id=request.session_id,
-                                error_code="PROCESSING_ERROR",
-                                error_message=f"Failed to process audio: {str(e)}",
-                            ).model_dump()
-                        )
-                        # 에러 발생 시 세션 제거
-                        session_manager.remove_session(request.session_id)
-
-                else:
-                    # 알 수 없는 메시지 타입
+                except ValidationError as e:
+                    logger.error(f"Validation error: {e}")
+                    span.record_exception(e)
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
                     await websocket.send_json(
                         ErrorResponse(
                             type=MessageType.ERROR,
                             session_id=current_session_id or "unknown",
-                            error_code="UNKNOWN_MESSAGE_TYPE",
-                            error_message=f"Unknown message type: {message_type}",
+                            error_code="VALIDATION_ERROR",
+                            error_message=f"Invalid message format: {str(e)}",
                         ).model_dump()
                     )
 
-            except ValidationError as e:
-                logger.error(f"Validation error: {e}")
-                await websocket.send_json(
-                    ErrorResponse(
-                        type=MessageType.ERROR,
-                        session_id=current_session_id or "unknown",
-                        error_code="VALIDATION_ERROR",
-                        error_message=f"Invalid message format: {str(e)}",
-                    ).model_dump()
-                )
-
-            except Exception as e:
-                logger.error(f"Unexpected error: {e}", exc_info=True)
-                await websocket.send_json(
-                    ErrorResponse(
-                        type=MessageType.ERROR,
-                        session_id=current_session_id or "unknown",
-                        error_code="INTERNAL_ERROR",
-                        error_message=f"Internal server error: {str(e)}",
-                    ).model_dump()
-                )
+                except Exception as e:
+                    logger.error(f"Unexpected error: {e}", exc_info=True)
+                    span.record_exception(e)
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
+                    await websocket.send_json(
+                        ErrorResponse(
+                            type=MessageType.ERROR,
+                            session_id=current_session_id or "unknown",
+                            error_code="INTERNAL_ERROR",
+                            error_message=f"Internal server error: {str(e)}",
+                        ).model_dump()
+                    )
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected. Session: {current_session_id}")
