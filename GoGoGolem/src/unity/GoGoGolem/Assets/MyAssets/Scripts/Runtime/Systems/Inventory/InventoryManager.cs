@@ -20,22 +20,5 @@ public class InventoryManager : MonoBehaviour
         }
         Logic.AddItem(itemID);
         Debug.Log($"아이템 획득 성공: {itemData.itemName}");
-        PrintInventoryToConsole();
-    }
-
-    public void PrintInventoryToConsole()
-    {
-        Debug.Log("===== 플레이어 인벤토리 =====");
-
-        if (Logic.GetAllItems().Count == 0)
-        {
-            Debug.Log(" (비어 있음)");
-            return;
-        }
-
-        foreach (var item in Logic.GetAllItems())
-        {
-            Debug.Log($"아이템명: {item.Key}, 수량: {item.Value}");
-        }
     }
 }

@@ -1,34 +1,37 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace MyAssets.FinalCharacterController
 {
     [DefaultExecutionOrder(-2)]
-    public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerLocomotionMapActions
+    public class PlayerLocomotionInput 
+        : MonoBehaviour, GameInputActions.IPlayerMovementActions
     {
         [SerializeField] private bool holdToSprint = true;
 
-        public bool SprintToggledOn {  get; private set; }
-        public PlayerControls PlayerControls { get; private set; }
         public Vector2 MovementInput { get; private set; }
         public Vector2 LookInput { get; private set; }
+        public bool SprintToggledOn { get; private set; }
+
+        private GameInputActions input;
 
         private void OnEnable()
         {
-            PlayerControls = new PlayerControls();
-            PlayerControls.Enable();
+            input = new GameInputActions();
 
-            PlayerControls.PlayerLocomotionMap.Enable();
-            PlayerControls.PlayerLocomotionMap.SetCallbacks(this);
+            input.PlayerMovement.SetCallbacks(this);
+            input.PlayerMovement.Enable();
         }
 
         private void OnDisable()
         {
-            PlayerControls.PlayerLocomotionMap.Disable();
-            PlayerControls.PlayerLocomotionMap.RemoveCallbacks(this);
+            if (input == null) return;
+
+            input.PlayerMovement.RemoveCallbacks(this);
+            input.PlayerMovement.Disable();
         }
+
+        // ===== PlayerMovement Actions =====
 
         public void OnMovement(InputAction.CallbackContext context)
         {
@@ -42,6 +45,8 @@ namespace MyAssets.FinalCharacterController
 
         public void OnToggleSprint(InputAction.CallbackContext context)
         {
+            if (!context.performed && !context.canceled) return;
+
             if (context.performed)
             {
                 SprintToggledOn = holdToSprint || !SprintToggledOn;
@@ -51,6 +56,5 @@ namespace MyAssets.FinalCharacterController
                 SprintToggledOn = !holdToSprint && SprintToggledOn;
             }
         }
-
     }
 }
