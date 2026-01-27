@@ -3,32 +3,37 @@ using UnityEngine;
 public class Managers : MonoBehaviour
 {
     private static Managers _instance;
-    private static Managers Instance { get { Init(); return _instance; } }
-
-    private DataManager _data = new DataManager();
-    private InventoryManager _inventory = new InventoryManager();
+    public static Managers Instance => _instance;
 
     public static DataManager Data => Instance._data;
     public static InventoryManager Inventory => Instance._inventory;
 
-    static void Init()
-    {
-        if (_instance == null)
-        {
-            GameObject go = GameObject.Find("@Managers");
-            if (go == null)
-            {
-                go = new GameObject { name = "@Managers" };
-                go.AddComponent<Managers>();
-            }
-            DontDestroyOnLoad(go);
-            _instance = go.GetComponent<Managers>();
+    private DataManager _data;
+    private InventoryManager _inventory;
 
-            // 초기화
-            Debug.Log("현위치: Managers.cs data.Init()");
-            _instance._data.Init();
-            Debug.Log("현위치: Managers.cs inventory.Init()");
-            _instance._inventory.Init();
+    private void Awake()
+    {
+        if (_instance != null)
+        {
+            Destroy(gameObject);
+            return;
         }
+
+        _instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        // 같은 GameObject에 붙어 있는 컴포넌트 참조
+        _data = GetComponent<DataManager>();
+        _inventory = GetComponent<InventoryManager>();
+
+        if (_data == null)
+            Debug.LogError("Managers: DataManager 컴포넌트가 없습니다.");
+        else
+            _data.Init();
+
+        if (_inventory == null)
+            Debug.LogError("Managers: InventoryManager 컴포넌트가 없습니다.");
+        else
+            _inventory.Init();
     }
 }
