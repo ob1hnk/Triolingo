@@ -6,7 +6,6 @@ public class InventoryManager : MonoBehaviour
 
     public void Init()
     {
-        Debug.Log("현위치: InventoryManager.cs Init(), 새 InventoryLogic() 생성");
         Logic = new InventoryLogic();
     }
 
@@ -17,9 +16,9 @@ public class InventoryManager : MonoBehaviour
         var itemData = Managers.Data.ItemDB.GetItem(itemID);
         if (itemData == null)
         {
-            Debug.LogWarning($"존재하지 않는 아이템 ID: {itemID}");
+            Debug.LogWarning($"DB에 존재하지 않는 아이템 ID: {itemID}");
         }
         Logic.AddItem(itemID);
-        Debug.Log($"아이템 획득 성공: {itemID}");
+        Debug.Log($"아이템 획득 성공: {itemData.itemName}");
     }
         }
