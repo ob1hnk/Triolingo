@@ -7,7 +7,7 @@ public class Item : MonoBehaviour, IInteractable
     public string GetInteractText() => "줍기 (E)";
     public string ItemID => itemID;
 
-    private void Awake()
+    private void Start()
     {
         if (string.IsNullOrEmpty(itemID))
         {
