@@ -8,6 +8,5 @@ public class DataManager : MonoBehaviour
     {
         ItemDB = new ItemDatabase();
         ItemDB.LoadDatabase();
-        Debug.Log("Item Database Loaded.");
     }
 }

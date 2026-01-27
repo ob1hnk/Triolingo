@@ -22,4 +22,5 @@ public class InventoryLogic
     public bool HasItem(string id) => items.ContainsKey(id) && items[id] > 0;
 
     public Dictionary<string, int> GetAllItems() => items;
+    
 }

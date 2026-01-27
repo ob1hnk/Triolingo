@@ -7,18 +7,15 @@ public class ItemDatabaseTester : MonoBehaviour
     void Start()
     {
         itemDatabase = new ItemDatabase();
-        Debug.Log("📌 LoadDatabase() called");
 
         TextAsset csvData = Resources.Load<TextAsset>("Data/Items");
 
         if (csvData == null)
         {
-            Debug.LogError("❌ CSV Load Failed: Resources/Data/Items.csv not found");
+            Debug.LogError("CSV Load Failed: Resources/Data/Items.csv not found");
             return;
         }
 
-        Debug.Log("✅ CSV Loaded Successfully");
-        Debug.Log($"📄 Raw CSV:\n{csvData.text}");
 
         itemDatabase.LoadDatabase();
 
