@@ -30,8 +30,6 @@ namespace MyAssets.FinalCharacterController
 
         private PlayerLocomotionInput _playerLocomotionInput;
         private PlayerState _playerState;
-
-        private Vector2 _playerTargetRotation = Vector2.zero;
         
         private float _verticalVelocity = 0f;
         private float _antiBump;

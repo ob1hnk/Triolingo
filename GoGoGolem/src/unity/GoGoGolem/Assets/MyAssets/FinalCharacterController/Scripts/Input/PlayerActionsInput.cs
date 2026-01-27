@@ -1,12 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace MyAssets.FinalCharacterController
 {
     [DefaultExecutionOrder(-2)]
-    public class PlayerActionsInput : MonoBehaviour, PlayerControls.IPlayerActionMapActions
+    public class PlayerActionsInput : MonoBehaviour, GameInputActions.IPlayerActionsActions
     {
         #region Class Variables
         public bool GatherPressed { get; private set; }
