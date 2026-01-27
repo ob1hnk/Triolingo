@@ -8,15 +8,30 @@ namespace MyAssets.UI.Presenters
         public class InventoryUIPresenter : MonoBehaviour, GameInputActions.IUIActions
         {
                 [SerializeField] private InventoryUIView view;
-                private GameInputActions inputActions;
-                private int selectedIndex = -1;
+                private GameInputActions.UIActions input;
 
                 private InventoryLogic inventoryLogic;
-                private void Awake()
+                
+
+
+        /* =====================
+        * 외부에서 호출되는 API
+        * ===================== */
+
+                public void Show()
                 {
-                        inputActions = new GameInputActions();
+                        gameObject.SetActive(true);
                 }
 
+                public void Hide()
+                {
+                        gameObject.SetActive(false);
+                }
+
+
+        /* =====================
+         * Unity Lifecycle
+         * ===================== */
                 void Start()
                 {
                         // InventoryLogic 연결
@@ -35,6 +50,28 @@ namespace MyAssets.UI.Presenters
                         Refresh();
                 }
 
+                private void OnEnable()
+                {
+                        input = InputModeController.Instance.UIInput.UI;
+                        input.Navigate.performed += OnNavigate;
+                        input.Point.performed += OnPoint;
+                        input.Click.performed += OnClick;
+                        input.Scroll.performed += OnScroll;
+                        input.Submit.performed += OnSubmit;
+                        input.Cancel.performed += OnCancel;
+                }
+
+                private void OnDisable()
+                {
+
+                        input.Navigate.performed -= OnNavigate;
+                        input.Point.performed -= OnPoint;
+                        input.Click.performed -= OnClick;
+                        input.Scroll.performed -= OnScroll;
+                        input.Submit.performed -= OnSubmit;
+                        input.Cancel.performed -= OnCancel;
+                }
+
                 void OnDestroy()
                 {
                         if (inventoryLogic != null)
@@ -46,20 +83,11 @@ namespace MyAssets.UI.Presenters
                         view.Render(inventoryLogic.GetAllItems());
                 }
 
-
-                private void OnEnable()
-                {
-                        inputActions.UI.SetCallbacks(this);
-                        inputActions.UI.Enable();
-                }
-
-                private void OnDisable()
-                {
-                        inputActions.UI.RemoveCallbacks(this);
-                        inputActions.UI.Disable();
-                }
-                
+        /* =====================
+         * Input Handlers
+         * ===================== */
                 // WASD, Arrow
+                private int selectedIndex = -1;
                 public void OnNavigate(InputAction.CallbackContext context)
                 {
                         if (!context.performed) return;
@@ -115,13 +143,7 @@ namespace MyAssets.UI.Presenters
                 {
                         if (!context.performed) return;
 
-                        CloseInventory();
+                        Hide();
                 }
-
-                private void CloseInventory()
-                {
-                        // 인벤토리 닫기
-                }
-
         }
 }

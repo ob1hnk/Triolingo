@@ -1,56 +1,56 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI; 
 
 public class InventoryUIView : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI inventoryText;
     [SerializeField] private ScrollRect scrollRect;
+    [SerializeField] private Transform slotContainer;
+    [SerializeField] private InventorySlot slotPrefab;
+
+    private List<InventorySlot> slots = new();
+    private int columns = 4;
 
         public void Render(Dictionary<string, int> items)
         {
-                if (inventoryText == null)
+                int index = 0;
+                
+                foreach (var slot in slots)
                 {
-                        Debug.LogWarning("InventoryUIView: inventoryText가 할당되지 않았습니다.");
-                        return;
+                        slot.Clear();
                 }
-
-                if (items.Count == 0)
-                {
-                        inventoryText.text = "Inventory is empty!";
-                        return;
-                }
-
-                inventoryText.text = "=== Inventory ===\n";
 
                 foreach (var item in items)
                 {
-                        inventoryText.text += $"{item.Key} x {item.Value}\n";
+                        if (index >= slots.Count) break;
+
+                        slots[index].SetItem(item.Key, item.Value);
+                        index++;
                 }
         }
 
         public void SelectItem(int index)
         {
-                Debug.Log($"아이템 선택: {index}");
+                ClearSelection();
+
+                if (IsValidIndex(index))
+                {
+                        slots[index].SetSelected(true);
+                }
         }
 
+        /// <summary>
+        /// 방향 입력에 따른 다음 인덱스 계산 + 선택 처리
+        /// 결과 인덱스를 Presenter에게 반환
+        /// </summary>
         public int MoveSelection(int currentIndex, Vector2 dir)
         {
-                // dir.y > 0 : 위
-                // dir.y < 0 : 아래
-                // dir.x > 0 : 오른쪽
-                // dir.x < 0 : 왼쪽
-
-                int nextIndex = currentIndex;
-
-                if (dir.y > 0) nextIndex--;
-                if (dir.y < 0) nextIndex++;
-
-                nextIndex = Mathf.Clamp(nextIndex, 0, GetItemCount() - 1);
+                int nextIndex = CalculateNextIndex(currentIndex, dir);
                 SelectItem(nextIndex);
                 return nextIndex;
         }
+
+
 
         public int GetItemIndexUnderMouse()
         {
@@ -80,6 +80,45 @@ public class InventoryUIView : MonoBehaviour
         {
                 return 20; // 예시
         }
+
+    /* =========================
+     * 내부 구현
+     * ========================= */
+        private void ClearSelection()
+        {
+                foreach (var slot in slots)
+                {
+                        slot.SetSelected(false);
+                }
+        }
+
+        private bool IsValidIndex(int index)
+        {
+                return index >= 0 && index < slots.Count;
+        }
+
+        private int CalculateNextIndex(int currentIndex, Vector2 dir)
+        {
+                int row = currentIndex / columns;
+                int col = currentIndex % columns;
+
+                if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+                {
+                col += dir.x > 0 ? 1 : -1;
+                }
+                else
+                {
+                row += dir.y > 0 ? -1 : 1;
+                }
+
+                int nextIndex = row * columns + col;
+
+                if (!IsValidIndex(nextIndex))
+                return currentIndex;
+
+                return nextIndex;
+        }
+
 
 }
 

@@ -7,6 +7,7 @@ public class Managers : MonoBehaviour
 
     public static DataManager Data => Instance._data;
     public static InventoryManager Inventory => Instance._inventory;
+    public static UIManager UI => UIManager.Instance;
 
     private DataManager _data;
     private InventoryManager _inventory;
