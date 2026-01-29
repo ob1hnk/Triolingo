@@ -1,9 +1,6 @@
-// 4. InventoryUIPresenter.cs (리팩토링)
 using MyAssets.FinalCharacterController;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
-// InventoryUIPresenter.cs 수정
 
 namespace MyAssets.UI.Presenters
 {
@@ -16,8 +13,8 @@ namespace MyAssets.UI.Presenters
         private InventoryLogic inventoryLogic;
         private int selectedIndex = -1;
         
-        // 입력 핸들러가 초기화되었는지 추적
         private bool isInputInitialized = false;
+        private bool isInventoryLogicInitialized = false;
 
         /* =====================
          * Unity Lifecycle
@@ -26,8 +23,12 @@ namespace MyAssets.UI.Presenters
         private void Awake()
         {
             ValidateComponents();
-            InitializeInventoryLogic();
             InitializeInputHandlers();
+        }
+
+        private void Start()
+        {
+            InitializeInventoryLogic();
         }
 
         private void OnDestroy()
@@ -55,7 +56,19 @@ namespace MyAssets.UI.Presenters
 
         private void InitializeInventoryLogic()
         {
-            inventoryLogic = Managers.Inventory?.Logic;
+            if (Managers.Instance == null)
+            {
+                Debug.LogError("InventoryUIPresenter: Managers가 초기화되지 않았습니다.");
+                return;
+            }
+
+            if (Managers.Inventory == null)
+            {
+                Debug.LogError("InventoryUIPresenter: InventoryManager가 초기화되지 않았습니다.");
+                return;
+            }
+
+            inventoryLogic = Managers.Inventory.Logic;
             
             if (inventoryLogic == null)
             {
@@ -64,6 +77,7 @@ namespace MyAssets.UI.Presenters
             }
             
             inventoryLogic.OnInventoryChanged += Refresh;
+            isInventoryLogicInitialized = true;
             Debug.Log("InventoryUIPresenter: InventoryLogic 연결 완료");
         }
 
@@ -89,7 +103,6 @@ namespace MyAssets.UI.Presenters
 
         private void CleanupInputHandlers()
         {
-            // struct는 null 체크 불가, 초기화 여부로 확인
             if (!isInputInitialized) return;
             
             uiInput.Navigate.performed -= OnNavigate;
@@ -104,10 +117,14 @@ namespace MyAssets.UI.Presenters
 
         private void CleanupInventoryLogic()
         {
+            if (!isInventoryLogicInitialized) return;
+            
             if (inventoryLogic != null)
             {
                 inventoryLogic.OnInventoryChanged -= Refresh;
             }
+            
+            isInventoryLogicInitialized = false;
         }
 
         /* =====================
@@ -117,6 +134,12 @@ namespace MyAssets.UI.Presenters
         public void Show()
         {
             if (canvasGroup == null) return;
+            
+            // InventoryLogic이 아직 초기화되지 않았다면 시도
+            if (!isInventoryLogicInitialized)
+            {
+                InitializeInventoryLogic();
+            }
             
             canvasGroup.alpha = 1f;
             canvasGroup.interactable = true;
@@ -145,16 +168,26 @@ namespace MyAssets.UI.Presenters
 
             Vector2 direction = context.ReadValue<Vector2>();
 
+            // 방향 입력이 없으면 무시
+            if (direction.sqrMagnitude < 0.1f) return;
+
             // 첫 선택
             if (selectedIndex < 0)
             {
                 selectedIndex = 0;
                 view.SelectItem(selectedIndex);
+                Debug.Log($"<color=green>슬롯 선택:</color> 인덱스 {selectedIndex}");
                 return;
             }
 
             // 방향키로 이동
+            int previousIndex = selectedIndex;
             selectedIndex = view.MoveSelection(selectedIndex, direction);
+            
+            if (previousIndex != selectedIndex)
+            {
+                Debug.Log($"<color=green>슬롯 이동:</color> {previousIndex} → {selectedIndex}");
+            }
         }
 
         private void OnPoint(InputAction.CallbackContext context)
@@ -174,6 +207,7 @@ namespace MyAssets.UI.Presenters
 
             selectedIndex = clickedIndex;
             view.SelectItem(selectedIndex);
+            Debug.Log($"<color=green>마우스 클릭:</color> 슬롯 {selectedIndex} 선택");
         }
 
         private void OnScroll(InputAction.CallbackContext context)
@@ -187,8 +221,20 @@ namespace MyAssets.UI.Presenters
         private void OnSubmit(InputAction.CallbackContext context)
         {
             if (!context.performed || view == null) return;
-            if (selectedIndex < 0) return;
+            if (selectedIndex < 0)
+            {
+                Debug.LogWarning("아이템을 먼저 선택해주세요.");
+                return;
+            }
 
+            // 선택한 슬롯에 아이템이 있는지 확인
+            if (!view.HasItemAtIndex(selectedIndex))
+            {
+                Debug.LogWarning($"슬롯 {selectedIndex}에 아이템이 없습니다.");
+                return;
+            }
+
+            Debug.Log($"<color=cyan>[E 키 입력]</color> 슬롯 {selectedIndex} 아이템 정보 표시");
             view.UseSelectedItem(selectedIndex);
         }
 
@@ -196,7 +242,7 @@ namespace MyAssets.UI.Presenters
         {
             if (!context.performed) return;
 
-            // 상태 변경을 통해 인벤토리 닫기
+            Debug.Log("<color=yellow>[Q/ESC 키 입력]</color> 인벤토리 닫기");
             GameStateManager.Instance.ChangeState(GameState.Gameplay);
         }
 
@@ -206,9 +252,9 @@ namespace MyAssets.UI.Presenters
 
         private void Refresh()
         {
-            if (inventoryLogic == null || view == null)
+            if (!isInventoryLogicInitialized || inventoryLogic == null || view == null)
             {
-                Debug.LogWarning("InventoryUIPresenter: Refresh 실패 - inventoryLogic 또는 view가 null입니다.");
+                Debug.LogWarning("InventoryUIPresenter: Refresh 실패 - 초기화되지 않았습니다.");
                 return;
             }
             
