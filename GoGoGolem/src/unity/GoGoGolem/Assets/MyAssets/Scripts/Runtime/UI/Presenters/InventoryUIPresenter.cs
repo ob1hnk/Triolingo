@@ -1,149 +1,224 @@
+// 4. InventoryUIPresenter.cs (리팩토링)
 using MyAssets.FinalCharacterController;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+// InventoryUIPresenter.cs 수정
 
 namespace MyAssets.UI.Presenters
 {
-        public class InventoryUIPresenter : MonoBehaviour, GameInputActions.IUIActions
-        {
-                [SerializeField] private InventoryUIView view;
-                private GameInputActions.UIActions input;
-
-                private InventoryLogic inventoryLogic;
-                
-
-
-        /* =====================
-        * 외부에서 호출되는 API
-        * ===================== */
-
-                public void Show()
-                {
-                        gameObject.SetActive(true);
-                }
-
-                public void Hide()
-                {
-                        gameObject.SetActive(false);
-                }
-
+    public class InventoryUIPresenter : MonoBehaviour
+    {
+        [SerializeField] private CanvasGroup canvasGroup;
+        [SerializeField] private InventoryUIView view;
+        
+        private GameInputActions.UIActions uiInput;
+        private InventoryLogic inventoryLogic;
+        private int selectedIndex = -1;
+        
+        // 입력 핸들러가 초기화되었는지 추적
+        private bool isInputInitialized = false;
 
         /* =====================
          * Unity Lifecycle
          * ===================== */
-                void Start()
-                {
-                        // InventoryLogic 연결
-                        inventoryLogic = Managers.Inventory.Logic;
 
-                        if (inventoryLogic == null)
-                        {
-                        Debug.LogError("InventoryUIPresenter: InventoryLogic을 찾을 수 없습니다.");
-                        return;
-                        }
+        private void Awake()
+        {
+            ValidateComponents();
+            InitializeInventoryLogic();
+            InitializeInputHandlers();
+        }
 
-                        // 이벤트 구독
-                        inventoryLogic.OnInventoryChanged += Refresh;
+        private void OnDestroy()
+        {
+            CleanupInputHandlers();
+            CleanupInventoryLogic();
+        }
 
-                        // 최초 1회 렌더링
-                        Refresh();
-                }
+        /* =====================
+         * Initialization
+         * ===================== */
 
-                private void OnEnable()
-                {
-                        input = InputModeController.Instance.UIInput.UI;
-                        input.Navigate.performed += OnNavigate;
-                        input.Point.performed += OnPoint;
-                        input.Click.performed += OnClick;
-                        input.Scroll.performed += OnScroll;
-                        input.Submit.performed += OnSubmit;
-                        input.Cancel.performed += OnCancel;
-                }
+        private void ValidateComponents()
+        {
+            if (view == null)
+            {
+                Debug.LogError("InventoryUIPresenter: view가 연결되지 않았습니다.");
+            }
+            
+            if (canvasGroup == null)
+            {
+                Debug.LogError("InventoryUIPresenter: canvasGroup이 연결되지 않았습니다.");
+            }
+        }
 
-                private void OnDisable()
-                {
+        private void InitializeInventoryLogic()
+        {
+            inventoryLogic = Managers.Inventory?.Logic;
+            
+            if (inventoryLogic == null)
+            {
+                Debug.LogError("InventoryUIPresenter: InventoryLogic을 찾을 수 없습니다.");
+                return;
+            }
+            
+            inventoryLogic.OnInventoryChanged += Refresh;
+            Debug.Log("InventoryUIPresenter: InventoryLogic 연결 완료");
+        }
 
-                        input.Navigate.performed -= OnNavigate;
-                        input.Point.performed -= OnPoint;
-                        input.Click.performed -= OnClick;
-                        input.Scroll.performed -= OnScroll;
-                        input.Submit.performed -= OnSubmit;
-                        input.Cancel.performed -= OnCancel;
-                }
+        private void InitializeInputHandlers()
+        {
+            if (InputModeController.Instance == null)
+            {
+                Debug.LogError("InventoryUIPresenter: InputModeController를 찾을 수 없습니다.");
+                return;
+            }
+            
+            uiInput = InputModeController.Instance.GetUIActions();
+            
+            uiInput.Navigate.performed += OnNavigate;
+            uiInput.Point.performed += OnPoint;
+            uiInput.Click.performed += OnClick;
+            uiInput.Scroll.performed += OnScroll;
+            uiInput.Submit.performed += OnSubmit;
+            uiInput.Cancel.performed += OnCancel;
+            
+            isInputInitialized = true;
+        }
 
-                void OnDestroy()
-                {
-                        if (inventoryLogic != null)
-                        inventoryLogic.OnInventoryChanged -= Refresh;
-                }
+        private void CleanupInputHandlers()
+        {
+            // struct는 null 체크 불가, 초기화 여부로 확인
+            if (!isInputInitialized) return;
+            
+            uiInput.Navigate.performed -= OnNavigate;
+            uiInput.Point.performed -= OnPoint;
+            uiInput.Click.performed -= OnClick;
+            uiInput.Scroll.performed -= OnScroll;
+            uiInput.Submit.performed -= OnSubmit;
+            uiInput.Cancel.performed -= OnCancel;
+            
+            isInputInitialized = false;
+        }
 
-                private void Refresh()
-                {
-                        view.Render(inventoryLogic.GetAllItems());
-                }
+        private void CleanupInventoryLogic()
+        {
+            if (inventoryLogic != null)
+            {
+                inventoryLogic.OnInventoryChanged -= Refresh;
+            }
+        }
+
+        /* =====================
+         * Public API
+         * ===================== */
+
+        public void Show()
+        {
+            if (canvasGroup == null) return;
+            
+            canvasGroup.alpha = 1f;
+            canvasGroup.interactable = true;
+            canvasGroup.blocksRaycasts = true;
+
+            ResetSelection();
+            Refresh();
+        }
+
+        public void Hide()
+        {
+            if (canvasGroup == null) return;
+            
+            canvasGroup.alpha = 0f;
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+        }
 
         /* =====================
          * Input Handlers
          * ===================== */
-                // WASD, Arrow
-                private int selectedIndex = -1;
-                public void OnNavigate(InputAction.CallbackContext context)
-                {
-                        if (!context.performed) return;
 
-                        Vector2 dir = context.ReadValue<Vector2>();
+        private void OnNavigate(InputAction.CallbackContext context)
+        {
+            if (!context.performed || view == null) return;
 
-                        if (selectedIndex < 0)
-                        {
-                                selectedIndex = 0;
-                                view.SelectItem(selectedIndex);
-                                return;
-                        }
+            Vector2 direction = context.ReadValue<Vector2>();
 
-                        selectedIndex = view.MoveSelection(selectedIndex, dir);
-                }
-                // 마우스 위치 (필요하면 View에서 사용)
-                public void OnPoint(InputAction.CallbackContext context)
-                {
-                        Vector2 mousePos = context.ReadValue<Vector2>();
-                        view.UpdatePointer(mousePos);
-                }
+            // 첫 선택
+            if (selectedIndex < 0)
+            {
+                selectedIndex = 0;
+                view.SelectItem(selectedIndex);
+                return;
+            }
 
-                // 마우스 클릭
-                public void OnClick(InputAction.CallbackContext context)
-                {
-                        if (!context.performed) return;
-
-                        int clickedIndex = view.GetItemIndexUnderMouse();
-                        if (clickedIndex < 0) return;
-
-                        selectedIndex = clickedIndex;
-                        view.SelectItem(selectedIndex);
-                }
-
-                // 스크롤
-                public void OnScroll(InputAction.CallbackContext context)
-                {
-                        float scroll = context.ReadValue<float>();
-                        view.Scroll(scroll);
-                }
-
-                // E 키
-                public void OnSubmit(InputAction.CallbackContext context)
-                {
-                        if (!context.performed) return;
-                        if (selectedIndex < 0) return;
-
-                        view.UseSelectedItem(selectedIndex);
-                }
-
-                // Q / Esc
-                public void OnCancel(InputAction.CallbackContext context)
-                {
-                        if (!context.performed) return;
-
-                        Hide();
-                }
+            // 방향키로 이동
+            selectedIndex = view.MoveSelection(selectedIndex, direction);
         }
+
+        private void OnPoint(InputAction.CallbackContext context)
+        {
+            if (view == null) return;
+            
+            Vector2 mousePos = context.ReadValue<Vector2>();
+            view.UpdatePointer(mousePos);
+        }
+
+        private void OnClick(InputAction.CallbackContext context)
+        {
+            if (!context.performed || view == null) return;
+
+            int clickedIndex = view.GetItemIndexUnderMouse();
+            if (clickedIndex < 0) return;
+
+            selectedIndex = clickedIndex;
+            view.SelectItem(selectedIndex);
+        }
+
+        private void OnScroll(InputAction.CallbackContext context)
+        {
+            if (view == null) return;
+            
+            float scrollDelta = context.ReadValue<float>();
+            view.Scroll(scrollDelta);
+        }
+
+        private void OnSubmit(InputAction.CallbackContext context)
+        {
+            if (!context.performed || view == null) return;
+            if (selectedIndex < 0) return;
+
+            view.UseSelectedItem(selectedIndex);
+        }
+
+        private void OnCancel(InputAction.CallbackContext context)
+        {
+            if (!context.performed) return;
+
+            // 상태 변경을 통해 인벤토리 닫기
+            GameStateManager.Instance.ChangeState(GameState.Gameplay);
+        }
+
+        /* =====================
+         * Internal Methods
+         * ===================== */
+
+        private void Refresh()
+        {
+            if (inventoryLogic == null || view == null)
+            {
+                Debug.LogWarning("InventoryUIPresenter: Refresh 실패 - inventoryLogic 또는 view가 null입니다.");
+                return;
+            }
+            
+            view.Render(inventoryLogic.GetAllItems());
+        }
+
+        private void ResetSelection()
+        {
+            selectedIndex = -1;
+            view?.ClearSelection();
+        }
+    }
 }

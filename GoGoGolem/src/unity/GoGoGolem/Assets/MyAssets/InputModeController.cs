@@ -1,14 +1,11 @@
 using MyAssets.FinalCharacterController;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class InputModeController : MonoBehaviour
 {
     public static InputModeController Instance { get; private set; }
 
     private GameInputActions input;
-
-    private bool inventoryOpen = false;
 
     private void Awake()
     {
@@ -21,48 +18,80 @@ public class InputModeController : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
+        InitializeInput();
+        SubscribeToStateChanges();
+    }
+        
+        private void InitializeInput()
+    {
         input = new GameInputActions();
-
-        // 항상 활성
         input.Global.Enable();
-
-        // 기본 상태
+        
+        // Q 키는 인벤토리 토글만 담당
+        input.Global.ToggleInventory.performed += _ => HandleInventoryToggle();
+        
+        // 초기 상태에 맞는 입력 활성화
         EnableGameplayInput();
-
-        // Q 키 바인딩
-        input.Global.ToggleInventory.performed += _ => ToggleInventory();
     }
 
-    private void ToggleInventory()
+    private void SubscribeToStateChanges()
     {
-        if (inventoryOpen)
-            CloseInventory();
-        else
-            OpenInventory();
+        GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
     }
 
-    public void OpenInventory()
+    private void HandleInventoryToggle()
     {
-        inventoryOpen = true;
-
-        DisableGameplayInput();
-        EnableUIInput();
-
-        Time.timeScale = 0f;
-
-        UIManager.Instance.Inventory.Show();
+        var currentState = GameStateManager.Instance.CurrentState;
+        
+        if (currentState == GameState.Gameplay)
+        {
+            GameStateManager.Instance.ChangeState(GameState.InventoryUI);
+        }
+        else if (currentState == GameState.InventoryUI)
+        {
+            GameStateManager.Instance.ChangeState(GameState.Gameplay);
+        }
     }
 
-    public void CloseInventory()
+    private void OnGameStateChanged(GameState oldState, GameState newState)
     {
-        inventoryOpen = false;
+        // 이전 상태의 입력 비활성화
+        DisableInputForState(oldState);
+        
+        // 새 상태의 입력 활성화
+        EnableInputForState(newState);
+    }
 
-        DisableUIInput();
-        EnableGameplayInput();
+    private void EnableInputForState(GameState state)
+    {
+        switch (state)
+        {
+            case GameState.Gameplay:
+                EnableGameplayInput();
+                break;
+                
+            case GameState.InventoryUI:
+                EnableUIInput();
+                break;
+                
+            case GameState.Paused:
+                // 일시정지 시에는 특정 입력만 활성화
+                break;
+        }
+    }
 
-        Time.timeScale = 1f;
-
-        UIManager.Instance.Inventory.Hide();
+    private void DisableInputForState(GameState state)
+    {
+        switch (state)
+        {
+            case GameState.Gameplay:
+                DisableGameplayInput();
+                break;
+                
+            case GameState.InventoryUI:
+                DisableUIInput();
+                break;
+        }
     }
 
     private void EnableGameplayInput()
@@ -89,5 +118,26 @@ public class InputModeController : MonoBehaviour
         input.UI.Disable();
     }
 
-    public GameInputActions UIInput => input;
+    private void OnDestroy()
+    {
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
+        }
+        
+        if (input == null) return;
+
+        input.Global.ToggleInventory.performed -= _ => HandleInventoryToggle();
+        
+        input.Global.Disable();
+        input.PlayerMovement.Disable();
+        input.PlayerActions.Disable();
+        input.CameraControl.Disable();
+        input.UI.Disable();
+
+        input.Dispose();
+    }
+
+    // Presenter가 접근할 수 있도록 제공
+    public GameInputActions.UIActions GetUIActions() => input.UI;
 }
