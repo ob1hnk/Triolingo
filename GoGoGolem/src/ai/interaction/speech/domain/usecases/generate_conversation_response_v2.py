@@ -7,7 +7,7 @@ Speech-to-Speech API를 사용하여 단일 API 호출로 응답을 생성합니
 """
 
 import logging
-from typing import Dict, Any, BinaryIO, Optional
+from typing import Dict, Any, BinaryIO
 from interaction.speech.domain.ports.speech_to_speech import SpeechToSpeechPort
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,6 @@ class GenerateConversationResponseUseCaseV2:
         self,
         audio_file: BinaryIO | bytes,
         language: str = "ko",
-        system_prompt: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         음성 파일을 처리하여 대화 응답을 직접 생성
@@ -45,7 +44,6 @@ class GenerateConversationResponseUseCaseV2:
         Args:
             audio_file: 오디오 파일 (BinaryIO 또는 bytes)
             language: 오디오 언어 코드 (기본값: "ko" - 한국어)
-            system_prompt: 시스템 프롬프트 (선택사항)
 
         Returns:
             {
@@ -63,7 +61,6 @@ class GenerateConversationResponseUseCaseV2:
             response_text = await self.speech_to_speech.generate_response_from_audio(
                 audio_file=audio_file,
                 language=language,
-                system_prompt=system_prompt,
             )
 
             logger.info("Conversation response generation completed successfully (v2)")
