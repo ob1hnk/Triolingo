@@ -14,11 +14,17 @@ from interaction.speech.components.text_to_text.llm_text_to_text_v1 import (
 from interaction.speech.components.speech_to_speech.llm_speech_to_speech_v1 import (
     LLMSpeechToSpeechV1,
 )
+from interaction.speech.components.speech_to_speech.llm_speech_to_speech_v2 import (
+    LLMSpeechToSpeechV2,
+)
 from interaction.speech.domain.usecases.generate_conversation_response import (
     GenerateConversationResponseUseCase,
 )
 from interaction.speech.domain.usecases.generate_conversation_response_v2 import (
     GenerateConversationResponseUseCaseV2,
+)
+from interaction.speech.domain.usecases.generate_conversation_response_v3 import (
+    GenerateConversationResponseUseCaseV3,
 )
 
 
@@ -61,4 +67,19 @@ class SpeechContainer(containers.DeclarativeContainer):
     generate_conversation_response_usecase_v2 = providers.Singleton(
         GenerateConversationResponseUseCaseV2,
         speech_to_speech=speech_to_speech,
+    )
+
+    # Speech-to-Speech v2 (Realtime API 기반)
+    speech_to_speech_v2 = providers.Singleton(
+        LLMSpeechToSpeechV2,
+        api_key=core_container.config.openai_api_key,
+        model="gpt-realtime-mini",
+        transcription_model="gpt-4o-mini-transcribe",
+        transcription_language="ko",
+    )
+
+    # v3: Realtime API 기반 (저지연)
+    generate_conversation_response_usecase_v3 = providers.Singleton(
+        GenerateConversationResponseUseCaseV3,
+        speech_to_speech=speech_to_speech_v2,
     )
