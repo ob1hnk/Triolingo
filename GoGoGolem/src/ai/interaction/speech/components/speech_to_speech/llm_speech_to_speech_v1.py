@@ -8,13 +8,13 @@ AI 응답을 생성합니다. 기존 2단계 파이프라인(음성→텍스트�
 
 import base64
 import logging
-from typing import BinaryIO, Optional, Union, List, Dict, Any
+from typing import BinaryIO, Union, List, Dict, Any
 from pathlib import Path
 from litellm import Router
 
 from interaction.speech.domain.ports.speech_to_speech import SpeechToSpeechPort
 from interaction.core.components.llm_components.llm_component import LLMComponent
-from interaction.speech.prompts.text_to_text_v1 import SYSTEM_PROMPT, MODEL_CONFIG
+from interaction.speech.prompts.text_to_text_v2 import SYSTEM_PROMPT, MODEL_CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,6 @@ class LLMSpeechToSpeechV1(LLMComponent, SpeechToSpeechPort):
         self,
         router: Router,
         model: str = "gpt-4o-audio-preview",
-        default_system_prompt: Optional[str] = None,
     ):
         """
         초기화
@@ -42,11 +41,9 @@ class LLMSpeechToSpeechV1(LLMComponent, SpeechToSpeechPort):
         Args:
             router: LiteLLM Router 인스턴스
             model: 사용할 모델명 (기본값: gpt-4o-audio-preview)
-            default_system_prompt: 기본 시스템 프롬프트 (None이면 text_to_text_v1 프롬프트 사용)
         """
         super().__init__(prompt_path="", router=router)
         self.model = model
-        self.default_system_prompt = default_system_prompt or SYSTEM_PROMPT
         self.temperature = MODEL_CONFIG.get("temperature", 0.7)
         self.max_tokens = MODEL_CONFIG.get("max_tokens", 10000)
         logger.info(f"LLMSpeechToSpeechV1 initialized with model: {model}")
@@ -155,7 +152,6 @@ class LLMSpeechToSpeechV1(LLMComponent, SpeechToSpeechPort):
         self,
         audio_file: BinaryIO,
         language: str = "ko",
-        system_prompt: Optional[str] = None,
     ) -> str:
         """
         사용자 오디오로부터 AI 응답을 직접 생성
@@ -163,7 +159,6 @@ class LLMSpeechToSpeechV1(LLMComponent, SpeechToSpeechPort):
         Args:
             audio_file: 오디오 파일 (BinaryIO 또는 bytes)
             language: 오디오 언어 코드 (기본값: "ko" - 한국어)
-            system_prompt: 시스템 프롬프트 (선택사항, None이면 기본 프롬프트 사용)
 
         Returns:
             AI가 생성한 응답 텍스트 (str)
@@ -177,9 +172,8 @@ class LLMSpeechToSpeechV1(LLMComponent, SpeechToSpeechPort):
             logger.debug(f"Audio format detected: {audio_format}")
 
             # 2. 메시지 구성
-            system_content = system_prompt or self.default_system_prompt
             messages: List[Dict[str, Any]] = [
-                {"role": "system", "content": system_content},
+                {"role": "system", "content": SYSTEM_PROMPT},
                 self._build_audio_message(audio_bytes, audio_format),
             ]
 
