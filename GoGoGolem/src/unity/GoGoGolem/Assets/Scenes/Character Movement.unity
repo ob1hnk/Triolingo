@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 111603828}
   - component: {fileID: 111603831}
   - component: {fileID: 111603830}
+  - component: {fileID: 111603833}
   m_Layer: 0
   m_Name: ManagersBootstrap
   m_TagString: Untagged
@@ -229,6 +230,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 775b101cc276548a6b3488abcea19d61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &111603833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111603825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9751b6e1db1f046778125b6e380de458, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  questDatabase: {fileID: 11400000, guid: 4b0354f72cbf948c38b004eb9364d897, type: 2}
+  showDebugLogs: 1
 --- !u!1 &169709587
 GameObject:
   m_ObjectHideFlags: 0
@@ -1373,6 +1388,54 @@ RectTransform:
   m_AnchoredPosition: {x: 200, y: 0}
   m_SizeDelta: {x: 400, y: 500}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &557866656
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 557866658}
+  - component: {fileID: 557866657}
+  m_Layer: 0
+  m_Name: QuestTest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &557866657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 557866656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23391415fff5c4b128b09e9385c0ca2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  testQuestID: MQ-01
+  testObjectiveID: MQ-01-OBJ-01
+  testPhaseID: MQ-01-P01
+  showHelpOnStart: 1
+--- !u!4 &557866658
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 557866656}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 403.82364, y: 199.33066, z: -41.245636}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &563220182 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: efd331d4b11709f40b82377af7a18459, type: 3}
@@ -8449,3 +8512,4 @@ SceneRoots:
   - {fileID: 381287357}
   - {fileID: 111603827}
   - {fileID: 1823090225}
+  - {fileID: 557866658}
