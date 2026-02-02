@@ -4,26 +4,72 @@ using UnityEngine.UI;
 
 public class InventoryUIView : MonoBehaviour
 {
+    /* =====================
+     * Serialized Fields
+     * ===================== */
+    
+    [Header("Slot Settings")]
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private Transform slotContainer;
     [SerializeField] private InventorySlot slotPrefab;
     
     [Header("Grid Settings")]
     [SerializeField] private int columns = 4;
-    [SerializeField] private int initialSlotCount = 8; // 기본 슬롯 개수
+    [SerializeField] private int initialSlotCount = 8;
+    
+    [Header("Item Info Panel")]
+    [SerializeField] private ItemInfoPanel itemInfoPanel;
+    
+    /* =====================
+     * Private Fields
+     * ===================== */
     
     private List<InventorySlot> slots = new();
     private Dictionary<int, string> indexToItemID = new();
+    
+    /* =====================
+     * Events
+     * ===================== */
+    
+    // 슬롯 클릭 이벤트 (Presenter가 구독)
+    public System.Action<int> OnSlotClicked;
 
     /* =====================
      * Unity Lifecycle
      * ===================== */
 
-    private void Awake()
+    private void Start()
     {
-        Debug.Log("<color=yellow>[InventoryUIView]</color> Awake - 슬롯 초기화 시작");
-        InitializeSlots();
+        Debug.Log("<color=yellow>[InventoryUIView]</color> Start - 슬롯 초기화 시작");
+        
+        if (Application.isPlaying)
+        {
+            InitializeSlots();
+        }
     }
+
+#if UNITY_EDITOR
+    private void OnDestroy()
+    {
+        if (!Application.isPlaying && slotContainer != null)
+        {
+            CleanupEditorSlots();
+        }
+    }
+
+    private void CleanupEditorSlots()
+    {
+        int childCount = slotContainer.childCount;
+        for (int i = childCount - 1; i >= 0; i--)
+        {
+            Transform child = slotContainer.GetChild(i);
+            if (child.gameObject.hideFlags == HideFlags.DontSave)
+            {
+                DestroyImmediate(child.gameObject);
+            }
+        }
+    }
+#endif
 
     /* =====================
      * Initialization
@@ -33,7 +79,7 @@ public class InventoryUIView : MonoBehaviour
     {
         if (slotPrefab == null)
         {
-            Debug.LogError("[InventoryUIView] slotPrefab이 할당되지 않았습니다! Inspector에서 프리팹을 할당해주세요.");
+            Debug.LogError("[InventoryUIView] slotPrefab이 할당되지 않았습니다!");
             return;
         }
 
@@ -43,40 +89,70 @@ public class InventoryUIView : MonoBehaviour
             return;
         }
 
-        // 기존 슬롯 모두 제거
-        int childCount = slotContainer.childCount;
-        for (int i = childCount - 1; i >= 0; i--)
-        {
-            if (Application.isPlaying)
-                Destroy(slotContainer.GetChild(i).gameObject);
-            else
-                DestroyImmediate(slotContainer.GetChild(i).gameObject);
-        }
-        slots.Clear();
+        ClearAllSlotObjects();
 
-        // 기본 슬롯 생성 (항상 표시될 빈 슬롯)
         Debug.Log($"<color=yellow>[InventoryUIView]</color> {initialSlotCount}개 슬롯 생성 시작");
         
         for (int i = 0; i < initialSlotCount; i++)
         {
-            InventorySlot newSlot = Instantiate(slotPrefab, slotContainer);
-            newSlot.gameObject.name = $"Slot_{i}";
-            newSlot.ShowAsEmpty(); // 빈 슬롯으로 표시
-            slots.Add(newSlot);
+            CreateSlot(i);
         }
 
         Debug.Log($"<color=yellow>[InventoryUIView]</color> 슬롯 {slots.Count}개 생성 완료 ✓");
     }
 
+    private void CreateSlot(int index)
+    {
+        InventorySlot newSlot = Instantiate(slotPrefab, slotContainer);
+        newSlot.gameObject.name = $"Slot_{index}";
+        newSlot.gameObject.hideFlags = HideFlags.DontSaveInEditor;
+        
+        // 슬롯 인덱스 설정
+        newSlot.SetIndex(index);
+        
+        // 클릭 이벤트 구독
+        newSlot.OnSlotClicked += HandleSlotClick;
+        
+        newSlot.ShowAsEmpty();
+        slots.Add(newSlot);
+    }
+
+    private void ClearAllSlotObjects()
+    {
+        // 기존 슬롯 이벤트 구독 해제
+        foreach (var slot in slots)
+        {
+            if (slot != null)
+            {
+                slot.OnSlotClicked -= HandleSlotClick;
+            }
+        }
+
+        int childCount = slotContainer.childCount;
+        for (int i = childCount - 1; i >= 0; i--)
+        {
+            Transform child = slotContainer.GetChild(i);
+            
+            if (Application.isPlaying)
+            {
+                Destroy(child.gameObject);
+            }
+            else
+            {
+                DestroyImmediate(child.gameObject);
+            }
+        }
+        slots.Clear();
+    }
+
     /* =====================
-     * Public API
+     * Public API - Rendering
      * ===================== */
 
     public void Render(Dictionary<string, int> items)
     {
         Debug.Log($"<color=yellow>[InventoryUIView]</color> Render 시작 - 아이템 {items?.Count ?? 0}개");
         
-        // 슬롯이 없으면 생성
         if (slots.Count == 0)
         {
             Debug.LogWarning("<color=yellow>[InventoryUIView]</color> 슬롯이 없어서 재생성 시도");
@@ -94,11 +170,9 @@ public class InventoryUIView : MonoBehaviour
         
         if (items == null || items.Count == 0)
         {
-            Debug.Log("<color=yellow>[InventoryUIView]</color> 렌더링할 아이템이 없습니다. 빈 슬롯만 표시합니다.");
+            Debug.Log("<color=yellow>[InventoryUIView]</color> 렌더링할 아이템이 없습니다.");
             return;
         }
-        
-        Debug.Log($"<color=yellow>[InventoryUIView]</color> 현재 슬롯 수: {slots.Count}");
 
         // 필요하면 슬롯 추가 생성
         int requiredSlots = items.Count;
@@ -109,10 +183,7 @@ public class InventoryUIView : MonoBehaviour
             
             for (int i = 0; i < slotsToAdd; i++)
             {
-                InventorySlot newSlot = Instantiate(slotPrefab, slotContainer);
-                newSlot.gameObject.name = $"Slot_{slots.Count}";
-                newSlot.ShowAsEmpty();
-                slots.Add(newSlot);
+                CreateSlot(slots.Count);
             }
         }
 
@@ -122,15 +193,12 @@ public class InventoryUIView : MonoBehaviour
         {
             if (index >= slots.Count)
             {
-                Debug.LogWarning($"<color=yellow>[InventoryUIView]</color> 슬롯 부족. 총 {slots.Count}개 중 {items.Count}개 아이템");
+                Debug.LogWarning($"<color=yellow>[InventoryUIView]</color> 슬롯 부족");
                 break;
             }
 
-            // ItemData 가져오기
             ItemData itemData = Managers.Data?.ItemDB?.GetItem(item.Key);
             string displayName = itemData != null ? itemData.itemName : item.Key;
-            
-            Debug.Log($"<color=yellow>[InventoryUIView]</color> 슬롯 {index}에 할당: {displayName} (ID: {item.Key}) x{item.Value}");
             
             slots[index].SetItem(displayName, item.Value);
             indexToItemID[index] = item.Key;
@@ -138,8 +206,11 @@ public class InventoryUIView : MonoBehaviour
         }
 
         Debug.Log($"<color=yellow>[InventoryUIView]</color> 총 {index}개 아이템 렌더링 완료 ✓");
-        Debug.Log($"<color=yellow>[InventoryUIView]</color> indexToItemID 크기: {indexToItemID.Count}");
     }
+
+    /* =====================
+     * Public API - Selection
+     * ===================== */
 
     public void SelectItem(int index)
     {
@@ -165,12 +236,65 @@ public class InventoryUIView : MonoBehaviour
         {
             slot.SetSelected(false);
         }
+
+        // 선택 해제 시 정보 패널도 비우기
+        if (itemInfoPanel != null)
+        {
+            itemInfoPanel.ShowEmpty();
+        }
     }
 
-    public int GetItemIndexUnderMouse()
+    /* =====================
+     * Public API - Item Info
+     * ===================== */
+
+    public void ShowItemInfo(int index)
     {
-        return -1;
+        Debug.Log($"<color=yellow>[InventoryUIView]</color> ShowItemInfo({index}) 호출");
+        
+        if (!IsValidIndex(index)) 
+        {
+            Debug.LogWarning($"<color=yellow>[InventoryUIView]</color> 유효하지 않은 인덱스: {index}");
+            if (itemInfoPanel != null)
+                itemInfoPanel.ShowEmpty();
+            return;
+        }
+        
+        if (!indexToItemID.TryGetValue(index, out string itemID))
+        {
+            Debug.LogWarning($"<color=orange>[InventoryUIView]</color> 인덱스 {index}에 아이템이 없습니다.");
+            if (itemInfoPanel != null)
+                itemInfoPanel.ShowEmpty();
+            return;
+        }
+        
+        ItemData itemData = Managers.Data?.ItemDB?.GetItem(itemID);
+        if (itemData == null)
+        {
+            Debug.LogWarning($"<color=yellow>[InventoryUIView]</color> 아이템 데이터를 찾을 수 없습니다. ID: {itemID}");
+            if (itemInfoPanel != null)
+                itemInfoPanel.ShowEmpty();
+            return;
+        }
+
+        // UI 패널에 표시
+        if (itemInfoPanel != null)
+        {
+            itemInfoPanel.ShowItemInfo(itemData);
+        }
+        
+        // 콘솔에도 출력 (디버깅용)
+        PrintItemInfo(itemData);
     }
+
+    public bool HasItemAtIndex(int index)
+    {
+        return indexToItemID.ContainsKey(index);
+    }
+
+    /* =====================
+     * Public API - Scrolling
+     * ===================== */
 
     public void Scroll(float delta)
     {
@@ -181,51 +305,42 @@ public class InventoryUIView : MonoBehaviour
         scrollRect.verticalNormalizedPosition = Mathf.Clamp01(scrollRect.verticalNormalizedPosition);
     }
 
-    public void UseSelectedItem(int index)
-    {
-        Debug.Log($"<color=yellow>[InventoryUIView]</color> UseSelectedItem({index}) 호출");
-        
-        if (!IsValidIndex(index)) 
-        {
-            Debug.LogWarning($"<color=yellow>[InventoryUIView]</color> 유효하지 않은 인덱스: {index}");
-            return;
-        }
-        
-        if (!indexToItemID.TryGetValue(index, out string itemID))
-        {
-            Debug.LogWarning($"<color=orange>[InventoryUIView]</color> 인덱스 {index}에 아이템이 없습니다.");
-            return;
-        }
-        
-        ItemData itemData = Managers.Data?.ItemDB?.GetItem(itemID);
-        if (itemData == null)
-        {
-            Debug.LogWarning($"<color=yellow>[InventoryUIView]</color> 아이템 데이터를 찾을 수 없습니다. ID: {itemID}");
-            return;
-        }
-        
-        PrintItemInfo(itemData);
-    }
+    /* =====================
+     * Public API - Mouse
+     * ===================== */
 
     public void UpdatePointer(Vector2 mousePos)
     {
-    }
-
-    public bool HasItemAtIndex(int index)
-    {
-        bool hasItem = indexToItemID.ContainsKey(index);
-        Debug.Log($"<color=yellow>[InventoryUIView]</color> HasItemAtIndex({index}): {hasItem}");
-        return hasItem;
+        // 필요시 마우스 호버 효과 구현
     }
 
     /* =====================
-     * Internal Methods
+     * Event Handlers
+     * ===================== */
+
+    /// <summary>
+    /// 슬롯 클릭 처리
+    /// </summary>
+    private void HandleSlotClick(int slotIndex)
+    {
+        Debug.Log($"<color=yellow>[InventoryUIView]</color> HandleSlotClick - 슬롯 {slotIndex} 클릭됨");
+        
+        // Presenter에게 전달
+        OnSlotClicked?.Invoke(slotIndex);
+    }
+
+    /* =====================
+     * Internal Helpers - Validation
      * ===================== */
 
     private bool IsValidIndex(int index)
     {
         return index >= 0 && index < slots.Count;
     }
+
+    /* =====================
+     * Internal Helpers - Navigation
+     * ===================== */
 
     private int CalculateNextIndex(int currentIndex, Vector2 direction)
     {
@@ -254,7 +369,13 @@ public class InventoryUIView : MonoBehaviour
     private void ScrollToItem(int index)
     {
         if (scrollRect == null || slotContainer == null) return;
+        
+        // TODO: 선택된 아이템이 보이도록 스크롤 위치 조정
     }
+
+    /* =====================
+     * Internal Helpers - Debug
+     * ===================== */
 
     private void PrintItemInfo(ItemData itemData)
     {
