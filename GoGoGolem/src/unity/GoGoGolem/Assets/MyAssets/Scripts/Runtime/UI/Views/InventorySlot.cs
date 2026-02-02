@@ -1,20 +1,35 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
-public class InventorySlot : MonoBehaviour
+public class InventorySlot : MonoBehaviour, IPointerClickHandler
 {
     [Header("UI References")]
     [SerializeField] private Image borderImage;
-    [SerializeField] private Image backgroundImage; // 배경 이미지 추가
+    [SerializeField] private Image backgroundImage;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI countText;
 
     [Header("Colors")]
     [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private Color selectedColor = Color.yellow;
-    [SerializeField] private Color emptyBackgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f); // 빈 슬롯 배경색
-    [SerializeField] private Color filledBackgroundColor = new Color(0.3f, 0.3f, 0.3f, 1f); // 아이템 있는 슬롯 배경색
+    [SerializeField] private Color emptyBackgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+    [SerializeField] private Color filledBackgroundColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+
+    // 슬롯의 인덱스 (View에서 설정)
+    private int slotIndex = -1;
+    
+    // 클릭 이벤트 (View가 구독)
+    public System.Action<int> OnSlotClicked;
+
+    /// <summary>
+    /// 슬롯 인덱스 설정
+    /// </summary>
+    public void SetIndex(int index)
+    {
+        slotIndex = index;
+    }
 
     /// <summary>
     /// 아이템을 슬롯에 설정
@@ -37,7 +52,7 @@ public class InventorySlot : MonoBehaviour
     }
 
     /// <summary>
-    /// 빈 슬롯으로 표시 (슬롯은 보이지만 아이템은 없음)
+    /// 빈 슬롯으로 표시
     /// </summary>
     public void ShowAsEmpty()
     {
@@ -53,11 +68,11 @@ public class InventorySlot : MonoBehaviour
         
         SetSelected(false);
         
-        gameObject.SetActive(true); // 중요: 활성화 상태 유지
+        gameObject.SetActive(true);
     }
 
     /// <summary>
-    /// 슬롯을 완전히 숨김 (사용하지 않음)
+    /// 슬롯을 완전히 숨김
     /// </summary>
     public void Clear()
     {
@@ -73,5 +88,16 @@ public class InventorySlot : MonoBehaviour
         {
             borderImage.color = selected ? selectedColor : normalColor;
         }
+    }
+
+    /// <summary>
+    /// 마우스 클릭 이벤트 처리 (Unity Event System)
+    /// </summary>
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        Debug.Log($"<color=cyan>[InventorySlot]</color> 슬롯 {slotIndex} 클릭됨");
+        
+        // 클릭 이벤트 발생
+        OnSlotClicked?.Invoke(slotIndex);
     }
 }

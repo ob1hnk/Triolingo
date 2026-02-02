@@ -19,6 +19,6 @@ public class InventoryManager : MonoBehaviour
             Debug.LogWarning($"DB에 존재하지 않는 아이템 ID: {itemID}");
         }
         Logic.AddItem(itemID);
-        Debug.Log($"아이템 획득 성공: {itemData.itemName}");
+        Debug.Log($"아이템 획득: {itemData.itemName}");
     }
 }
