@@ -5,7 +5,7 @@ using MyAssets.Runtime.Data.Quest;
 namespace MyAssets.Runtime.Systems.Quest
 {
     [CreateAssetMenu(fileName = "QuestDatabase", menuName = "Quest System/Quest Database")]
-    public class QuestDatabase : ScriptableObject  // ← 중요!
+    public class QuestDatabase : ScriptableObject
     {
         [Header("Quest 데이터 목록")]
         [SerializeField] private List<QuestData> questDataList = new List<QuestData>();
