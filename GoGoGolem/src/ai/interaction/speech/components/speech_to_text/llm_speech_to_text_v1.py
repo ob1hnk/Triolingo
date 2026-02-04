@@ -5,10 +5,10 @@ SpeechLLMComponent를 사용하여 음성을 텍스트로 변환합니다.
 """
 
 import logging
-from typing import BinaryIO
 from litellm import Router
 
 from interaction.speech.domain.ports.speech_to_text import SpeechToTextPort
+from interaction.speech.domain.entity.voice_input import VoiceInput
 from interaction.core.components.llm_components.speech_llm_component import (
     SpeechLLMComponent,
 )
@@ -30,13 +30,13 @@ class LLMSpeechToTextV1(SpeechToTextPort, SpeechLLMComponent):
         logger.info("LLMSpeechToTextV1 initialized")
 
     async def transcribe_user_audio_to_text(
-        self, audio_file: BinaryIO, language: str = "ko"
+        self, voice_input: VoiceInput, language: str = "ko"
     ) -> str:
         """
         사용자 오디오를 텍스트로 변환
 
         Args:
-            audio_file: 오디오 파일 (BinaryIO)
+            voice_input: 음성 입력 데이터
             language: 오디오 언어 코드 (기본값: "ko" - 한국어)
 
         Returns:
@@ -44,6 +44,9 @@ class LLMSpeechToTextV1(SpeechToTextPort, SpeechLLMComponent):
         """
         try:
             logger.info(f"Transcribing audio to text (language: {language})")
+
+            # VoiceInput을 BinaryIO로 변환
+            audio_file = voice_input.to_binary_io()
 
             # SpeechLLMComponent를 사용하여 음성을 텍스트로 변환
             transcription_result = await self.transcribe(

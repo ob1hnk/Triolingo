@@ -4,15 +4,18 @@ LLM 기반 Speech-to-Speech 컴포넌트 구현 (v1)
 OpenAI의 gpt-4o-audio-preview 모델을 사용하여 음성 입력을 직접 이해하고
 AI 응답을 생성합니다. 기존 2단계 파이프라인(음성→텍스트→응답)을
 단일 단계로 통합하여 레이턴시를 줄입니다.
+
+멀티턴 대화를 지원하여 이전 대화 이력을 기반으로 응답을 생성합니다.
 """
 
 import base64
 import logging
-from typing import BinaryIO, Union, List, Dict, Any
-from pathlib import Path
+from typing import List, Dict, Any, Optional
 from litellm import Router
 
 from interaction.speech.domain.ports.speech_to_speech import SpeechToSpeechPort
+from interaction.speech.domain.entity.conversation import ConversationHistory
+from interaction.speech.domain.entity.voice_input import VoiceInput
 from interaction.core.components.llm_components.llm_component import LLMComponent
 from interaction.speech.prompts.text_to_text_v2 import SYSTEM_PROMPT, MODEL_CONFIG
 
@@ -47,48 +50,6 @@ class LLMSpeechToSpeechV1(LLMComponent, SpeechToSpeechPort):
         self.temperature = MODEL_CONFIG.get("temperature", 0.7)
         self.max_tokens = MODEL_CONFIG.get("max_tokens", 10000)
         logger.info(f"LLMSpeechToSpeechV1 initialized with model: {model}")
-
-    def _prepare_audio_bytes(
-        self, audio_file: Union[str, Path, BinaryIO, bytes]
-    ) -> bytes:
-        """
-        오디오 파일을 bytes로 변환
-
-        Args:
-            audio_file: 오디오 파일 경로, 파일 객체, 또는 bytes
-
-        Returns:
-            오디오 데이터 bytes
-        """
-        if isinstance(audio_file, bytes):
-            return audio_file
-        elif isinstance(audio_file, (str, Path)):
-            file_path = Path(audio_file)
-            if not file_path.exists():
-                raise FileNotFoundError(f"Audio file not found: {file_path}")
-            # 파일 크기 확인 (25MB 제한)
-            file_size = file_path.stat().st_size
-            if file_size > 25 * 1024 * 1024:
-                raise ValueError(
-                    f"File size ({file_size / 1024 / 1024:.2f}MB) exceeds 25MB limit"
-                )
-            with open(file_path, "rb") as f:
-                return f.read()
-        elif hasattr(audio_file, "read"):
-            # BinaryIO 객체
-            if hasattr(audio_file, "tell") and hasattr(audio_file, "seek"):
-                current_pos = audio_file.tell()
-                audio_file.seek(0)
-                audio_bytes = audio_file.read()
-                audio_file.seek(current_pos)
-                return audio_bytes
-            else:
-                return audio_file.read()
-        else:
-            raise ValueError(
-                f"Invalid audio_file type: {type(audio_file)}. "
-                f"Expected str, Path, BinaryIO, or bytes"
-            )
 
     def _detect_audio_format(self, audio_bytes: bytes) -> str:
         """
@@ -150,35 +111,54 @@ class LLMSpeechToSpeechV1(LLMComponent, SpeechToSpeechPort):
 
     async def generate_response_from_audio(
         self,
-        audio_file: BinaryIO,
+        voice_input: VoiceInput,
+        conversation_history: Optional[ConversationHistory] = None,
         language: str = "ko",
     ) -> str:
         """
         사용자 오디오로부터 AI 응답을 직접 생성
 
         Args:
-            audio_file: 오디오 파일 (BinaryIO 또는 bytes)
+            voice_input: 음성 입력 데이터
+            conversation_history: 이전 대화 이력 (멀티턴 대화 지원)
             language: 오디오 언어 코드 (기본값: "ko" - 한국어)
 
         Returns:
             AI가 생성한 응답 텍스트 (str)
         """
         try:
-            logger.info(f"Generating response from audio (language: {language})")
+            is_first_turn = (
+                conversation_history is None or conversation_history.is_empty()
+            )
+            logger.info(
+                f"Generating response from audio (language: {language}, "
+                f"first_turn={is_first_turn}, "
+                f"history_length={0 if is_first_turn else len(conversation_history)})"
+            )
 
             # 1. 오디오 데이터 준비
-            audio_bytes = self._prepare_audio_bytes(audio_file)
-            audio_format = self._detect_audio_format(audio_bytes)
+            audio_bytes = voice_input.data
+            audio_format = voice_input.format or self._detect_audio_format(audio_bytes)
             logger.debug(f"Audio format detected: {audio_format}")
 
             # 2. 메시지 구성
             messages: List[Dict[str, Any]] = [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                self._build_audio_message(audio_bytes, audio_format),
             ]
 
+            # 이전 대화 이력 추가 (멀티턴)
+            if conversation_history and not conversation_history.is_empty():
+                for msg in conversation_history:
+                    messages.append(msg.to_dict())
+                logger.debug(f"Added {len(conversation_history)} messages from history")
+
+            # 현재 사용자 오디오 메시지 추가
+            messages.append(self._build_audio_message(audio_bytes, audio_format))
+
             # 3. API 호출 (text 출력만 사용)
-            logger.info(f"Calling LLM with model: {self.model}")
+            logger.info(
+                f"Calling LLM with model: {self.model}, total messages: {len(messages)}"
+            )
             response = await self.router.acompletion(
                 model=self.model,
                 messages=messages,
