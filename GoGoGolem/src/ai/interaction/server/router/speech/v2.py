@@ -4,11 +4,13 @@
 Speech-to-Speech API를 사용하여 단일 API 호출로 응답을 생성합니다.
 기존 v1의 2단계 파이프라인(음성→텍스트→응답)을 단일 단계로 통합하여
 레이턴시를 줄입니다.
+
+멀티턴 대화를 지원하여 WebSocket 연결 동안 대화 이력을 유지합니다.
 """
 
 import logging
-import io
 import base64
+import uuid
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
@@ -22,10 +24,14 @@ from interaction.server.dto.speech import (
     ResultResponse,
     ErrorResponse,
 )
+from interaction.speech.domain.usecases.generate_conversation_response_v2 import (
+    GenerateConversationResponseUseCaseV2,
+)
+from interaction.speech.domain.entity.voice_input import VoiceInput
 from interaction.speech.domain.usecases.generate_conversation_response_v2 import GenerateConversationResponseUseCaseV2
 from interaction.speech.domain.usecases.generate_conversation_response_v3 import GenerateConversationResponseUseCaseV3
 from interaction.speech.di.container import SpeechContainer
-from interaction.server.core.session_manager import session_manager
+from interaction.server.core.session_manager import audio_session_manager
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +51,10 @@ async def handle_websocket_v2(
     v1과 동일한 프로토콜을 사용하지만 내부적으로 Speech-to-Speech API를 사용하여
     단일 API 호출로 응답을 생성합니다.
 
+    멀티턴 대화 지원:
+    - WebSocket 연결 = 하나의 대화 세션
+    - 연결이 유지되는 동안 대화 이력이 UseCase 내부에서 관리됩니다
+
     프로토콜:
     1. SESSION_START: 세션 시작, session_id와 오디오 포맷 정보 전송
     2. AUDIO_CHUNK: 오디오 청크를 순차적으로 전송 (base64 인코딩)
@@ -57,7 +67,15 @@ async def handle_websocket_v2(
     - 결과를 텍스트로 반환 (transcription 없이 response만 반환)
     """
     await websocket.accept()
-    logger.info("WebSocket connection accepted (v2 - Speech-to-Speech)")
+
+    # WebSocket 연결 = 하나의 대화 세션
+    # conversation_id는 WebSocket 연결 동안 유지됩니다
+    conversation_id = str(uuid.uuid4())
+
+    logger.info(
+        f"WebSocket connection accepted (v2 - Speech-to-Speech), "
+        f"conversation_id: {conversation_id}"
+    )
 
     current_session_id: str | None = None
 
@@ -75,8 +93,8 @@ async def handle_websocket_v2(
                     request = SessionStartRequest(**data)
                     current_session_id = request.session_id
 
-                    # 세션 생성
-                    session_manager.create_session(
+                    # 오디오 세션 생성 (일시적 - 요청 단위)
+                    audio_session_manager.create_session(
                         request.session_id,
                         request.audio_format or "wav",
                         request.sample_rate or 16000,
@@ -91,14 +109,17 @@ async def handle_websocket_v2(
                             message="Session started (v2 - Speech-to-Speech)",
                         ).model_dump()
                     )
-                    logger.info(f"Session started (v2): {request.session_id}")
+                    logger.info(
+                        f"Session started (v2): {request.session_id}, "
+                        f"conversation_id: {conversation_id}"
+                    )
 
                 elif message_type == MessageType.AUDIO_CHUNK:
                     request = AudioChunkRequest(**data)
                     current_session_id = request.session_id
 
                     # 세션 존재 확인
-                    if not session_manager.has_session(request.session_id):
+                    if not audio_session_manager.has_session(request.session_id):
                         await websocket.send_json(
                             ErrorResponse(
                                 type=MessageType.ERROR,
@@ -125,7 +146,7 @@ async def handle_websocket_v2(
                         continue
 
                     # 청크 저장
-                    session_manager.add_chunk(
+                    audio_session_manager.add_chunk(
                         request.session_id, request.chunk_index, audio_bytes
                     )
 
@@ -147,7 +168,7 @@ async def handle_websocket_v2(
                     current_session_id = request.session_id
 
                     # 세션 존재 확인
-                    if not session_manager.has_session(request.session_id):
+                    if not audio_session_manager.has_session(request.session_id):
                         await websocket.send_json(
                             ErrorResponse(
                                 type=MessageType.ERROR,
@@ -170,33 +191,44 @@ async def handle_websocket_v2(
 
                     try:
                         # 모든 청크를 합쳐서 오디오 파일 생성
-                        audio_bytes = session_manager.get_audio(request.session_id)
+                        audio_bytes = audio_session_manager.get_audio(
+                            request.session_id
+                        )
 
                         if len(audio_bytes) == 0:
                             raise ValueError("No audio data received")
 
-                        # BytesIO로 변환
-                        audio_file = io.BytesIO(audio_bytes)
-                        audio_file.name = f"audio_{request.session_id}.wav"
+                        # VoiceInput 엔티티 생성
+                        voice_input = VoiceInput.from_bytes(
+                            data=audio_bytes,
+                            format="wav",
+                            name=f"audio_{request.session_id}.wav",
+                        )
 
-                        # UseCase 호출 (v2 - Speech-to-Speech)
-                        result = await usecase.execute(audio_file)
+                        # UseCase 호출 (v2 - Speech-to-Speech, session_id 전달, 내부에서 대화 이력 관리)
+                        result = await usecase.execute(
+                            voice_input=voice_input,
+                            session_id=conversation_id,
+                        )
 
-                        # 세션 완료 표시 및 제거
-                        session_manager.mark_complete(request.session_id)
-                        session_manager.remove_session(request.session_id)
+                        response_text = result.get("response", "")
+
+                        # 오디오 세션 완료 표시 및 제거 (일시적)
+                        audio_session_manager.mark_complete(request.session_id)
+                        audio_session_manager.remove_session(request.session_id)
 
                         # 결과 응답 (v2는 transcription 없이 response만 반환)
                         await websocket.send_json(
                             ResultResponse(
                                 type=MessageType.RESULT,
                                 session_id=request.session_id,
-                                text=result.get("response", ""),
+                                text=response_text,
                                 transcription=None,  # v2는 transcription 없음
                             ).model_dump()
                         )
                         logger.info(
-                            f"Session completed successfully (v2): {request.session_id}"
+                            f"Session completed successfully (v2): {request.session_id}, "
+                            f"conversation_id: {conversation_id}"
                         )
 
                     except Exception as e:
@@ -212,8 +244,8 @@ async def handle_websocket_v2(
                                 error_message=f"Failed to process audio: {str(e)}",
                             ).model_dump()
                         )
-                        # 에러 발생 시 세션 제거
-                        session_manager.remove_session(request.session_id)
+                        # 에러 발생 시 오디오 세션만 제거 (대화 이력은 유지)
+                        audio_session_manager.remove_session(request.session_id)
 
                 else:
                     # 알 수 없는 메시지 타입
@@ -249,16 +281,23 @@ async def handle_websocket_v2(
                 )
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket disconnected. Session: {current_session_id}")
+        logger.info(
+            f"WebSocket disconnected. Session: {current_session_id}, "
+            f"conversation_id: {conversation_id}"
+        )
         # 연결 종료 시 세션 정리
         if current_session_id:
-            session_manager.remove_session(current_session_id)
+            audio_session_manager.remove_session(current_session_id)
+        # 대화 이력 정리 (메모리 누수 방지)
+        usecase.clear_session(conversation_id)
 
     except Exception as e:
         logger.error(f"WebSocket error: {e}", exc_info=True)
         # 연결 종료 시 세션 정리
         if current_session_id:
-            session_manager.remove_session(current_session_id)
+            audio_session_manager.remove_session(current_session_id)
+        # 대화 이력 정리
+        usecase.clear_session(conversation_id)
         raise
 
 
@@ -269,6 +308,10 @@ async def websocket_speech_v2(websocket: WebSocket):
 
     Speech-to-Speech API를 사용하여 단일 API 호출로 응답을 생성합니다.
     v1과 동일한 프로토콜을 사용하지만 레이턴시가 더 낮습니다.
+
+    멀티턴 대화 지원:
+    - WebSocket 연결이 유지되는 동안 대화 이력이 누적됩니다
+    - 이전 대화 맥락을 기반으로 더 자연스러운 응답을 생성합니다
 
     프로토콜:
     1. SESSION_START: 세션 시작
