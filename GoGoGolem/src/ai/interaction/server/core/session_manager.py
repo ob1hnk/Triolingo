@@ -1,5 +1,5 @@
 """
-세션별 오디오 청크를 관리하는 SessionManager
+세션별 오디오 청크를 관리하는 AudioSessionManager
 """
 
 import logging
@@ -10,7 +10,7 @@ from typing import Dict
 logger = logging.getLogger(__name__)
 
 
-class SessionManager:
+class AudioSessionManager:
     """세션별 오디오 청크를 관리하는 클래스"""
 
     def __init__(self):
@@ -254,5 +254,5 @@ class SessionManager:
         return session_id in self.sessions
 
 
-# 전역 세션 매니저 인스턴스
-session_manager = SessionManager()
+# 전역 오디오 세션 매니저 인스턴스
+audio_session_manager = AudioSessionManager()
