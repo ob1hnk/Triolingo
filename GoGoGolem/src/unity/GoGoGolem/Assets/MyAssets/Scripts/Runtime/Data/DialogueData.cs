@@ -5,6 +5,7 @@ namespace MyAssets.Runtime.Data.Quest
 {
     /// <summary>
     /// 대화 데이터 ScriptableObject
+    /// Phase와 연결되어 대화 내용을 정의
     /// </summary>
     [CreateAssetMenu(fileName = "New Dialogue", menuName = "Quest System/Dialogue Data")]
     public class DialogueData : ScriptableObject
@@ -37,7 +38,30 @@ namespace MyAssets.Runtime.Data.Quest
                 return false;
             }
             
+            // 각 라인 검증
+            for (int i = 0; i < dialogueLines.Count; i++)
+            {
+                var line = dialogueLines[i];
+                if (string.IsNullOrEmpty(line.speaker))
+                {
+                    Debug.LogWarning($"Dialogue {dialogueID}, Line {i}: speaker가 비어있습니다.");
+                }
+                
+                if (string.IsNullOrEmpty(line.content))
+                {
+                    Debug.LogWarning($"Dialogue {dialogueID}, Line {i}: content가 비어있습니다.");
+                }
+            }
+            
             return true;
+        }
+        
+        /// <summary>
+        /// 특정 순서의 라인 가져오기
+        /// </summary>
+        public DialogueLine GetLineByOrder(int order)
+        {
+            return dialogueLines.Find(line => line.order == order);
         }
     }
     
