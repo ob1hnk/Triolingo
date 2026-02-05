@@ -62,22 +62,14 @@ namespace Demo.GestureDetection.UI
     {
       if (_isInitialized) return;
 
-      // Solution GameObject를 찾아서 GestureRunner 컴포넌트 가져오기
-      var solutionObject = GameObject.Find("Solution");
-      if (solutionObject == null)
+      // GestureDetector 찾기
+      var gestureDetector = FindObjectOfType<GestureDetector>();
+      if (gestureDetector == null)
       {
-        Debug.LogError("[GestureConfigWindow] Solution GameObject not found!");
+        Debug.LogError("[GestureConfigWindow] Detector GameObject not found!");
         return;
       }
-
-      var gestureRunner = solutionObject.GetComponent<SingleGestureRunner>();
-      if (gestureRunner == null)
-      {
-        Debug.LogError("[GestureConfigWindow] GestureRunner component not found on Solution GameObject!");
-        return;
-      }
-
-      _config = gestureRunner.config;
+      _config = gestureDetector.Config;
       InitializeContents();
       _isInitialized = true;
       Debug.Log("GestureConfigWindow initialized successfully");
