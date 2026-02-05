@@ -12,8 +12,8 @@ namespace Demo.GestureDetection
   /// </summary>
   public class GestureSceneController : MonoBehaviour
   {
-    [Header("Target Gesture")]
-    [SerializeField] private GestureType _targetGesture = GestureType.Wind;
+    [Header("Scene Configuration")]
+    [SerializeField] private GestureSceneConfig _sceneConfig;
 
     [Header("Core Components")]
     [SerializeField] private GestureDetector _gestureDetector;
@@ -38,6 +38,9 @@ namespace Demo.GestureDetection
     // Debounce 상태
     private float _lastDetectedTime = 0f;
 
+    // 현재 타겟 제스처 (Config 또는 직접 설정)
+    private GestureType _targetGesture;
+
     private void Start()
     {
       InitializeComponents();
@@ -57,8 +60,30 @@ namespace Demo.GestureDetection
     /// </summary>
     private void InitializeComponents()
     {
+      // Config에서 설정 로드
+      if (_sceneConfig != null)
+      {
+        _targetGesture = _sceneConfig.targetGesture;
+        Debug.Log($"[GestureSceneController] Loaded config - Target: {_targetGesture}");
+      }
+      else
+      {
+        Debug.LogWarning("[GestureSceneController] Scene config not assigned! Using default Wind gesture.");
+        _targetGesture = GestureType.Wind;
+      }
+
       // GestureRecognizer 초기화
-      _gestureRecognizer = new GestureRecognizer();
+      if (_sceneConfig != null && _sceneConfig.thresholds != null)
+      {
+        // Config의 Threshold 사용
+        _gestureRecognizer = new GestureRecognizer(_sceneConfig.thresholds);
+      }
+      else
+      {
+        // 기본값 사용
+        _gestureRecognizer = new GestureRecognizer();
+      }
+      
       _gestureRecognizer.SetActiveGesture(_targetGesture);
 
       // UI Controller에 타겟 제스처 설정
