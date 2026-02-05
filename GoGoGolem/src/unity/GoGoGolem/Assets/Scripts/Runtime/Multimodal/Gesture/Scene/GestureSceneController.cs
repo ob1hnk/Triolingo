@@ -5,7 +5,18 @@ using Mediapipe.Tasks.Vision.PoseLandmarker;
 namespace Demo.GestureDetection
 {
   /// <summary>
-  /// 제스처 씬의 전체 흐름을 제어하는 Controller (Glue 코드 30%)
+  /// 제스처 씬 상태
+  /// </summary>
+  public enum GestureSceneState
+  {
+    Entry,    // 진입 (초기화)
+    Playing,  // 플레이 중 (제스처 인식)
+    Success,  // 성공 (연출 준비, Phase 4에서 사용)
+    Exit      // 종료
+  }
+
+  /// <summary>
+  /// 제스처 씬의 전체 흐름을 제어하는 Controller (Glue 코드)
   /// - GestureDetector에서 Landmark 데이터 받기
   /// - GestureRecognizer로 제스처 판정
   /// - Avatar, UI, Annotation 업데이트
@@ -35,6 +46,9 @@ namespace Demo.GestureDetection
     // 제스처 인식기
     private GestureRecognizer _gestureRecognizer;
 
+    // 상태 관리
+    private GestureSceneState _state = GestureSceneState.Entry;
+
     // Debounce 상태
     private float _lastDetectedTime = 0f;
 
@@ -43,8 +57,19 @@ namespace Demo.GestureDetection
 
     private void Start()
     {
+      ChangeState(GestureSceneState.Entry);
       InitializeComponents();
       StartGestureDetection();
+      ChangeState(GestureSceneState.Playing);
+    }
+
+    private void Update()
+    {
+      // ESC 키로 씬 종료
+      if (Input.GetKeyDown(KeyCode.Escape) && _state != GestureSceneState.Exit)
+      {
+        ExitScene();
+      }
     }
 
     private void OnDestroy()
@@ -53,6 +78,9 @@ namespace Demo.GestureDetection
       {
         _gestureDetector.OnLandmarksUpdated -= OnLandmarksUpdated;
       }
+
+      // EventBus 구독 해제 (메모리 누수 방지)
+      GestureSceneEvents.ClearAllSubscribers();
     }
 
     /// <summary>
@@ -149,6 +177,12 @@ namespace Demo.GestureDetection
         _lastDetectedTime = Time.time;
         _gestureUIController?.UpdateGestureResult(gestureResult);
         isDetectedNow = true;
+
+        // 제스처 성공 시 이벤트 발행 및 씬 종료
+        if (_state == GestureSceneState.Playing)
+        {
+          OnGestureSuccess(gestureResult.Type);
+        }
       }
 
       // 5. Debounce 로직 (UI 깜빡임 방지)
@@ -227,6 +261,80 @@ namespace Demo.GestureDetection
     public void SetShowAnnotations(bool show)
     {
       _showAnnotations = show;
+    }
+
+    // ========== 상태 관리 ==========
+
+    /// <summary>
+    /// 상태 변경
+    /// </summary>
+    private void ChangeState(GestureSceneState newState)
+    {
+      if (_state == newState) return;
+
+      Debug.Log($"[GestureSceneController] State changed: {_state} → {newState}");
+      _state = newState;
+
+      switch (_state)
+      {
+        case GestureSceneState.Entry:
+          // 진입 시 초기화 작업 (필요 시 추가)
+          break;
+
+        case GestureSceneState.Playing:
+          // 제스처 인식 시작 이벤트 발행
+          GestureSceneEvents.RaiseGestureStart(_targetGesture);
+          break;
+
+        case GestureSceneState.Success:
+          // 성공 연출 (Phase 4에서 구현)
+          break;
+
+        case GestureSceneState.Exit:
+          // 종료 처리
+          break;
+      }
+    }
+
+    /// <summary>
+    /// 제스처 성공 처리
+    /// </summary>
+    private void OnGestureSuccess(GestureType gestureType)
+    {
+      Debug.Log($"[GestureSceneController] Gesture SUCCESS: {gestureType}");
+      
+      // 이벤트 발행
+      GestureSceneEvents.RaiseGestureComplete(gestureType);
+
+      // TODO: Phase 4에서 Success 상태로 전환 후 연출
+      // ChangeState(GestureSceneState.Success);
+      
+      // 현재는 바로 종료
+      ExitScene();
+    }
+
+    /// <summary>
+    /// 씬 종료 (ESC 키 또는 성공 후)
+    /// </summary>
+    private void ExitScene()
+    {
+      if (_state == GestureSceneState.Exit) return;
+
+      ChangeState(GestureSceneState.Exit);
+      
+      // 이벤트 발행
+      GestureSceneEvents.RaiseGestureSceneExit();
+
+      // GestureDetector 정리
+      if (_gestureDetector != null)
+      {
+        _gestureDetector.Stop();
+      }
+
+      Debug.Log("[GestureSceneController] Scene exit requested");
+      
+      // TODO: 실제 씬 전환은 SceneManager에서 처리
+      // SceneManager.LoadScene("MainScene");
     }
   }
 }
