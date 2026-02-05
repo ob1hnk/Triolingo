@@ -259,8 +259,8 @@ private void OnSlotClickedByMouse(int clickedIndex)
         {
             if (view == null) return;
             
-            float scrollDelta = context.ReadValue<float>();
-            view.Scroll(scrollDelta);
+            Vector2 scrollDelta = context.ReadValue<Vector2>();
+            view.Scroll(scrollDelta.y);
         }
 
         private void OnSubmit(InputAction.CallbackContext context)
