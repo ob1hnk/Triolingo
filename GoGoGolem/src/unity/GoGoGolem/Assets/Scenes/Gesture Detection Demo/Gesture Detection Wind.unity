@@ -2395,7 +2395,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ad60ac9bd1e80c4f86fc17506940b0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _targetGesture: 1
+  _sceneConfig: {fileID: 11400000, guid: 13daab74e7124fa4ca19cb8ac20ed685, type: 2}
   _gestureDetector: {fileID: 1596214718}
   _avatarAnimator: {fileID: 909100857}
   _gestureUIController: {fileID: 1266644736}
