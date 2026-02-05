@@ -22,7 +22,7 @@ namespace MyAssets.Runtime.Data.Quest
         public string summary;
 
         [Tooltip("퀘스트 타입")]
-        public QuestType questType = QuestType.MainQuest;
+        public QuestType questType;
 
         [Header("Quest 목표들")]
         [Tooltip("퀘스트의 Objective 목록")]

@@ -7,7 +7,6 @@ namespace MyAssets.Runtime.Data.Quest
     {
         MainQuest,      // MQ
         SubQuest,       // SQ
-        Tutorial        // TQ
     }
 
     /// <summary>
