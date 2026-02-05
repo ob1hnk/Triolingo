@@ -2,6 +2,7 @@ using UnityEngine;
 using MyAssets.Runtime.Data.Quest;
 using MyAssets.Runtime.Systems.Quest;
 using System.Collections.Generic;
+using MyAssets.Runtime.Systems.Dialogue;
 
 /// <summary>
 /// 퀘스트 시스템의 중앙 관리자
@@ -11,6 +12,7 @@ public class QuestManager : MonoBehaviour
 {
     [Header("Dependencies")]
     [SerializeField] private QuestDatabase questDatabase;
+    [SerializeField] private DialogueManager dialogueManager;
 
     [Header("Options")]
     [SerializeField] private bool autoSave = true;
@@ -67,6 +69,17 @@ public class QuestManager : MonoBehaviour
 
         // QuestDatabase 초기화
         questDatabase.Initialize();
+
+        // DialogueManager 자동 찾기 (Inspector에 할당 안 했을 경우)
+        if (dialogueManager == null)
+        {
+            dialogueManager = FindObjectOfType<DialogueManager>();
+            
+            if (dialogueManager == null)
+            {
+                Debug.LogWarning("[QuestManager] DialogueManager not found in scene.");
+            }
+        }
 
         // 협력 객체 생성
         progressTracker = new QuestProgressTracker();
@@ -160,54 +173,85 @@ public class QuestManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Phase 완료 처리
-    /// </summary>
-    public void CompletePhase(string questID, string objectiveID, string phaseID)
+/// Phase 완료 처리
+/// </summary>
+public void CompletePhase(string questID, string objectiveID, string phaseID)
+{
+    if (!isInitialized)
     {
-        if (!isInitialized)
-        {
-            Debug.LogError("[QuestManager] Not initialized yet!");
-            return;
-        }
-
-        Quest quest = progressTracker.GetActiveQuest(questID);
-        if (quest == null)
-        {
-            Debug.LogWarning($"[QuestManager] Quest {questID} is not active.");
-            return;
-        }
-
-        // Phase 완료
-        quest.CompletePhase(objectiveID, phaseID);
-
-        // Phase 완료 이벤트
-        var phase = quest.GetPhase(objectiveID, phaseID);
-        if (phase != null && phase.IsCompleted)
-        {
-            QuestEvents.TriggerPhaseCompleted(phase);
-        }
-
-        // Objective 완료 체크
-        if (quest.IsObjectiveCompleted(objectiveID))
-        {
-            var objective = quest.GetObjective(objectiveID);
-            QuestEvents.TriggerObjectiveCompleted(objective);
-        }
-
-        // Quest 완료 체크
-        if (quest.IsCompleted())
-        {
-            QuestEvents.TriggerQuestCompleted(quest);
-        }
-
-        // 자동 저장
-        if (autoSave)
-        {
-            SaveProgress();
-        }
+        Debug.LogError("[QuestManager] Not initialized yet!");
+        return;
     }
 
+    Quest quest = progressTracker.GetActiveQuest(questID);
+    if (quest == null)
+    {
+        Debug.LogWarning($"[QuestManager] Quest {questID} is not active.");
+        return;
+    }
+
+    // Phase 완료
+    quest.CompletePhase(objectiveID, phaseID);
+
+    // Phase 완료 이벤트
+    var phase = quest.GetPhase(objectiveID, phaseID);
+    if (phase != null && phase.IsCompleted)
+    {
+        QuestEvents.TriggerPhaseCompleted(phase);
+        
+        // ============ 여기에 추가 ============
+        // Phase 타입이 Dialogue면 대화 시작
+        if (phase.PhaseType == PhaseType.Dialogue && !string.IsNullOrEmpty(phase.ContentID))
+        {
+            TriggerDialogue(phase.ContentID);
+        }
+        // ===================================
+    }
+
+    // Objective 완료 체크
+    if (quest.IsObjectiveCompleted(objectiveID))
+    {
+        var objective = quest.GetObjective(objectiveID);
+        QuestEvents.TriggerObjectiveCompleted(objective);
+    }
+
+    // Quest 완료 체크
+    if (quest.IsCompleted())
+    {
+        QuestEvents.TriggerQuestCompleted(quest);
+    }
+
+    // 자동 저장
+    if (autoSave)
+    {
+        SaveProgress();
+    }
+}
+
     #endregion
+
+    #region Dialogue Integration
+
+/// <summary>
+/// 대화 트리거 (DialogueManager 호출)
+/// </summary>
+private void TriggerDialogue(string dialogueID)
+{
+    if (dialogueManager == null)
+    {
+        Debug.LogWarning($"[QuestManager] Cannot trigger dialogue {dialogueID} - DialogueManager not found.");
+        return;
+    }
+    
+    if (showDebugLogs)
+    {
+        Debug.Log($"[QuestManager] Triggering dialogue: {dialogueID}");
+    }
+    
+    dialogueManager.StartDialogue(dialogueID);
+}
+
+#endregion
 
     #region Query Methods (ProgressTracker에 위임)
 
