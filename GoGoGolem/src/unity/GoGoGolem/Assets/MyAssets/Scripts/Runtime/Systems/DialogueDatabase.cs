@@ -1,9 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace MyAssets.Runtime.Data.Quest
 {
+    /// <summary>
+    /// 대화 데이터베이스
+    /// 모든 DialogueData를 관리하고 검색 기능 제공
+    /// </summary>
     [CreateAssetMenu(fileName = "DialogueDatabase", menuName = "Quest System/Dialogue Database")]
     public class DialogueDatabase : ScriptableObject
     {
@@ -19,7 +22,11 @@ namespace MyAssets.Runtime.Data.Quest
         /// </summary>
         public void Initialize()
         {
-            if (isInitialized) return;
+            if (isInitialized)
+            {
+                Debug.Log("[DialogueDatabase] Already initialized.");
+                return;
+            }
             
             dialogueDictionary = new Dictionary<string, DialogueData>();
             phaseDialogueDictionary = new Dictionary<string, List<DialogueData>>();
@@ -28,13 +35,17 @@ namespace MyAssets.Runtime.Data.Quest
             {
                 if (dialogue != null && dialogue.Validate())
                 {
-                    // Dialogue ID로 검색
+                    // Dialogue ID로 검색용 Dictionary
                     if (!dialogueDictionary.ContainsKey(dialogue.dialogueID))
                     {
                         dialogueDictionary.Add(dialogue.dialogueID, dialogue);
                     }
+                    else
+                    {
+                        Debug.LogWarning($"[DialogueDatabase] Duplicate dialogue ID: {dialogue.dialogueID}");
+                    }
                     
-                    // Phase ID로 검색 (한 Phase에 여러 Dialogue가 있을 수 있음)
+                    // Phase ID로 검색용 Dictionary (한 Phase에 여러 Dialogue가 있을 수 있음)
                     if (!string.IsNullOrEmpty(dialogue.phaseID))
                     {
                         if (!phaseDialogueDictionary.ContainsKey(dialogue.phaseID))
@@ -57,6 +68,7 @@ namespace MyAssets.Runtime.Data.Quest
         {
             if (!isInitialized)
             {
+                Debug.LogWarning("[DialogueDatabase] Not initialized! Initializing now...");
                 Initialize();
             }
             
@@ -76,6 +88,7 @@ namespace MyAssets.Runtime.Data.Quest
         {
             if (!isInitialized)
             {
+                Debug.LogWarning("[DialogueDatabase] Not initialized! Initializing now...");
                 Initialize();
             }
             
@@ -85,6 +98,61 @@ namespace MyAssets.Runtime.Data.Quest
             }
             
             return new List<DialogueData>();
+        }
+        
+        /// <summary>
+        /// 모든 Dialogue 개수 반환
+        /// </summary>
+        public int GetDialogueCount()
+        {
+            return allDialogues.Count;
+        }
+        
+        /// <summary>
+        /// 데이터베이스 유효성 검사
+        /// </summary>
+        [ContextMenu("Validate All Dialogues")]
+        public void ValidateAll()
+        {
+            int validCount = 0;
+            int invalidCount = 0;
+            
+            foreach (var dialogue in allDialogues)
+            {
+                if (dialogue != null && dialogue.Validate())
+                {
+                    validCount++;
+                }
+                else
+                {
+                    invalidCount++;
+                }
+            }
+            
+            Debug.Log($"[DialogueDatabase] Validation complete: {validCount} valid, {invalidCount} invalid");
+        }
+        
+        /// <summary>
+        /// 데이터베이스 내용 출력 (디버그용)
+        /// </summary>
+        [ContextMenu("Print Database Content")]
+        public void PrintDatabaseContent()
+        {
+            if (!isInitialized)
+            {
+                Initialize();
+            }
+            
+            Debug.Log($"=== Dialogue Database ===");
+            Debug.Log($"Total Dialogues: {allDialogues.Count}");
+            
+            foreach (var dialogue in allDialogues)
+            {
+                if (dialogue != null)
+                {
+                    Debug.Log($"- {dialogue.dialogueID} (Phase: {dialogue.phaseID}) - {dialogue.dialogueLines.Count} lines");
+                }
+            }
         }
     }
 }

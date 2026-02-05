@@ -1,17 +1,18 @@
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 using MyAssets.Runtime.Data.Quest;
 
 namespace MyAssets.Runtime.Systems.Dialogue
 {
     /// <summary>
     /// 대화 시스템 관리자
+    /// DialogueData를 받아서 대화를 재생하고 UI에 표시
     /// </summary>
     public class DialogueManager : MonoBehaviour
     {
+        [Header("Dependencies")]
         [SerializeField] private DialogueDatabase dialogueDatabase;
-        // [SerializeField] private DialogueUI dialogueUI; // 대화 UI (별도 생성 필요)
+        // [SerializeField] private DialogueUI dialogueUI; // TODO: 나중에 추가
         
         private DialogueData currentDialogue;
         private int currentLineIndex = 0;
@@ -22,6 +23,10 @@ namespace MyAssets.Runtime.Systems.Dialogue
             if (dialogueDatabase != null)
             {
                 dialogueDatabase.Initialize();
+            }
+            else
+            {
+                Debug.LogError("[DialogueManager] DialogueDatabase is not assigned!");
             }
         }
         
@@ -36,6 +41,12 @@ namespace MyAssets.Runtime.Systems.Dialogue
                 return;
             }
             
+            if (dialogueDatabase == null)
+            {
+                Debug.LogError("[DialogueManager] DialogueDatabase is not assigned!");
+                return;
+            }
+            
             currentDialogue = dialogueDatabase.GetDialogueData(dialogueID);
             if (currentDialogue == null)
             {
@@ -46,7 +57,9 @@ namespace MyAssets.Runtime.Systems.Dialogue
             currentLineIndex = 0;
             isPlaying = true;
             
-            // StartCoroutine(PlayDialogue());
+            Debug.Log($"[DialogueManager] Starting dialogue: {dialogueID}");
+            
+            StartCoroutine(PlayDialogue());
         }
         
         /// <summary>
@@ -59,10 +72,12 @@ namespace MyAssets.Runtime.Systems.Dialogue
             {
                 StartDialogue(dialogues[0].dialogueID);
             }
+            else
+            {
+                Debug.LogWarning($"[DialogueManager] No dialogue found for phase {phaseID}");
+            }
         }
         
-
-        /*
         /// <summary>
         /// 대화 재생 코루틴
         /// </summary>
@@ -72,16 +87,19 @@ namespace MyAssets.Runtime.Systems.Dialogue
             {
                 DialogueLine line = currentDialogue.dialogueLines[currentLineIndex];
                 
-                // UI에 대화 표시
-                dialogueUI?.ShowDialogueLine(line.speaker, line.content);
+                // 콘솔에 대화 출력 (임시 - UI 구현 전)
+                Debug.Log($"[{line.speaker}] {line.content}");
+                
+                // TODO: UI에 대화 표시
+                // dialogueUI?.ShowDialogueLine(line.speaker, line.content);
                 
                 // 선택지가 있는 경우
                 if (line.isChoice && line.choiceOptions.Count > 0)
                 {
-                    dialogueUI?.ShowChoices(line.choiceOptions);
-                    yield return new WaitUntil(() => dialogueUI.HasSelectedChoice());
-                    int choice = dialogueUI.GetSelectedChoice();
-                    Debug.Log($"[DialogueManager] Player chose option {choice}");
+                    Debug.Log($"[Choice] Options: {string.Join(", ", line.choiceOptions)}");
+                    // TODO: dialogueUI?.ShowChoices(line.choiceOptions);
+                    // TODO: yield return new WaitUntil(() => dialogueUI.HasSelectedChoice());
+                    // TODO: int choice = dialogueUI.GetSelectedChoice();
                 }
                 
                 // 다음 라인으로 (스페이스바 또는 마우스 클릭 대기)
@@ -103,7 +121,7 @@ namespace MyAssets.Runtime.Systems.Dialogue
             currentDialogue = null;
             currentLineIndex = 0;
             
-            dialogueUI?.HideDialogueUI();
+            // TODO: dialogueUI?.HideDialogueUI();
             
             Debug.Log("[DialogueManager] Dialogue ended.");
         }
@@ -115,6 +133,16 @@ namespace MyAssets.Runtime.Systems.Dialogue
         {
             return isPlaying;
         }
-        */
+        
+        /// <summary>
+        /// 대화 스킵
+        /// </summary>
+        public void SkipDialogue()
+        {
+            if (!isPlaying) return;
+            
+            StopAllCoroutines();
+            EndDialogue();
         }
+    }
 }

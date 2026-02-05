@@ -367,6 +367,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   questDatabase: {fileID: 11400000, guid: 4b0354f72cbf948c38b004eb9364d897, type: 2}
+  dialogueManager: {fileID: 0}
   autoSave: 1
   loadOnStart: 1
   showDebugLogs: 1
@@ -7646,7 +7647,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC544\uC774\uD15C \uC815\uBCF4 "
+  m_text: "\uC544\uC774\uD15C \uC815\uBCF4 !!!!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 43cbe872b87734b5380b0ae980e79138, type: 2}
   m_sharedMaterial: {fileID: 7861708564099447170, guid: 43cbe872b87734b5380b0ae980e79138, type: 2}
