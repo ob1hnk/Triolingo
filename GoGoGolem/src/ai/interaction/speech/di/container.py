@@ -14,8 +14,8 @@ from interaction.speech.components.text_to_text.llm_text_to_text_v1 import (
 from interaction.speech.components.speech_to_speech.llm_speech_to_speech_v1 import (
     LLMSpeechToSpeechV1,
 )
-from interaction.speech.components.speech_to_speech.llm_speech_to_speech_v2 import (
-    LLMSpeechToSpeechV2,
+from interaction.speech.components.realtime.llm_realtime_speech_v1 import (
+    LLMRealtimeSpeechV1,
 )
 from interaction.speech.domain.usecases.generate_conversation_response import (
     GenerateConversationResponseUseCase,
@@ -66,10 +66,10 @@ class SpeechContainer(containers.DeclarativeContainer):
         speech_to_speech=speech_to_speech,
     )
 
-    # LLMSpeechToSpeechV2는 RealtimeLLMComponent를 상속하여 실시간 스트리밍 지원
+    # Realtime API 기반 음성 처리 컴포넌트 (v1 - Server VAD)
     # Factory 패턴: 각 WebSocket 연결마다 새 인스턴스 생성 (동시 접속 지원)
-    speech_to_speech_v2 = providers.Factory(
-        LLMSpeechToSpeechV2,
+    realtime_speech_v1 = providers.Factory(
+        LLMRealtimeSpeechV1,
         api_key=core_container.config.openai_api_key,
         model="gpt-realtime-mini",
         transcription_model="gpt-4o-mini-transcribe",

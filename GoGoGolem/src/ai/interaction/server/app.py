@@ -15,7 +15,6 @@ from interaction.core.di.container import CoreContainer
 from interaction.core.di.config import CoreConfig
 from interaction.server.router.speech.v1 import router as speech_router_v1
 from interaction.server.router.speech.v2 import router as speech_router_v2
-from interaction.server.router.speech.v3 import router as speech_router_v3
 from interaction.server.router.text.v1 import router as text_router_v1
 from interaction.server.router.realtime.v1 import router as realtime_router_v1
 from interaction.speech.di.container import SpeechContainer
@@ -46,7 +45,6 @@ def create_app() -> FastAPI:
         modules=[
             "interaction.server.router.speech.v1",
             "interaction.server.router.speech.v2",
-            "interaction.server.router.speech.v3",
             "interaction.server.router.realtime.v1",
         ]
     )
@@ -81,7 +79,6 @@ def create_app() -> FastAPI:
     # 라우터 등록
     app.include_router(speech_router_v1, prefix="/api/v1", tags=["speech-v1"])
     app.include_router(speech_router_v2, prefix="/api/v2", tags=["speech-v2"])
-    app.include_router(speech_router_v3, prefix="/api/v3", tags=["speech-v3"])
     app.include_router(text_router_v1, prefix="/api/v1/text", tags=["text-v1"])
     app.include_router(realtime_router_v1, prefix="/api/realtime", tags=["realtime-v1"])
 
