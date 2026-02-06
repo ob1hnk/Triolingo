@@ -325,7 +325,8 @@ async def websocket_speech_v2(websocket: WebSocket):
 
     speech_container: SpeechContainer = app.state.speech_container
 
-    # 컨테이너에서 v2 usecase 가져오기
+    # 컨테이너에서 V2 usecase 가져오기 (Chat Completions API 기반)
     usecase = speech_container.generate_conversation_response_usecase_v2()
+    logger.info(f"Using usecase: {type(usecase).__name__}")
 
     await handle_websocket_v2(websocket, usecase)
