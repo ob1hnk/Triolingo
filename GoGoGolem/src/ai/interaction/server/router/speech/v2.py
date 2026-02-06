@@ -28,8 +28,6 @@ from interaction.speech.domain.usecases.generate_conversation_response_v2 import
     GenerateConversationResponseUseCaseV2,
 )
 from interaction.speech.domain.entity.voice_input import VoiceInput
-from interaction.speech.domain.usecases.generate_conversation_response_v2 import GenerateConversationResponseUseCaseV2
-from interaction.speech.domain.usecases.generate_conversation_response_v3 import GenerateConversationResponseUseCaseV3
 from interaction.speech.di.container import SpeechContainer
 from interaction.server.core.session_manager import audio_session_manager
 
@@ -37,13 +35,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# V2 (Chat Completions API) 또는 V3 (Realtime API) 모두 지원
-SpeechToSpeechUseCaseType = GenerateConversationResponseUseCaseV2 | GenerateConversationResponseUseCaseV3
-
 
 async def handle_websocket_v2(
     websocket: WebSocket,
-    usecase: SpeechToSpeechUseCaseType,
+    usecase: GenerateConversationResponseUseCaseV2,
 ):
     """
     WebSocket 연결을 처리하는 핸들러 (v2 - Speech-to-Speech)
@@ -330,8 +325,8 @@ async def websocket_speech_v2(websocket: WebSocket):
 
     speech_container: SpeechContainer = app.state.speech_container
 
-    # 컨테이너에서 usecase 가져오기 (V2 또는 V3는 컨테이너 설정에 따라 결정)
-    usecase = speech_container.generate_conversation_response_usecase()
+    # 컨테이너에서 V2 usecase 가져오기 (Chat Completions API 기반)
+    usecase = speech_container.generate_conversation_response_usecase_v2()
     logger.info(f"Using usecase: {type(usecase).__name__}")
 
     await handle_websocket_v2(websocket, usecase)
