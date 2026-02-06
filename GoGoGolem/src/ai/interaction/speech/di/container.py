@@ -23,9 +23,6 @@ from interaction.speech.domain.usecases.generate_conversation_response import (
 from interaction.speech.domain.usecases.generate_conversation_response_v2 import (
     GenerateConversationResponseUseCaseV2,
 )
-from interaction.speech.domain.usecases.generate_conversation_response_v3 import (
-    GenerateConversationResponseUseCaseV3,
-)
 
 
 class SpeechContainer(containers.DeclarativeContainer):
@@ -69,17 +66,12 @@ class SpeechContainer(containers.DeclarativeContainer):
         speech_to_speech=speech_to_speech,
     )
 
-    # Speech-to-Speech v2 (Realtime API 기반)
-    speech_to_speech_v2 = providers.Singleton(
+    # LLMSpeechToSpeechV2는 RealtimeLLMComponent를 상속하여 실시간 스트리밍 지원
+    # Factory 패턴: 각 WebSocket 연결마다 새 인스턴스 생성 (동시 접속 지원)
+    speech_to_speech_v2 = providers.Factory(
         LLMSpeechToSpeechV2,
         api_key=core_container.config.openai_api_key,
         model="gpt-realtime-mini",
         transcription_model="gpt-4o-mini-transcribe",
         transcription_language="ko",
-    )
-
-    # v3: Realtime API 기반 (저지연)
-    generate_conversation_response_usecase_v3 = providers.Singleton(
-        GenerateConversationResponseUseCaseV3,
-        speech_to_speech=speech_to_speech_v2,
     )

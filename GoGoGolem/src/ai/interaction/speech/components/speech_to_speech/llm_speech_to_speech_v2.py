@@ -1,30 +1,30 @@
 """
-LLM 기반 Speech-to-Speech 컴포넌트 구현 (v2) - Realtime API 사용
+RealTime LLM 기반 Speech-to-Speech 컴포넌트 구현 (v2) - Realtime API 사용
 
 OpenAI Realtime API를 사용하여 실시간 음성 처리를 수행합니다.
-현재는 방식 A (세션 기반 일괄 처리)를 지원하며,
-기존 v1 인터페이스(SpeechToSpeechPort)를 그대로 구현합니다.
+방식 B (실시간 스트리밍)를 지원하며, RealtimeLLMComponent를 상속합니다.
 """
 
 import logging
-from typing import BinaryIO, Optional, Union
-from pathlib import Path
+from typing import Optional
 
 from interaction.speech.domain.ports.speech_to_speech import SpeechToSpeechPort
 from interaction.core.components.realtime_components.realtime_llm_component import (
     RealtimeLLMComponent,
 )
+from interaction.speech.domain.entity.conversation import ConversationHistory
+from interaction.speech.domain.entity.voice_input import VoiceInput
 from interaction.speech.prompts import SYSTEM_PROMPT, MODEL_CONFIG
 
 logger = logging.getLogger(__name__)
 
 
-class LLMSpeechToSpeechV2(SpeechToSpeechPort):
+class LLMSpeechToSpeechV2(RealtimeLLMComponent, SpeechToSpeechPort):
     """
     Speech-to-Speech 구현 (v2) - Realtime API 사용
 
     OpenAI Realtime API를 사용하여 실시간으로 음성을 처리합니다.
-    기존 SpeechToSpeechPort 인터페이스를 구현하여 v1과 호환됩니다.
+    RealtimeLLMComponent를 상속하고 SpeechToSpeechPort 인터페이스를 구현합니다.
     """
 
     def __init__(
@@ -49,13 +49,17 @@ class LLMSpeechToSpeechV2(SpeechToSpeechPort):
             transcription_language: transcription 언어 (기본: ko)
             timeout: 연결 타임아웃 (초)
         """
-        self.api_key = api_key
-        self.model = model
-        self.base_url = base_url
+        # RealtimeLLMComponent 초기화
+        super().__init__(
+            api_key=api_key,
+            base_url=base_url,
+            model=model,
+            timeout=timeout,
+        )
+
         self.default_system_prompt = default_system_prompt or SYSTEM_PROMPT
         self.transcription_model = transcription_model
         self.transcription_language = transcription_language
-        self.timeout = timeout
         self.temperature = MODEL_CONFIG.get("temperature", 0.8)
 
         logger.info(
@@ -63,77 +67,52 @@ class LLMSpeechToSpeechV2(SpeechToSpeechPort):
             f"transcription: {transcription_model} ({transcription_language})"
         )
 
-    def _prepare_audio_bytes(
-        self, audio_file: Union[str, Path, BinaryIO, bytes]
-    ) -> bytes:
-        """
-        오디오 파일을 bytes로 변환
-
-        Args:
-            audio_file: 오디오 파일 경로, 파일 객체, 또는 bytes
-
-        Returns:
-            오디오 데이터 bytes
-        """
-        if isinstance(audio_file, bytes):
-            return audio_file
-        elif isinstance(audio_file, (str, Path)):
-            file_path = Path(audio_file)
-            if not file_path.exists():
-                raise FileNotFoundError(f"Audio file not found: {file_path}")
-            with open(file_path, "rb") as f:
-                return f.read()
-        elif hasattr(audio_file, "read"):
-            if hasattr(audio_file, "tell") and hasattr(audio_file, "seek"):
-                current_pos = audio_file.tell()
-                audio_file.seek(0)
-                audio_bytes = audio_file.read()
-                audio_file.seek(current_pos)
-                return audio_bytes
-            else:
-                return audio_file.read()
-        else:
-            raise ValueError(
-                f"Invalid audio_file type: {type(audio_file)}. "
-                f"Expected str, Path, BinaryIO, or bytes"
-            )
-
     async def generate_response_from_audio(
         self,
-        audio_file: BinaryIO,
+        voice_input: VoiceInput,
+        conversation_history: Optional[ConversationHistory] = None,
         language: str = "ko",
-        system_prompt: Optional[str] = None,
     ) -> str:
         """
         사용자 오디오로부터 AI 응답을 직접 생성 (Realtime API 사용)
 
         Args:
-            audio_file: 오디오 파일 (BinaryIO 또는 bytes)
+            voice_input: 음성 입력 데이터 (VoiceInput 엔티티)
+            conversation_history: 대화 이력 (멀티턴 지원)
             language: 오디오 언어 코드 (기본값: "ko" - 한국어)
-            system_prompt: 시스템 프롬프트 (선택사항, None이면 기본 프롬프트 사용)
 
         Returns:
             AI가 생성한 응답 텍스트 (str)
         """
         try:
-            logger.info(f"Generating response from audio using Realtime API (language: {language})")
+            is_first_turn = conversation_history is None or conversation_history.is_empty()
+            history_length = 0 if conversation_history is None else len(conversation_history)
 
-            # 1. 오디오 데이터 준비
-            audio_bytes = self._prepare_audio_bytes(audio_file)
-            logger.debug(f"Audio prepared: {len(audio_bytes)} bytes")
-
-            # 2. Realtime 컴포넌트 생성 및 연결
-            realtime = RealtimeLLMComponent(
-                api_key=self.api_key,
-                base_url=self.base_url,
-                model=self.model,
-                timeout=self.timeout,
+            logger.info(
+                f"Generating response from audio using Realtime API "
+                f"(language: {language}, first_turn: {is_first_turn}, "
+                f"history_length: {history_length})"
             )
 
-            async with realtime:
-                # 3. 세션 설정
-                instructions = system_prompt or self.default_system_prompt
-                await realtime.configure_session(
+            # 1. 오디오 데이터 준비
+            audio_bytes = voice_input.data
+            logger.debug(f"Audio prepared: {len(audio_bytes)} bytes")
+
+            # 2. 시스템 프롬프트 구성
+            instructions = self.default_system_prompt
+
+            # 이전 대화 이력 추가 (멀티턴)
+            if conversation_history and not conversation_history.is_empty():
+                history_text = ""
+                for msg in conversation_history:
+                    history_text += f"{msg.role.value}: {msg.content}\n"
+                instructions = f"{instructions}{history_text}"
+                logger.debug(f"Added {len(conversation_history)} messages from history")
+
+            # 3. WebSocket 연결 및 응답 생성
+            async with self:
+                # 세션 설정
+                await self.configure_session(
                     instructions=instructions,
                     modalities=["text"],  # 텍스트 출력만 사용
                     input_audio_transcription={
@@ -143,15 +122,11 @@ class LLMSpeechToSpeechV2(SpeechToSpeechPort):
                     temperature=self.temperature,
                 )
 
-                # 4. 오디오 처리 및 응답 생성
-                result = await realtime.generate_response_from_audio(
+                # 오디오 처리 및 응답 생성 (부모 클래스 메서드 사용)
+                result = await super().generate_response_from_audio(
                     audio_bytes=audio_bytes,
                     modalities=["text"],
                 )
-
-                logger.info("#############")
-                logger.info(result)
-                logger.info("#############")
 
             response_text = result.get("response_text", "")
 
