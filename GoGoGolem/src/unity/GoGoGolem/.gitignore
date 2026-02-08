@@ -72,6 +72,30 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
+# Firebase Unity SDK (각 팀원이 .unitypackage로 직접 설치)
+/[Aa]ssets/Firebase/
+/[Aa]ssets/Firebase.meta
+/[Aa]ssets/ExternalDependencyManager/
+/[Aa]ssets/ExternalDependencyManager.meta
+/[Aa]ssets/[Ee]ditor Default Resources/Firebase/
+/[Aa]ssets/[Ee]ditor Default Resources/Firebase.meta
+/[Aa]ssets/[Ee]ditor Default Resources.meta
+/[Aa]ssets/[Pp]lugins/iOS/Firebase/
+/[Aa]ssets/[Pp]lugins/iOS/Firebase.meta
+/[Aa]ssets/[Pp]lugins/tvOS/Firebase/
+/[Aa]ssets/[Pp]lugins/tvOS/Firebase.meta
+/[Aa]ssets/[Pp]lugins/iOS.meta
+/[Aa]ssets/[Pp]lugins/tvOS.meta
+/[Aa]ssets/[Pp]lugins.meta
+/[Aa]ssets/[Pp]lugins/Android/Firebase*
+/[Aa]ssets/[Pp]lugins/Android/res/
+/[Aa]ssets/[Ss]treamingAssets/
+/[Aa]ssets/[Ss]treamingAssets.meta
+
+# Exclude firebase key
+/[Aa]ssets/google-services.json
+/[Aa]ssets/google-services.json.meta
+
 # Exclude test scripts
 Assets/Scripts/Runtime/Multimodal/Examples/
 Assets/Scripts/Runtime/Multimodal/Examples.meta
