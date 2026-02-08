@@ -8,14 +8,14 @@ using Multimodal.Config;
 namespace Multimodal.Letter
 {
     /// <summary>
-    /// 편지 응답 생성 매니저
+    /// 편지 전송 컴포넌트
     ///
     /// 특징:
-    /// - HTTP POST 기반 비동기 처리
-    /// - 사용자 ID 관리
-    /// - 에러 핸들링
+    /// - HTTP POST로 편지 전송
+    /// - 서버가 task_id 반환 (비동기 처리)
+    /// - 실제 응답은 Firebase에 저장됨 (LetterReader로 조회)
     /// </summary>
-    public class LetterManager : MonoBehaviour
+    public class LetterSender : MonoBehaviour
     {
         #region Inspector Fields
         [Header("User Settings")]
@@ -48,7 +48,7 @@ namespace Multimodal.Letter
             _httpClient = new AIHttpClient(ServerConfig.LetterHttpUrl);
             _httpClient.SetTimeout(60); // 편지 생성은 시간이 걸릴 수 있음
 
-            DebugLog($"LetterManager initialized - User ID: {userId}");
+            DebugLog($"LetterSender initialized - User ID: {userId}");
         }
 
         private void OnDestroy()
@@ -103,13 +103,10 @@ namespace Multimodal.Letter
                 {
                     OnProcessing?.Invoke(_currentTaskId);
 
-                    // 서버는 비동기 처리 (Firebase에 결과 저장)
-                    // 클라이언트는 task_id를 받고 Firebase에서 결과 폴링 필요
+                    // 서버는 비동기 처리 후 Firebase에 결과 저장
+                    // LetterReader.FetchLatestResponseAsync()로 결과 조회
                     DebugLog($"Letter request accepted. Task ID: {_currentTaskId}");
-                    DebugLog("Note: Response will be saved to Firebase. Poll Firebase for results.");
 
-                    // task_id 반환 (
-                    // TODO: 실제 응답은 Firebase에서 가져와야 함
                     return _currentTaskId;
                 }
                 else
@@ -120,13 +117,13 @@ namespace Multimodal.Letter
             catch (HttpRequestException ex)
             {
                 var errorMsg = $"HTTP {ex.StatusCode}: {ex.Message}";
-                Debug.LogError($"[LetterManager] {errorMsg}");
+                Debug.LogError($"[LetterSender] {errorMsg}");
                 OnError?.Invoke($"HTTP_{ex.StatusCode}", ex.Message);
                 throw;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[LetterManager] Send letter failed: {ex.Message}");
+                Debug.LogError($"[LetterSender] Send letter failed: {ex.Message}");
                 OnError?.Invoke("SEND_FAILED", ex.Message);
                 throw;
             }
@@ -142,7 +139,7 @@ namespace Multimodal.Letter
         {
             if (string.IsNullOrWhiteSpace(newUserId))
             {
-                Debug.LogWarning("[LetterManager] Invalid user ID");
+                Debug.LogWarning("[LetterSender] Invalid user ID");
                 return;
             }
 
@@ -157,7 +154,7 @@ namespace Multimodal.Letter
         {
             if (enableDebugLogs)
             {
-                Debug.Log($"[LetterManager] {message}");
+                Debug.Log($"[LetterSender] {message}");
             }
         }
         #endregion
