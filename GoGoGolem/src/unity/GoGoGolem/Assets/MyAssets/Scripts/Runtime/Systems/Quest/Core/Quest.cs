@@ -38,7 +38,6 @@ namespace MyAssets.Runtime.Systems.Quest
             Status = QuestStatus.InProgress;
             Reward = questData.reward;
 
-            // Objective 생성
             objectives = new List<QuestObjective>();
             foreach (var objData in questData.objectives)
             {
@@ -61,37 +60,7 @@ namespace MyAssets.Runtime.Systems.Quest
             }
 
             objective.CompletePhase(phaseID);
-
-            // Quest 완료 체크
             CheckCompletion();
-        }
-
-        /// <summary>
-        /// Objective가 완료되었는지 확인
-        /// </summary>
-        public bool IsObjectiveCompleted(string objectiveID)
-        {
-            var objective = GetObjective(objectiveID);
-            return objective?.IsCompleted ?? false;
-        }
-
-        /// <summary>
-        /// Quest가 완료되었는지 확인
-        /// </summary>
-        public bool IsCompleted()
-        {
-            return objectives.All(o => o.IsCompleted);
-        }
-
-        /// <summary>
-        /// 완료 상태 체크
-        /// </summary>
-        private void CheckCompletion()
-        {
-            if (IsCompleted() && Status != QuestStatus.Completed)
-            {
-                Complete();
-            }
         }
 
         /// <summary>
@@ -121,8 +90,7 @@ namespace MyAssets.Runtime.Systems.Quest
         /// </summary>
         public QuestPhase GetPhase(string objectiveID, string phaseID)
         {
-            var objective = GetObjective(objectiveID);
-            return objective?.GetPhase(phaseID);
+            return GetObjective(objectiveID)?.GetPhase(phaseID);
         }
 
         /// <summary>
@@ -153,8 +121,32 @@ namespace MyAssets.Runtime.Systems.Quest
         }
 
         /// <summary>
-        /// Quest 정보를 문자열로 반환
+        /// Quest가 완료되었는지 확인
         /// </summary>
+        public bool IsCompleted()
+        {
+            return objectives.All(o => o.IsCompleted);
+        }
+
+        /// <summary>
+        /// Objective가 완료되었는지 확인
+        /// </summary>
+        public bool IsObjectiveCompleted(string objectiveID)
+        {
+            return GetObjective(objectiveID)?.IsCompleted ?? false;
+        }
+
+        /// <summary>
+        /// 완료 상태 체크
+        /// </summary>
+        private void CheckCompletion()
+        {
+            if (IsCompleted() && Status != QuestStatus.Completed)
+            {
+                Complete();
+            }
+        }
+
         public override string ToString()
         {
             int completedObjectives = objectives.Count(o => o.IsCompleted);
