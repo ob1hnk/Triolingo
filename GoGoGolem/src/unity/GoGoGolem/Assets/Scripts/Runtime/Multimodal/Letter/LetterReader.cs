@@ -19,7 +19,8 @@ namespace Multimodal.Letter
     ///
     /// 사용법:
     /// ```csharp
-    /// var response = await letterReader.FetchLatestResponseAsync("user123");
+    /// var taskId = await letterSender.SendLetterAsync("편지 내용");
+    /// var response = await letterReader.FetchResponseByTaskIdAsync(taskId);
     /// if (response != null)
     /// {
     ///     Debug.Log(response.GeneratedResponseLetter);
@@ -51,41 +52,40 @@ namespace Multimodal.Letter
         #endregion
 
         #region Public API
-        /// 가장 최근 편지 응답 1건 조회
-        public async Task<LetterResponse> FetchLatestResponseAsync(string userId)
+        /// task_id로 편지 응답 조회
+        public async Task<LetterResponse> FetchResponseByTaskIdAsync(string taskId)
         {
-            if (string.IsNullOrWhiteSpace(userId))
+            if (string.IsNullOrWhiteSpace(taskId))
             {
-                OnError?.Invoke("INVALID_INPUT", "User ID cannot be empty");
+                OnError?.Invoke("INVALID_INPUT", "Task ID cannot be empty");
                 return null;
             }
 
             try
             {
-                DebugLog($"Fetching latest response for user: {userId}");
+                DebugLog($"Fetching response for task: {taskId}");
 
                 var query = _db.Collection(CollectionName)
-                    .WhereEqualTo("user_id", userId)
-                    .OrderByDescending("created_at")
+                    .WhereEqualTo("task_id", taskId)
                     .Limit(1);
 
                 var snapshot = await query.GetSnapshotAsync();
 
                 if (snapshot.Count == 0)
                 {
-                    DebugLog("No letter response found");
+                    DebugLog($"No letter response found for task: {taskId}");
                     return null;
                 }
 
                 var doc = snapshot.Documents.First();
                 var response = DocumentToLetterResponse(doc);
 
-                DebugLog($"Letter response found: {response.Id}");
+                DebugLog($"Letter response found: {response.Id} for task: {taskId}");
                 return response;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[LetterReader] Fetch latest failed: {ex.Message}");
+                Debug.LogError($"[LetterReader] Fetch by task ID failed: {ex.Message}");
                 OnError?.Invoke("FETCH_FAILED", ex.Message);
                 return null;
             }
@@ -137,6 +137,7 @@ namespace Multimodal.Letter
             var response = new LetterResponse
             {
                 Id = doc.Id,
+                TaskId = dict.ContainsKey("task_id") ? dict["task_id"]?.ToString() : "",
                 UserId = dict.ContainsKey("user_id") ? dict["user_id"]?.ToString() : "",
                 UserLetter = dict.ContainsKey("user_letter") ? dict["user_letter"]?.ToString() : "",
                 GeneratedResponseLetter = dict.ContainsKey("generated_response_letter")
