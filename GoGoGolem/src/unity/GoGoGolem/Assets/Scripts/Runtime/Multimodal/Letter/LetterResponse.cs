@@ -10,6 +10,7 @@ namespace Multimodal.Letter
     public class LetterResponse
     {
         public string Id { get; set; }
+        public string TaskId { get; set; }
         public string UserId { get; set; }
         public string UserLetter { get; set; }
         public string GeneratedResponseLetter { get; set; }

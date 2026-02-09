@@ -104,7 +104,7 @@ namespace Multimodal.Letter
                     OnProcessing?.Invoke(_currentTaskId);
 
                     // 서버는 비동기 처리 후 Firebase에 결과 저장
-                    // LetterReader.FetchLatestResponseAsync()로 결과 조회
+                    // LetterReader.FetchResponseByTaskIdAsync(taskId)로 결과 조회
                     DebugLog($"Letter request accepted. Task ID: {_currentTaskId}");
 
                     return _currentTaskId;
