@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace MyAssets.FinalCharacterController
+namespace MyAssets.CharacterControllerNamespace
 {
     [DefaultExecutionOrder(-1)]
     public class PlayerController : MonoBehaviour
