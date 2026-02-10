@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace MyAssets.FinalCharacterController
+namespace MyAssets.CharacterControllerNamespace
 {
     public static class CharacterControllerUtils
     {

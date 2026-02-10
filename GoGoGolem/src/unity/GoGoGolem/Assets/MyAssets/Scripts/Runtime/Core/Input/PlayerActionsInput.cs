@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace MyAssets.FinalCharacterController
+namespace MyAssets.CharacterControllerNamespace
 {
     [DefaultExecutionOrder(-2)]
     public class PlayerActionsInput : MonoBehaviour, GameInputActions.IPlayerActionsActions

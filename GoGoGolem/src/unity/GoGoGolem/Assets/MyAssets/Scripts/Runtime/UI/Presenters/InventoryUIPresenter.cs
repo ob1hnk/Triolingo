@@ -1,4 +1,4 @@
-using MyAssets.FinalCharacterController;
+using MyAssets.CharacterControllerNamespace;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
