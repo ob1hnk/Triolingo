@@ -14,6 +14,7 @@ class Letter:
     """편지 응답 데이터 모델"""
 
     id: Optional[str] = None
+    task_id: str = ""
     user_id: str = ""
     user_letter: str = ""
     generated_response_letter: str = ""
@@ -24,6 +25,7 @@ class Letter:
         """딕셔너리로 변환"""
         return {
             "id": self.id,
+            "task_id": self.task_id,
             "user_id": self.user_id,
             "user_letter": self.user_letter,
             "generated_response_letter": self.generated_response_letter,
@@ -51,6 +53,7 @@ class Letter:
 
         return cls(
             id=data.get("id"),
+            task_id=data.get("task_id", ""),
             user_id=data.get("user_id", ""),
             user_letter=data.get("user_letter", ""),
             generated_response_letter=data.get("generated_response_letter", ""),

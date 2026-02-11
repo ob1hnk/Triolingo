@@ -53,6 +53,7 @@ async def generate_letter(request: GenerateLetterRequest):
         asyncio.create_task(
             usecase.execute(
                 {
+                    "task_id": task_id,
                     "user_id": request.user_id,
                     "user_letter": request.user_letter,
                 }

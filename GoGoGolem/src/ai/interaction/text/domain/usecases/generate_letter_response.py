@@ -66,6 +66,7 @@ class GenerateLetterResponseUseCase:
 
             # Step 2: Firebase에 편지와 응답 저장
             letter_response = Letter(
+                task_id=input_data.get("task_id", ""),
                 user_id=input_data["user_id"],
                 user_letter=input_data["user_letter"],
                 generated_response_letter=generated_response_letter,
