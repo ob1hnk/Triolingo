@@ -35,7 +35,7 @@ namespace Demo.GestureDetection
     }
 
     public GestureResult Recognize(
-        HandLandmarkerResult handResult, 
+        HandLandmarkerResult handResult,
         PoseLandmarkerResult poseResult)
     {
       // 1. 선행 조건: 양손이 감지되는가?
@@ -44,7 +44,15 @@ namespace Demo.GestureDetection
         return GestureResult.None;
       }
 
-      // 2. 데이터 추출 - 각 손목, 중지 손끝, 손 방향 
+      // 1-1. 각 손의 landmark 개수 검증 (21개 필수)
+      if (handResult.handLandmarks[0].landmarks.Count < 21 ||
+          handResult.handLandmarks[1].landmarks.Count < 21)
+      {
+        Debug.LogWarning($"[WindGesture] Incomplete hand landmarks - Hand0: {handResult.handLandmarks[0].landmarks.Count}/21, Hand1: {handResult.handLandmarks[1].landmarks.Count}/21");
+        return GestureResult.None;
+      }
+
+      // 2. 데이터 추출 - 각 손목, 중지 손끝, 손 방향
       var wrist1 = GetVector3(handResult.handLandmarks[0].landmarks[0]);
       var middleTip1 = GetVector3(handResult.handLandmarks[0].landmarks[12]);
       Vector3 hand1_dir = (middleTip1 - wrist1).normalized;

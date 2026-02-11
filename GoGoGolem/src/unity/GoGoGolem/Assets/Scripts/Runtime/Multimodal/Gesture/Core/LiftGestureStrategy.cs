@@ -28,7 +28,7 @@ namespace Demo.GestureDetection
     }
 
     public GestureResult Recognize(
-        HandLandmarkerResult handResult, 
+        HandLandmarkerResult handResult,
         PoseLandmarkerResult poseResult)
     {
       // 1. Pose 데이터 유효성 검사
@@ -39,7 +39,15 @@ namespace Demo.GestureDetection
       }
 
       var poseLandmarks = poseResult.poseLandmarks[0];
-      
+
+      // 1-1. Pose landmark 개수 검증 (최소 17개 필요: 인덱스 0-16)
+      if (poseLandmarks.landmarks.Count < 17)
+      {
+        Debug.LogWarning($"[LiftGesture] Insufficient pose landmarks: {poseLandmarks.landmarks.Count}/17");
+        ResetState();
+        return GestureResult.None;
+      }
+
       // 2. 현재 손목 위치 (왼쪽: 15, 오른쪽: 16)
       var leftWrist = GetVector3(poseLandmarks.landmarks[15]);
       var rightWrist = GetVector3(poseLandmarks.landmarks[16]);
