@@ -234,7 +234,7 @@ namespace Demo.GestureDetection
 
     /* 손목 회전
       손바닥 평면 정의
-      손바닥 방향 판단 위해 normal vector 계산
+      손바닥 방향 판단 위해 normal vector 계산 
       손 뒤틀리는 것 완화하기 위한 직교화
     */
     private void UpdateHandRotation(
@@ -242,7 +242,14 @@ namespace Demo.GestureDetection
         Transform handTarget,
         bool isLeftHand)
     {
-        if (landmarks == null || landmarks.Count <= 17 || handTarget == null) return;
+        if (landmarks == null || landmarks.Count < 21 || handTarget == null)
+        {
+            if (landmarks != null && landmarks.Count < 21)
+            {
+                Debug.LogWarning($"[UpdateHandRotation] Insufficient landmarks for {(isLeftHand ? "LEFT" : "RIGHT")} hand: {landmarks.Count}/21");
+            }
+            return;
+        }
 
         Vector3 wristPos = LandmarkTo3D.LandmarkToWorldPosition(landmarks[0]);
         Vector3 indexPos = LandmarkTo3D.LandmarkToWorldPosition(landmarks[5]);
@@ -292,12 +299,34 @@ namespace Demo.GestureDetection
 
       var poseLandmarks = _latestPoseResult.poseLandmarks[0].landmarks;
 
+      // Pose landmarks 개수 검증 (최소 17개 필요: 0-16 인덱스)
+      if (poseLandmarks.Count < 17)
+      {
+        Debug.LogWarning($"[ProcessMovement] Insufficient pose landmarks: {poseLandmarks.Count}/17");
+        return;
+      }
+
       if (result.handedness != null && result.handedness.Count >= 2)
       {
-          string label0 = result.handedness[0].categories[0].categoryName; 
-          
-          var hand0Marks = result.handLandmarks[0].landmarks; 
+          // Handedness categories 검증 (왼손/오른손 구분 정보)
+          if (result.handedness[0].categories == null || result.handedness[0].categories.Count == 0 ||
+              result.handedness[1].categories == null || result.handedness[1].categories.Count == 0)
+          {
+            Debug.LogWarning("[ProcessMovement] Handedness categories are empty - cannot determine left/right hand");
+            return;
+          }
+
+          string label0 = result.handedness[0].categories[0].categoryName;
+
+          var hand0Marks = result.handLandmarks[0].landmarks;
           var hand1Marks = result.handLandmarks[1].landmarks;
+
+          // 각 손의 landmarks가 21개(0-20 인덱스)인지 검증
+          if (hand0Marks.Count < 21 || hand1Marks.Count < 21)
+          {
+            Debug.LogWarning($"[ProcessMovement] Incomplete hand landmarks - Hand0: {hand0Marks.Count}/21, Hand1: {hand1Marks.Count}/21");
+            return;
+          }
 
           bool isHand0Left = label0 == "Right"; 
 
@@ -444,6 +473,13 @@ namespace Demo.GestureDetection
     {
         if (handBones == null) return;
 
+        // Landmark 개수 검증 (21개 필수: 인덱스 0-20)
+        if (landmarks == null || landmarks.Count < 21)
+        {
+            Debug.LogWarning($"[UpdateFingerTargets] Insufficient landmarks for {(isLeftHand ? "LEFT" : "RIGHT")} hand: {landmarks?.Count ?? 0}/21");
+            return;
+        }
+
         Transform handBone = isLeftHand ? _leftHandBone : _rightHandBone;
         if (handBone == null)
         {
@@ -491,6 +527,13 @@ namespace Demo.GestureDetection
 
                 int currentIdx = _fingerLandmarkIndices[i][j];
                 int nextIdx = _fingerLandmarkIndices[i][j + 1];
+
+                // 인덱스 범위 체크 (방어 로직)
+                if (currentIdx >= landmarks.Count || nextIdx >= landmarks.Count)
+                {
+                    Debug.LogWarning($"[UpdateFingerTargets] Index out of range - finger:{i}, bone:{j}, currentIdx:{currentIdx}, nextIdx:{nextIdx}, landmarksCount:{landmarks.Count}");
+                    continue;
+                }
 
                 Vector3 currentPosWorld = LandmarkTo3D.LandmarkToWorldPosition(landmarks[currentIdx]);
                 Vector3 nextPosWorld = LandmarkTo3D.LandmarkToWorldPosition(landmarks[nextIdx]);
