@@ -6,7 +6,7 @@ namespace Demo.GestureDetection.UI
   /// <summary>
   /// 제스처 인식 결과를 UI에 표시하는 컨트롤러
   /// </summary>
-  public class SingleGestureUIController : MonoBehaviour
+  public class GestureUIController : MonoBehaviour
   {
     [Header("Gesture Indicators")]
     [SerializeField] private Image _gestureIndicator;  // 씬별 설정하는 제스처 인디케이터

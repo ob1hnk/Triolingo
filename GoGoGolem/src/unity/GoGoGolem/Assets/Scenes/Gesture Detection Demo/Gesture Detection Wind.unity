@@ -788,6 +788,57 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Animation.Rigging::UnityEngine.Animations.Rigging.Rig
   m_Weight: 1
   m_Effectors: []
+--- !u!1 &743251077
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 743251079}
+  - component: {fileID: 743251078}
+  m_Layer: 0
+  m_Name: GesturePlayView
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &743251078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 743251077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 771ab64d71cd44a4185d4bac0a8cb7d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _avatarAnimator: {fileID: 909100857}
+  _gestureUIController: {fileID: 1266644736}
+  _handAnnotationController: {fileID: 1383265120}
+  _poseAnnotationController: {fileID: 1479458217}
+  _showAnnotations: 1
+  _backgroundObjects: {fileID: 0}
+  _targetObjects: {fileID: 0}
+--- !u!4 &743251079
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 743251077}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &797696144
 GameObject:
   m_ObjectHideFlags: 0
@@ -2397,11 +2448,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _sceneConfig: {fileID: 11400000, guid: 13daab74e7124fa4ca19cb8ac20ed685, type: 2}
   _gestureDetector: {fileID: 1596214718}
-  _avatarAnimator: {fileID: 909100857}
-  _gestureUIController: {fileID: 1266644736}
-  _handAnnotationController: {fileID: 1479458217}
-  _poseAnnotationController: {fileID: 1383265120}
-  _showAnnotations: 1
+  _gesturePlayView: {fileID: 743251078}
   _debounceDuration: 0.2
 --- !u!1 &1982504399
 GameObject:
@@ -3850,3 +3897,4 @@ SceneRoots:
   - {fileID: 1596214717}
   - {fileID: 1966528229}
   - {fileID: 1006544147}
+  - {fileID: 743251079}
