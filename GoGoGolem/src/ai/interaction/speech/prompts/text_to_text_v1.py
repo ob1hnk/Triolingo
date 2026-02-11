@@ -280,7 +280,7 @@ Only add a follow-up question if the player shows clear conversational interest.
     """
 
     MODEL_CONFIG: ClassVar[dict] = {
-        "model": "gpt-4.1",
+        "model": "gpt-4o",
         "temperature": 0.7,
         "max_tokens": 10000,
     }
