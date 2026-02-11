@@ -5,7 +5,8 @@ Speech-to-Text 포트 인터페이스
 """
 
 from abc import ABC, abstractmethod
-from typing import BinaryIO
+
+from interaction.speech.domain.entity.voice_input import VoiceInput
 
 
 class SpeechToTextPort(ABC):
@@ -13,13 +14,13 @@ class SpeechToTextPort(ABC):
 
     @abstractmethod
     async def transcribe_user_audio_to_text(
-        self, audio_file: BinaryIO, language: str = "ko"
+        self, voice_input: VoiceInput, language: str = "ko"
     ) -> str:
         """
         사용자 오디오를 텍스트로 변환
 
         Args:
-            audio_file: 오디오 파일 (BinaryIO)
+            voice_input: 음성 입력 데이터
             language: 오디오 언어 코드 (기본값: "ko" - 한국어)
 
         Returns:

@@ -3,11 +3,13 @@
 
 APIRouter를 사용한 버전
 Unity에서 VAD로 세션별로 쪼갠 음성을 받아서 처리하는 엔드포인트
+
+멀티턴 대화를 지원하여 WebSocket 연결 동안 대화 이력을 유지합니다.
 """
 
 import logging
-import io
 import base64
+import uuid
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
@@ -24,8 +26,9 @@ from interaction.server.dto.speech import (
 from interaction.speech.domain.usecases.generate_conversation_response import (
     GenerateConversationResponseUseCase,
 )
+from interaction.speech.domain.entity.voice_input import VoiceInput
 from interaction.speech.di.container import SpeechContainer
-from interaction.server.core.session_manager import session_manager
+from interaction.server.core.session_manager import audio_session_manager
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +42,10 @@ async def handle_websocket(
     """
     WebSocket 연결을 처리하는 핸들러
 
+    멀티턴 대화 지원:
+    - WebSocket 연결 = 하나의 대화 세션
+    - 연결이 유지되는 동안 대화 이력이 UseCase 내부에서 관리됩니다
+
     프로토콜:
     1. SESSION_START: 세션 시작, session_id와 오디오 포맷 정보 전송
     2. AUDIO_CHUNK: 오디오 청크를 순차적으로 전송 (base64 인코딩)
@@ -51,7 +58,13 @@ async def handle_websocket(
     - 결과를 텍스트로 반환
     """
     await websocket.accept()
-    logger.info("WebSocket connection accepted")
+
+    # WebSocket 연결 = 하나의 대화 세션
+    conversation_id = str(uuid.uuid4())
+
+    logger.info(
+        f"WebSocket connection accepted (v1), conversation_id: {conversation_id}"
+    )
 
     current_session_id: str | None = None
 
@@ -69,8 +82,8 @@ async def handle_websocket(
                     request = SessionStartRequest(**data)
                     current_session_id = request.session_id
 
-                    # 세션 생성
-                    session_manager.create_session(
+                    # 오디오 세션 생성
+                    audio_session_manager.create_session(
                         request.session_id,
                         request.audio_format or "wav",
                         request.sample_rate or 16000,
@@ -82,17 +95,20 @@ async def handle_websocket(
                         AckResponse(
                             type=MessageType.ACK,
                             session_id=request.session_id,
-                            message="Session started",
+                            message="Session started (v1)",
                         ).model_dump()
                     )
-                    logger.info(f"Session started: {request.session_id}")
+                    logger.info(
+                        f"Session started (v1): {request.session_id}, "
+                        f"conversation_id: {conversation_id}"
+                    )
 
                 elif message_type == MessageType.AUDIO_CHUNK:
                     request = AudioChunkRequest(**data)
                     current_session_id = request.session_id
 
                     # 세션 존재 확인
-                    if not session_manager.has_session(request.session_id):
+                    if not audio_session_manager.has_session(request.session_id):
                         await websocket.send_json(
                             ErrorResponse(
                                 type=MessageType.ERROR,
@@ -119,7 +135,7 @@ async def handle_websocket(
                         continue
 
                     # 청크 저장
-                    session_manager.add_chunk(
+                    audio_session_manager.add_chunk(
                         request.session_id, request.chunk_index, audio_bytes
                     )
 
@@ -141,7 +157,7 @@ async def handle_websocket(
                     current_session_id = request.session_id
 
                     # 세션 존재 확인
-                    if not session_manager.has_session(request.session_id):
+                    if not audio_session_manager.has_session(request.session_id):
                         await websocket.send_json(
                             ErrorResponse(
                                 type=MessageType.ERROR,
@@ -164,21 +180,29 @@ async def handle_websocket(
 
                     try:
                         # 모든 청크를 합쳐서 오디오 파일 생성
-                        audio_bytes = session_manager.get_audio(request.session_id)
+                        audio_bytes = audio_session_manager.get_audio(
+                            request.session_id
+                        )
 
                         if len(audio_bytes) == 0:
                             raise ValueError("No audio data received")
 
-                        # BytesIO로 변환 (generate_conversation_response가 파일 객체를 받을 수 있도록)
-                        audio_file = io.BytesIO(audio_bytes)
-                        audio_file.name = f"audio_{request.session_id}.wav"
+                        # VoiceInput 엔티티 생성
+                        voice_input = VoiceInput.from_bytes(
+                            data=audio_bytes,
+                            format="wav",
+                            name=f"audio_{request.session_id}.wav",
+                        )
 
-                        # UseCase 호출 (의존성 주입으로 받은 usecase 사용)
-                        result = await usecase.execute(audio_file)
+                        # UseCase 호출 (session_id 전달, 내부에서 대화 이력 관리)
+                        result = await usecase.execute(
+                            voice_input=voice_input,
+                            session_id=conversation_id,
+                        )
 
-                        # 세션 완료 표시 및 제거
-                        session_manager.mark_complete(request.session_id)
-                        session_manager.remove_session(request.session_id)
+                        # 오디오 세션 완료 표시 및 제거
+                        audio_session_manager.mark_complete(request.session_id)
+                        audio_session_manager.remove_session(request.session_id)
 
                         # 결과 응답
                         await websocket.send_json(
@@ -190,7 +214,8 @@ async def handle_websocket(
                             ).model_dump()
                         )
                         logger.info(
-                            f"Session completed successfully: {request.session_id}"
+                            f"Session completed successfully (v1): {request.session_id}, "
+                            f"conversation_id: {conversation_id}"
                         )
 
                     except Exception as e:
@@ -206,8 +231,8 @@ async def handle_websocket(
                                 error_message=f"Failed to process audio: {str(e)}",
                             ).model_dump()
                         )
-                        # 에러 발생 시 세션 제거
-                        session_manager.remove_session(request.session_id)
+                        # 에러 발생 시 오디오 세션만 제거
+                        audio_session_manager.remove_session(request.session_id)
 
                 else:
                     # 알 수 없는 메시지 타입
@@ -243,16 +268,23 @@ async def handle_websocket(
                 )
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket disconnected. Session: {current_session_id}")
+        logger.info(
+            f"WebSocket disconnected. Session: {current_session_id}, "
+            f"conversation_id: {conversation_id}"
+        )
         # 연결 종료 시 세션 정리
         if current_session_id:
-            session_manager.remove_session(current_session_id)
+            audio_session_manager.remove_session(current_session_id)
+        # 대화 이력 정리 (메모리 누수 방지)
+        usecase.clear_session(conversation_id)
 
     except Exception as e:
         logger.error(f"WebSocket error: {e}", exc_info=True)
         # 연결 종료 시 세션 정리
         if current_session_id:
-            session_manager.remove_session(current_session_id)
+            audio_session_manager.remove_session(current_session_id)
+        # 대화 이력 정리
+        usecase.clear_session(conversation_id)
         raise
 
 
@@ -263,6 +295,9 @@ async def websocket_speech_v1(websocket: WebSocket):
 
     Unity에서 VAD로 세션별로 쪼갠 음성을 받아서 처리합니다.
 
+    멀티턴 대화 지원:
+    - WebSocket 연결이 유지되는 동안 대화 이력이 누적됩니다
+
     프로토콜:
     1. SESSION_START: 세션 시작
     2. AUDIO_CHUNK: 오디오 청크 전송 (여러 번 가능)
@@ -271,7 +306,7 @@ async def websocket_speech_v1(websocket: WebSocket):
     응답:
     - ACK: 수신 확인
     - PROCESSING: 처리 중
-    - RESULT: 최종 결과 (텍스트 응답)
+    - RESULT: 최종 결과 (텍스트 응답 + transcription)
     - ERROR: 에러 발생
     """
     import interaction.server.app as app_module
