@@ -99,3 +99,7 @@ crashlytics-build.properties
 # Exclude test scripts
 Assets/Scripts/Runtime/Multimodal/Examples/
 Assets/Scripts/Runtime/Multimodal/Examples.meta
+
+# 3D model assets
+/[Aa]ssets/*.fbx
+/[Aa]ssets/*.fbx.meta
