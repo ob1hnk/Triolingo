@@ -9,6 +9,7 @@ namespace Demo.GestureDetection.UI
   /// - GestureDetector 이벤트 구독
   /// - GestureRecognizer 호출
   /// - View 업데이트 (View 내부 구조는 모름)
+  /// - 제스처 3초 유지 시 성공 콜백
   /// </summary>
   public class GesturePlayPresenter
   {
@@ -21,6 +22,11 @@ namespace Demo.GestureDetection.UI
     
     // 설정값
     private GestureType _targetGesture;
+
+    // 성공 판정 (3초 유지)
+    private float _holdStartTime = -1f;
+    private float _requiredHoldDuration = 3f;
+    private bool _successTriggered = false;
     
     // 성공 콜백
     private System.Action<GestureType> _onGestureSuccess;
@@ -33,12 +39,18 @@ namespace Demo.GestureDetection.UI
       GestureDetector detector,
       GestureType targetGesture,
       GestureThresholdData thresholds,
-      System.Action<GestureType> onSuccess)
+      System.Action<GestureType> onSuccess,
+      float requiredHoldDuration = 3f)
     {
       _view = view;
       _gestureDetector = detector;
       _targetGesture = targetGesture;
       _onGestureSuccess = onSuccess;
+      _requiredHoldDuration = requiredHoldDuration;
+
+      // 상태 초기화
+      _holdStartTime = -1f;
+      _successTriggered = false;
       
       // GestureRecognizer 생성 및 설정
       _gestureRecognizer = new GestureRecognizer(thresholds ?? GestureThresholdData.Default());
@@ -50,7 +62,7 @@ namespace Demo.GestureDetection.UI
         _gestureDetector.OnLandmarksUpdated += OnLandmarksUpdated;
       }
       
-      Debug.Log($"[GesturePlayPresenter] Initialized - Target: {targetGesture}");
+      Debug.Log($"[GesturePlayPresenter] Initialized - Target: {targetGesture}, HoldDuration: {requiredHoldDuration}s");
     }
     
     /// <summary>
@@ -76,7 +88,10 @@ namespace Demo.GestureDetection.UI
       
       if (!hasHandData || !hasPoseData)
       {
-        // 데이터 부족 시 View에 전달
+        // 데이터 부족 시 홀드 타이머 리셋
+        ResetHoldTimer();
+
+        // 뷰에 전달
         _view?.UpdateDisplay(new DisplayData
         {
           HasValidData = false
@@ -89,11 +104,34 @@ namespace Demo.GestureDetection.UI
       // 2. 제스처 인식
       var gestureResult = _gestureRecognizer.RecognizeGesture(handResult, poseResult);
       
-      // 3. 타겟 제스처 성공 시 콜백 호출
-      if (gestureResult.Type == _targetGesture && gestureResult.IsDetected)
+      // 3. 타겟 제스처 3초 유지 판정
+      bool isTargetDetected = gestureResult.Type == _targetGesture && gestureResult.IsDetected;
+      
+      if (isTargetDetected && !_successTriggered)
       {
-        Debug.Log($"[GesturePlayPresenter] Gesture SUCCESS! Type={gestureResult.Type}, Confidence={gestureResult.Confidence:F2}");
-        _onGestureSuccess?.Invoke(gestureResult.Type);
+        // 홀드 시작 또는 유지
+        if (_holdStartTime < 0f)
+        {
+          _holdStartTime = Time.time;
+          Debug.Log($"[GesturePlayPresenter] Hold started: {gestureResult.Type}");
+        }
+        else
+        {
+          float holdDuration = Time.time - _holdStartTime;
+          
+          // 3초 도달 시 성공 콜백
+          if (holdDuration >= _requiredHoldDuration)
+          {
+            _successTriggered = true;
+            Debug.Log($"[GesturePlayPresenter] Gesture SUCCESS! Held for {holdDuration:F1}s");
+            _onGestureSuccess?.Invoke(gestureResult.Type);
+          }
+        }
+      }
+      else if (!isTargetDetected)
+      {
+        // 제스처 끊김 → 홀드 타이머 리셋
+        ResetHoldTimer();
       }
       
       // 4. View 업데이트 (단일 진입점)
@@ -102,11 +140,36 @@ namespace Demo.GestureDetection.UI
         PoseData = poseResult,
         HandData = handResult,
         GestureResult = gestureResult,
-        HasValidData = true
+        HasValidData = true,
+        HoldProgress = CalculateHoldProgress()
       });
       
       // 5. 메모리 정리 (Pose segmentation masks)
       DisposeAllMasks(poseResult);
+    }
+
+    /// <summary>
+    /// 홀드 타이머 리셋
+    /// </summary>
+    private void ResetHoldTimer()
+    {
+      if (_holdStartTime >= 0f)
+      {
+        Debug.Log("[GesturePlayPresenter] Hold interrupted");
+        _holdStartTime = -1f;
+      }
+    }
+    
+    /// <summary>
+    /// 홀드 진행도 계산 (0.0 ~ 1.0)
+    /// </summary>
+    private float CalculateHoldProgress()
+    {
+      if (_holdStartTime < 0f || _successTriggered)
+        return 0f;
+      
+      float elapsed = Time.time - _holdStartTime;
+      return Mathf.Clamp01(elapsed / _requiredHoldDuration);
     }
     
     /// <summary>
