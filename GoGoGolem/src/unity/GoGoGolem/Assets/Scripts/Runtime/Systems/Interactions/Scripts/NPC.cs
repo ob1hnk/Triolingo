@@ -8,36 +8,36 @@ public class NPC : MonoBehaviour, IInteractable
 {
     [Header("NPC Info")]
     [SerializeField] private string npcName = "마을 주민";
-    
+
     [Header("Dialogue")]
     [Tooltip("상호작용 시 표시할 대사")]
     [TextArea(2, 4)]
     [SerializeField] private string dialogueText = "안녕하세요!";
-    
+
     [Header("Quest Settings (Optional)")]
     [Tooltip("퀘스트 기능을 사용하려면 체크")]
     [SerializeField] private bool hasQuestAction = false;
-    
+
     [Tooltip("퀘스트 ID (예: MQ-01)")]
     [SerializeField] private string questID;
-    
+
     [Tooltip("NPC 액션 타입")]
     [SerializeField] private NPCQuestAction questAction = NPCQuestAction.None;
-    
+
     [Tooltip("완료할 Objective ID (CompletePhase 전용)")]
     [SerializeField] private string objectiveID;
-    
+
     [Tooltip("완료할 Phase ID (CompletePhase 전용)")]
     [SerializeField] private string phaseID;
-    
+
     [Header("Options")]
     [Tooltip("한 번만 상호작용 가능")]
     [SerializeField] private bool onceOnly = false;
-    
+
     [Tooltip("상호작용 후 대사")]
     [TextArea(2, 4)]
     [SerializeField] private string afterInteractionText = "";
-    
+
     private bool hasInteracted = false;
 
     #region IInteractable Implementation
@@ -56,7 +56,7 @@ public class NPC : MonoBehaviour, IInteractable
         {
             return ""; // 이미 상호작용함
         }
-        
+
         return $"{npcName}와 대화하기 (E)";
     }
 
@@ -221,7 +221,7 @@ public class NPC : MonoBehaviour, IInteractable
     {
         // NPC 위치 시각화
         Color gizmoColor = Color.blue;
-        
+
         if (hasInteracted)
         {
             gizmoColor = Color.green;
@@ -240,7 +240,7 @@ public class NPC : MonoBehaviour, IInteractable
         // 선택 시 상호작용 범위 표시
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, 3f);
-        
+
         // 퀘스트 정보 표시
         if (hasQuestAction && !string.IsNullOrEmpty(questID))
         {
