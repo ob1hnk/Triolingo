@@ -8959,11 +8959,19 @@ PrefabInstance:
     - target: {fileID: 3298924898663588549, guid: 6402bbdded91646be8f0f29b2ccb9c86, type: 3}
       propertyPath: m_fontAsset
       value: 
+<<<<<<< Updated upstream
       objectReference: {fileID: 11400000, guid: 6666223ba1b6a4b4a919ad23d5404a1d, type: 2}
     - target: {fileID: 3298924898663588549, guid: 6402bbdded91646be8f0f29b2ccb9c86, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4832196895189814390, guid: 6666223ba1b6a4b4a919ad23d5404a1d, type: 2}
+=======
+      objectReference: {fileID: 11400000, guid: 3f5c05ef14383452c99a018a291744a7, type: 2}
+    - target: {fileID: 3298924898663588549, guid: 6402bbdded91646be8f0f29b2ccb9c86, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -6193203460992081240, guid: 3f5c05ef14383452c99a018a291744a7, type: 2}
+>>>>>>> Stashed changes
     - target: {fileID: 3298924898663588549, guid: 6402bbdded91646be8f0f29b2ccb9c86, type: 3}
       propertyPath: m_hasFontAssetChanged
       value: 0
@@ -9055,11 +9063,19 @@ PrefabInstance:
     - target: {fileID: 8349249172594699420, guid: 6402bbdded91646be8f0f29b2ccb9c86, type: 3}
       propertyPath: m_fontAsset
       value: 
+<<<<<<< Updated upstream
       objectReference: {fileID: 11400000, guid: 6666223ba1b6a4b4a919ad23d5404a1d, type: 2}
     - target: {fileID: 8349249172594699420, guid: 6402bbdded91646be8f0f29b2ccb9c86, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4832196895189814390, guid: 6666223ba1b6a4b4a919ad23d5404a1d, type: 2}
+=======
+      objectReference: {fileID: 11400000, guid: 3f5c05ef14383452c99a018a291744a7, type: 2}
+    - target: {fileID: 8349249172594699420, guid: 6402bbdded91646be8f0f29b2ccb9c86, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -6193203460992081240, guid: 3f5c05ef14383452c99a018a291744a7, type: 2}
+>>>>>>> Stashed changes
     - target: {fileID: 8349249172594699420, guid: 6402bbdded91646be8f0f29b2ccb9c86, type: 3}
       propertyPath: m_hasFontAssetChanged
       value: 0
