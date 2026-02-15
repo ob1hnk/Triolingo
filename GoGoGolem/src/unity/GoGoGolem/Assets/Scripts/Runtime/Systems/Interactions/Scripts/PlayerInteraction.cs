@@ -15,6 +15,8 @@ public class PlayerInteraction : MonoBehaviour
         _animator = GetComponent<Animator>();
     }
 
+
+
     void Update()
     {
         CheckForInteractables();
