@@ -1,11 +1,17 @@
+using UnityEngine;
+
 public enum ItemType { Item, Skill, Reward }
 
-[System.Serializable]
-public class ItemData {
+[CreateAssetMenu(fileName = "NewItem", menuName = "GoGoGolem/Item")]
+public class ItemData : ScriptableObject
+{
     public string itemID;
     public string itemName;
     public ItemType type;
     public string phase;
-    public string description; 
+    [TextArea(2, 4)]
+    public string description;
+    [TextArea(2, 4)]
     public string usage;
+    public Sprite icon;
 }
