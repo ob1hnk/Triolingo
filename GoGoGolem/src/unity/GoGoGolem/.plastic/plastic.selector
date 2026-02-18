@@ -1,4 +1,3 @@
-repository "DissectUniteye/GoGoGolem@14568751860113@cloud"
+repository "GoGoGolemUVC/GoGoGolem@14568751860113@cloud"
   path "/"
-    br "/main"
-    co "/main"
+    smartbranch "/main/Quest system"
