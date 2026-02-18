@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using System.Collections.Generic;
-using MyAssets.Runtime.Data.Quest;
 
 public class QuestUIView : MonoBehaviour
 {

@@ -1,65 +1,61 @@
 using System.Collections.Generic;
 using UnityEngine;
-using MyAssets.Runtime.Data.Quest;
 
-namespace MyAssets.Runtime.Systems.Quest
+/// <summary>
+/// 런타임에서 실행되는 Phase 인스턴스
+/// </summary>
+[System.Serializable]
+public class QuestPhase
 {
+    public string PhaseID { get; private set; }
+    public PhaseType PhaseType { get; private set; }
+    public string ContentID { get; private set; }
+    public string Description { get; private set; }
+    public bool IsCompleted { get; private set; }
+
+    private List<string> conditionIDs;
+    private List<string> actionIDs;
+
     /// <summary>
-    /// 런타임에서 실행되는 Phase 인스턴스
+    /// PhaseData로부터 Phase 생성
     /// </summary>
-    [System.Serializable]
-    public class QuestPhase
+    public QuestPhase(PhaseData phaseData)
     {
-        public string PhaseID { get; private set; }
-        public PhaseType PhaseType { get; private set; }
-        public string ContentID { get; private set; }
-        public string Description { get; private set; }
-        public bool IsCompleted { get; private set; }
+        PhaseID = phaseData.phaseID;
+        PhaseType = phaseData.phaseType;
+        ContentID = phaseData.contentID;
+        Description = phaseData.description;
+        IsCompleted = false;
 
-        private List<string> conditionIDs;
-        private List<string> actionIDs;
+        conditionIDs = phaseData.conditionIDs != null 
+            ? new List<string>(phaseData.conditionIDs) 
+            : new List<string>();
+        
+        actionIDs = phaseData.actionIDs != null 
+            ? new List<string>(phaseData.actionIDs) 
+            : new List<string>();
+    }
 
-        /// <summary>
-        /// PhaseData로부터 Phase 생성
-        /// </summary>
-        public QuestPhase(PhaseData phaseData)
+    /// <summary>
+    /// Phase 완료 처리
+    /// </summary>
+    public void Complete()
+    {
+        if (IsCompleted)
         {
-            PhaseID = phaseData.phaseID;
-            PhaseType = phaseData.phaseType;
-            ContentID = phaseData.contentID;
-            Description = phaseData.description;
-            IsCompleted = false;
-
-            conditionIDs = phaseData.conditionIDs != null 
-                ? new List<string>(phaseData.conditionIDs) 
-                : new List<string>();
-            
-            actionIDs = phaseData.actionIDs != null 
-                ? new List<string>(phaseData.actionIDs) 
-                : new List<string>();
+            Debug.LogWarning($"Phase {PhaseID} is already completed.");
+            return;
         }
 
-        /// <summary>
-        /// Phase 완료 처리
-        /// </summary>
-        public void Complete()
-        {
-            if (IsCompleted)
-            {
-                Debug.LogWarning($"Phase {PhaseID} is already completed.");
-                return;
-            }
+        IsCompleted = true;
+        Debug.Log($"[Quest Phase] Completed: {PhaseID} ({Description})");
+    }
 
-            IsCompleted = true;
-            Debug.Log($"[Quest Phase] Completed: {PhaseID} ({Description})");
-        }
-
-        /// <summary>
-        /// Phase 정보를 문자열로 반환
-        /// </summary>
-        public override string ToString()
-        {
-            return $"[Phase {PhaseID}] Type: {PhaseType}, Content: {ContentID}, Completed: {IsCompleted}";
-        }
+    /// <summary>
+    /// Phase 정보를 문자열로 반환
+    /// </summary>
+    public override string ToString()
+    {
+        return $"[Phase {PhaseID}] Type: {PhaseType}, Content: {ContentID}, Completed: {IsCompleted}";
     }
 }

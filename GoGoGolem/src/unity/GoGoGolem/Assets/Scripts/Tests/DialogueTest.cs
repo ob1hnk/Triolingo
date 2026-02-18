@@ -1,5 +1,4 @@
 using UnityEngine;
-using MyAssets.Runtime.Systems.Dialogue;
 
 public class DialogueTest : MonoBehaviour
 {

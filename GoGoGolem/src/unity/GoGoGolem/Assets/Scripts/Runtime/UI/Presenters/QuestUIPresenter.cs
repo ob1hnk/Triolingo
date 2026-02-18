@@ -1,7 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using MyAssets.Runtime.Data.Quest;
-using MyAssets.Runtime.Systems.Quest; // ← 이 네임스페이스 사용!
 
 public class QuestUIPresenter : MonoBehaviour
 {

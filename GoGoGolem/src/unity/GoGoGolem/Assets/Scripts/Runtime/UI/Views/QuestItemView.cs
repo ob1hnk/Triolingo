@@ -1,7 +1,6 @@
 using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
-using MyAssets.Runtime.Data.Quest;
 
 public class QuestItemView : MonoBehaviour
 {
