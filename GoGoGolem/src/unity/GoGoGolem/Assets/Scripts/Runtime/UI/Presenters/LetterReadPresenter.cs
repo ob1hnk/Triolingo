@@ -59,12 +59,22 @@ namespace UI.Presenters
 
         #region Public API
         /// <summary>
+        /// RoomStateManager가 편지 전송 후 taskId를 전달할 때 호출.
+        /// Open() 호출 전에 설정해두면 testLetterId 대신 사용됨.
+        /// </summary>
+        public void SetTaskId(string taskId)
+        {
+            testLetterId = taskId;
+            DebugLog($"TaskId 설정됨: {taskId}");
+        }
+
+        /// <summary>
         /// 편지 읽기 UI를 연다.
-        /// letterId가 null이면 testLetterId(하드코딩) 사용.
+        /// letterId가 null이면 testLetterId(하드코딩 또는 SetTaskId로 설정된 값) 사용.
         ///
         /// 사용법:
-        ///   LetterMailbox에서: presenter.Open();          // testLetterId 사용
-        ///   LoadManager 연동: presenter.Open(letterId);   // 매니저에서 받은 id 사용
+        ///   LetterDesk에서:       presenter.Open();          // testLetterId 사용
+        ///   LoadManager 연동:     presenter.Open(letterId);   // 매니저에서 받은 id 사용
         /// </summary>
         public void Open(string letterId = null)
         {
