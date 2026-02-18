@@ -1,4 +1,3 @@
-using MyAssets.CharacterControllerNamespace;
 using UnityEngine;
 
 public class PlayerInteraction : MonoBehaviour
