@@ -28,7 +28,6 @@ public class Item : MonoBehaviour, IInteractable
             return;
         }
         Managers.Inventory.AcquireItem(itemID);
-        Debug.Log("아이템 획득: " + itemID);
-        Destroy(gameObject); // 아이템을 씬에서 사라지게 함
+        Destroy(gameObject);
     }
 }
