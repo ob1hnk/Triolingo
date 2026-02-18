@@ -1,5 +1,4 @@
 using UnityEngine;
-using MyAssets.UI.Presenters;
 
 public class UIManager : MonoBehaviour
 {
