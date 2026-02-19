@@ -2,13 +2,20 @@ using UnityEngine;
 
 public class InventoryManager : MonoBehaviour
 {
+    [Header("Data")]
+    [SerializeField] private ItemDatabaseSO itemCatalogue;
+
     [Header("Event Channels")]
     [SerializeField] private StringGameEvent requestAcquireItemEvent;
 
     public InventoryLogic Logic { get; private set; }
+    public ItemDatabase ItemDB { get; private set; }
 
     public void Init()
     {
+        ItemDB = new ItemDatabase();
+        ItemDB.LoadDatabase(itemCatalogue);
+
         Logic = new InventoryLogic();
     }
 
@@ -26,7 +33,7 @@ public class InventoryManager : MonoBehaviour
 
     public void AcquireItem(string itemID)
     {
-        var itemData = Managers.Data.ItemDB.GetItem(itemID);
+        var itemData = ItemDB.GetItem(itemID);
         if (itemData == null)
         {
             Debug.LogWarning($"DB에 존재하지 않는 아이템 ID: {itemID}");
