@@ -4,6 +4,9 @@ public class InputModeController : MonoBehaviour
 {
     public static InputModeController Instance { get; private set; }
 
+    [Header("Event Channels")]
+    [SerializeField] private GameStateChangeEvent onGameStateChangedEvent;
+
     private GameInputActions input;
 
     private void Awake()
@@ -18,30 +21,36 @@ public class InputModeController : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         InitializeInput();
-        SubscribeToStateChanges();
     }
-        
-        private void InitializeInput()
+
+    private void OnEnable()
+    {
+        if (onGameStateChangedEvent != null)
+            onGameStateChangedEvent.Register(OnGameStateChanged);
+    }
+
+    private void OnDisable()
+    {
+        if (onGameStateChangedEvent != null)
+            onGameStateChangedEvent.Unregister(OnGameStateChanged);
+    }
+
+    private void InitializeInput()
     {
         input = new GameInputActions();
         input.Global.Enable();
-        
+
         // Q 키는 인벤토리 토글만 담당
         input.Global.ToggleInventory.performed += _ => HandleInventoryToggle();
-        
+
         // 초기 상태에 맞는 입력 활성화
         EnableGameplayInput();
-    }
-
-    private void SubscribeToStateChanges()
-    {
-        GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
     }
 
     private void HandleInventoryToggle()
     {
         var currentState = GameStateManager.Instance.CurrentState;
-        
+
         if (currentState == GameState.Gameplay)
         {
             GameStateManager.Instance.ChangeState(GameState.InventoryUI);
@@ -52,13 +61,13 @@ public class InputModeController : MonoBehaviour
         }
     }
 
-    private void OnGameStateChanged(GameState oldState, GameState newState)
+    private void OnGameStateChanged(GameStateChange change)
     {
         // 이전 상태의 입력 비활성화
-        DisableInputForState(oldState);
-        
+        DisableInputForState(change.OldState);
+
         // 새 상태의 입력 활성화
-        EnableInputForState(newState);
+        EnableInputForState(change.NewState);
     }
 
     private void EnableInputForState(GameState state)
@@ -68,11 +77,11 @@ public class InputModeController : MonoBehaviour
             case GameState.Gameplay:
                 EnableGameplayInput();
                 break;
-                
+
             case GameState.InventoryUI:
                 EnableUIInput();
                 break;
-                
+
             case GameState.Paused:
                 // 일시정지 시에는 특정 입력만 활성화
                 break;
@@ -86,7 +95,7 @@ public class InputModeController : MonoBehaviour
             case GameState.Gameplay:
                 DisableGameplayInput();
                 break;
-                
+
             case GameState.InventoryUI:
                 DisableUIInput();
                 break;
@@ -119,15 +128,8 @@ public class InputModeController : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (GameStateManager.Instance != null)
-        {
-            GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
-        }
-        
         if (input == null) return;
 
-        input.Global.ToggleInventory.performed -= _ => HandleInventoryToggle();
-        
         input.Global.Disable();
         input.PlayerMovement.Disable();
         input.PlayerActions.Disable();

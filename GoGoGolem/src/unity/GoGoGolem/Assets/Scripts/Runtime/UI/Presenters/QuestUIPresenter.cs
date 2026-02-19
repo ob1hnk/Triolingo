@@ -4,8 +4,14 @@ using System.Collections.Generic;
 public class QuestUIPresenter : MonoBehaviour
 {
     [SerializeField] private QuestUIView view;
-    
-    // Model (QuestManager 연동)
+
+    [Header("Event Channels")]
+    [SerializeField] private QuestGameEvent onQuestStartedEvent;
+    [SerializeField] private QuestGameEvent onQuestCompletedEvent;
+    [SerializeField] private QuestObjectiveGameEvent onObjectiveCompletedEvent;
+    [SerializeField] private QuestPhaseGameEvent onPhaseCompletedEvent;
+
+    // Model (QuestManager 연동 - 읽기 전용)
     private QuestManager questManager;
     
     // 추적 중인 퀘스트
@@ -32,37 +38,31 @@ public class QuestUIPresenter : MonoBehaviour
         view.OnExpandRequested += HandleExpand;
         view.OnCollapseRequested += HandleCollapse;
         
-        // QuestManager 이벤트 등록 (QuestEvents 사용)
-        RegisterQuestEvents();
+        // SO 이벤트 등록
+        RegisterEvents();
         
         // 초기 퀘스트 로드 (저장된 퀘스트가 있다면)
         LoadActiveQuests();
     }
     
-    /// <summary>
-    /// QuestEvents 이벤트 등록
-    /// </summary>
-    private void RegisterQuestEvents()
+    private void RegisterEvents()
     {
-        QuestEvents.OnQuestStarted += OnQuestStarted;
-        QuestEvents.OnObjectiveCompleted += OnObjectiveCompleted;
-        QuestEvents.OnQuestCompleted += OnQuestCompleted;
-        QuestEvents.OnPhaseCompleted += OnPhaseCompleted;
+        onQuestStartedEvent?.Register(OnQuestStarted);
+        onObjectiveCompletedEvent?.Register(OnObjectiveCompleted);
+        onQuestCompletedEvent?.Register(OnQuestCompleted);
+        onPhaseCompletedEvent?.Register(OnPhaseCompleted);
+    }
+
+    private void UnregisterEvents()
+    {
+        onQuestStartedEvent?.Unregister(OnQuestStarted);
+        onObjectiveCompletedEvent?.Unregister(OnObjectiveCompleted);
+        onQuestCompletedEvent?.Unregister(OnQuestCompleted);
+        onPhaseCompletedEvent?.Unregister(OnPhaseCompleted);
     }
     
     /// <summary>
-    /// QuestEvents 이벤트 해제
-    /// </summary>
-    private void UnregisterQuestEvents()
-    {
-        QuestEvents.OnQuestStarted -= OnQuestStarted;
-        QuestEvents.OnObjectiveCompleted -= OnObjectiveCompleted;
-        QuestEvents.OnQuestCompleted -= OnQuestCompleted;
-        QuestEvents.OnPhaseCompleted -= OnPhaseCompleted;
-    }
-    
-    /// <summary>
-    /// 퀘스트 시작 처리 (QuestEvents.OnQuestStarted)
+    /// 퀘스트 시작 처리
     /// </summary>
     private void OnQuestStarted(Quest quest)
     {
@@ -101,7 +101,7 @@ public class QuestUIPresenter : MonoBehaviour
     {
         if (phase == null) return;
         
-        // Phase가 완료되면 Objective 완료 여부를 QuestEvents.OnObjectiveCompleted에서 처리
+        // Phase가 완료되면 Objective 완료 여부를 OnObjectiveCompleted에서 처리
     }
     
     /// <summary>
@@ -253,7 +253,6 @@ public class QuestUIPresenter : MonoBehaviour
             view.OnCollapseRequested -= HandleCollapse;
         }
         
-        // QuestEvents 이벤트 해제
-        UnregisterQuestEvents();
+        UnregisterEvents();
     }
 }

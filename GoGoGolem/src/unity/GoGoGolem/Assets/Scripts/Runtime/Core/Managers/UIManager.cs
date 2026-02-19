@@ -3,6 +3,10 @@ using UnityEngine;
 public class UIManager : MonoBehaviour
 {
     [SerializeField] private InventoryUIPresenter inventoryPresenter;
+
+    [Header("Event Channels")]
+    [SerializeField] private GameStateChangeEvent onGameStateChangedEvent;
+
     public InventoryUIPresenter Inventory => inventoryPresenter;
 
     private void Start()
@@ -12,24 +16,33 @@ public class UIManager : MonoBehaviour
             Debug.LogError("UIManager: InventoryUIPresenter가 할당되지 않았습니다.");
             return;
         }
-        
-        // 상태 변화 구독
-        GameStateManager.Instance.OnStateChanged += OnGameStateChanged;
-        
+
         // 초기 상태 설정
         inventoryPresenter.Hide();
     }
 
-    private void OnGameStateChanged(GameState oldState, GameState newState)
+    private void OnEnable()
     {
-        switch (newState)
+        if (onGameStateChangedEvent != null)
+            onGameStateChangedEvent.Register(OnGameStateChanged);
+    }
+
+    private void OnDisable()
+    {
+        if (onGameStateChangedEvent != null)
+            onGameStateChangedEvent.Unregister(OnGameStateChanged);
+    }
+
+    private void OnGameStateChanged(GameStateChange change)
+    {
+        switch (change.NewState)
         {
             case GameState.InventoryUI:
                 HandleInventoryOpen();
                 break;
-                
+
             case GameState.Gameplay:
-                if (oldState == GameState.InventoryUI)
+                if (change.OldState == GameState.InventoryUI)
                 {
                     HandleInventoryClose();
                 }
@@ -47,13 +60,5 @@ public class UIManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         inventoryPresenter.Hide();
-    }
-
-    private void OnDestroy()
-    {
-        if (GameStateManager.Instance != null)
-        {
-            GameStateManager.Instance.OnStateChanged -= OnGameStateChanged;
-        }
     }
 }
