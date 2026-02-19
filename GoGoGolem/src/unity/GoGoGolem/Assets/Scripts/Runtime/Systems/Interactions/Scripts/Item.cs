@@ -4,6 +4,10 @@ public class Item : MonoBehaviour, IInteractable
 {
     [Header("Item Info")]
     [SerializeField] private string itemID;
+
+    [Header("Event Channels")]
+    [SerializeField] private StringGameEvent requestAcquireItemEvent;
+
     public string GetInteractText() => "줍기 (E)";
     public string ItemID => itemID;
 
@@ -12,22 +16,19 @@ public class Item : MonoBehaviour, IInteractable
         if (string.IsNullOrEmpty(itemID))
         {
             Debug.LogError("Item ID가 설정되지 않았습니다: " + gameObject.name);
-            return;
-        }
-        if (Managers.Data != null && Managers.Data.ItemDB.GetItem(itemID) == null)
-        {
-            Debug.LogError("존재하지 않는 Item ID가 설정되었습니다: " + itemID);
         }
     }
 
     public void Interact()
     {
-        if (Managers.Inventory == null)
+        if (requestAcquireItemEvent != null)
         {
-            Debug.LogError("InventoryManager 인스턴스를 찾을 수 없습니다.");
-            return;
+            requestAcquireItemEvent.Raise(itemID);
         }
-        Managers.Inventory.AcquireItem(itemID);
+        else
+        {
+            Debug.LogError($"[Item] RequestAcquireItem 이벤트가 연결되지 않았습니다: {gameObject.name}");
+        }
         Destroy(gameObject);
     }
 }

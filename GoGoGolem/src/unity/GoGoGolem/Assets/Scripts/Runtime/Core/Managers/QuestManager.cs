@@ -9,7 +9,17 @@ public class QuestManager : MonoBehaviour
 {
     [Header("Dependencies")]
     [SerializeField] private QuestDatabase questDatabase;
-    [SerializeField] private DialogueManager dialogueManager;
+
+    [Header("Event Channels - Notifications")]
+    [SerializeField] private QuestGameEvent onQuestStartedEvent;
+    [SerializeField] private QuestGameEvent onQuestCompletedEvent;
+    [SerializeField] private QuestObjectiveGameEvent onObjectiveCompletedEvent;
+    [SerializeField] private QuestPhaseGameEvent onPhaseCompletedEvent;
+
+    [Header("Event Channels - Requests")]
+    [SerializeField] private StringGameEvent requestStartQuestEvent;
+    [SerializeField] private CompletePhaseGameEvent requestCompletePhaseEvent;
+    [SerializeField] private StringGameEvent requestStartDialogueEvent;
 
     [Header("Options")]
     [SerializeField] private bool autoSave = true;
@@ -29,12 +39,32 @@ public class QuestManager : MonoBehaviour
         Initialize();
     }
 
-    private void OnDestroy()
+    private void OnEnable()
     {
-        // 이벤트 구독 해제
-        QuestEvents.OnQuestCompleted -= OnQuestCompleted;
-        QuestEvents.OnObjectiveCompleted -= OnObjectiveCompleted;
-        QuestEvents.OnPhaseCompleted -= OnPhaseCompleted;
+        if (requestStartQuestEvent != null)
+            requestStartQuestEvent.Register(HandleStartQuestRequest);
+        if (requestCompletePhaseEvent != null)
+            requestCompletePhaseEvent.Register(HandleCompletePhaseRequest);
+        if (onQuestCompletedEvent != null)
+            onQuestCompletedEvent.Register(OnQuestCompleted);
+        if (onObjectiveCompletedEvent != null)
+            onObjectiveCompletedEvent.Register(OnObjectiveCompleted);
+        if (onPhaseCompletedEvent != null)
+            onPhaseCompletedEvent.Register(OnPhaseCompleted);
+    }
+
+    private void OnDisable()
+    {
+        if (requestStartQuestEvent != null)
+            requestStartQuestEvent.Unregister(HandleStartQuestRequest);
+        if (requestCompletePhaseEvent != null)
+            requestCompletePhaseEvent.Unregister(HandleCompletePhaseRequest);
+        if (onQuestCompletedEvent != null)
+            onQuestCompletedEvent.Unregister(OnQuestCompleted);
+        if (onObjectiveCompletedEvent != null)
+            onObjectiveCompletedEvent.Unregister(OnObjectiveCompleted);
+        if (onPhaseCompletedEvent != null)
+            onPhaseCompletedEvent.Unregister(OnPhaseCompleted);
     }
 
     private void OnApplicationQuit()
@@ -65,25 +95,9 @@ public class QuestManager : MonoBehaviour
 
         questDatabase.Initialize();
 
-        // DialogueManager 자동 찾기
-        if (dialogueManager == null)
-        {
-            dialogueManager = FindObjectOfType<DialogueManager>();
-            
-            if (dialogueManager == null)
-            {
-                Debug.LogWarning("[QuestManager] DialogueManager not found in scene.");
-            }
-        }
-
         // 협력 객체 생성
         progressTracker = new QuestProgressTracker();
         saveSystem = new QuestSaveSystem();
-
-        // 이벤트 구독
-        QuestEvents.OnQuestCompleted += OnQuestCompleted;
-        QuestEvents.OnObjectiveCompleted += OnObjectiveCompleted;
-        QuestEvents.OnPhaseCompleted += OnPhaseCompleted;
 
         isInitialized = true;
 
@@ -96,6 +110,20 @@ public class QuestManager : MonoBehaviour
         {
             LoadProgress();
         }
+    }
+
+    #endregion
+
+    #region Event Handlers (Requests)
+
+    private void HandleStartQuestRequest(string questID)
+    {
+        StartQuest(questID);
+    }
+
+    private void HandleCompletePhaseRequest(CompletePhaseRequest req)
+    {
+        CompletePhase(req.QuestID, req.ObjectiveID, req.PhaseID);
     }
 
     #endregion
@@ -132,7 +160,7 @@ public class QuestManager : MonoBehaviour
         Quest quest = new Quest(questData);
         progressTracker.AddActiveQuest(quest);
 
-        QuestEvents.TriggerQuestStarted(quest);
+        onQuestStartedEvent?.Raise(quest);
 
         if (autoSave)
         {
@@ -162,7 +190,7 @@ public class QuestManager : MonoBehaviour
         var phase = quest.GetPhase(objectiveID, phaseID);
         if (phase != null && phase.IsCompleted)
         {
-            QuestEvents.TriggerPhaseCompleted(phase);
+            onPhaseCompletedEvent?.Raise(phase);
             
             if (phase.PhaseType == PhaseType.Dialogue && !string.IsNullOrEmpty(phase.ContentID))
             {
@@ -174,13 +202,13 @@ public class QuestManager : MonoBehaviour
         if (quest.IsObjectiveCompleted(objectiveID))
         {
             var objective = quest.GetObjective(objectiveID);
-            QuestEvents.TriggerObjectiveCompleted(objective);
+            onObjectiveCompletedEvent?.Raise(objective);
         }
 
         // Quest 완료 체크
         if (quest.IsCompleted())
         {
-            QuestEvents.TriggerQuestCompleted(quest);
+            onQuestCompletedEvent?.Raise(quest);
         }
 
         if (autoSave)
@@ -195,18 +223,18 @@ public class QuestManager : MonoBehaviour
 
     private void TriggerDialogue(string dialogueID)
     {
-        if (dialogueManager == null)
+        if (requestStartDialogueEvent == null)
         {
-            Debug.LogWarning($"[QuestManager] Cannot trigger dialogue {dialogueID} - DialogueManager not found.");
+            Debug.LogWarning($"[QuestManager] Cannot trigger dialogue {dialogueID} - RequestStartDialogue event not assigned.");
             return;
         }
-        
+
         if (showDebugLogs)
         {
             Debug.Log($"[QuestManager] Triggering dialogue: {dialogueID}");
         }
-        
-        dialogueManager.StartDialogue(dialogueID);
+
+        requestStartDialogueEvent.Raise(dialogueID);
     }
 
     #endregion
@@ -294,7 +322,7 @@ public class QuestManager : MonoBehaviour
 
         if (showDebugLogs)
         {
-            Debug.Log($"[QuestManager] ✓ Loaded {saveData.activeQuests.Count} active, {saveData.completedQuestIDs.Count} completed quests");
+            Debug.Log($"[QuestManager] Loaded {saveData.activeQuests.Count} active, {saveData.completedQuestIDs.Count} completed quests");
         }
     }
 
@@ -359,7 +387,7 @@ public class QuestManager : MonoBehaviour
 
     #endregion
 
-    #region Event Handlers
+    #region Event Handlers (Notifications)
 
     private void OnQuestCompleted(Quest quest)
     {

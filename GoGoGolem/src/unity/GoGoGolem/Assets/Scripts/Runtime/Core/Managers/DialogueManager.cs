@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using Yarn.Unity;
 
@@ -11,8 +10,10 @@ public class DialogueManager : MonoBehaviour
     [Header("Yarn Spinner")]
     [SerializeField] private DialogueRunner dialogueRunner;
 
-    public event Action OnDialogueStarted;
-    public event Action OnDialogueCompleted;
+    [Header("Event Channels")]
+    [SerializeField] private StringGameEvent requestStartDialogueEvent;
+    [SerializeField] private GameEvent onDialogueStartedEvent;
+    [SerializeField] private GameEvent onDialogueCompletedEvent;
 
     private void Awake()
     {
@@ -29,6 +30,18 @@ public class DialogueManager : MonoBehaviour
 
         dialogueRunner.onDialogueStart.AddListener(HandleDialogueStart);
         dialogueRunner.onDialogueComplete.AddListener(HandleDialogueComplete);
+    }
+
+    private void OnEnable()
+    {
+        if (requestStartDialogueEvent != null)
+            requestStartDialogueEvent.Register(StartDialogue);
+    }
+
+    private void OnDisable()
+    {
+        if (requestStartDialogueEvent != null)
+            requestStartDialogueEvent.Unregister(StartDialogue);
     }
 
     private void OnDestroy()
@@ -87,12 +100,12 @@ public class DialogueManager : MonoBehaviour
 
     private void HandleDialogueStart()
     {
-        OnDialogueStarted?.Invoke();
+        onDialogueStartedEvent?.Raise();
     }
 
     private void HandleDialogueComplete()
     {
         Debug.Log("[DialogueManager] 대화 종료.");
-        OnDialogueCompleted?.Invoke();
+        onDialogueCompletedEvent?.Raise();
     }
 }

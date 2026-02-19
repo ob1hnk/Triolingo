@@ -17,6 +17,12 @@ public class QuestSystemTester : MonoBehaviour
     [Tooltip("테스트할 Phase ID")]
     [SerializeField] private string testPhaseID = "MQ-01-P01";
 
+    [Header("Event Channels")]
+    [SerializeField] private QuestGameEvent onQuestStartedEvent;
+    [SerializeField] private QuestGameEvent onQuestCompletedEvent;
+    [SerializeField] private QuestObjectiveGameEvent onObjectiveCompletedEvent;
+    [SerializeField] private QuestPhaseGameEvent onPhaseCompletedEvent;
+
     [Header("Options")]
     [SerializeField] private bool showHelpOnStart = true;
 
@@ -27,27 +33,27 @@ public class QuestSystemTester : MonoBehaviour
             PrintHelp();
         }
 
-        // Managers가 초기화될 때까지 대기
         if (Managers.Quest == null)
         {
             Debug.LogError("[QuestSystemTester] Managers.Quest is null! Make sure Managers GameObject has QuestManager component.");
             return;
         }
-
-        // 이벤트 구독 (테스트용)
-        QuestEvents.OnQuestStarted += OnQuestStarted;
-        QuestEvents.OnQuestCompleted += OnQuestCompleted;
-        QuestEvents.OnObjectiveCompleted += OnObjectiveCompleted;
-        QuestEvents.OnPhaseCompleted += OnPhaseCompleted;
     }
 
-    private void OnDestroy()
+    private void OnEnable()
     {
-        // 이벤트 구독 해제
-        QuestEvents.OnQuestStarted -= OnQuestStarted;
-        QuestEvents.OnQuestCompleted -= OnQuestCompleted;
-        QuestEvents.OnObjectiveCompleted -= OnObjectiveCompleted;
-        QuestEvents.OnPhaseCompleted -= OnPhaseCompleted;
+        onQuestStartedEvent?.Register(OnQuestStarted);
+        onQuestCompletedEvent?.Register(OnQuestCompleted);
+        onObjectiveCompletedEvent?.Register(OnObjectiveCompleted);
+        onPhaseCompletedEvent?.Register(OnPhaseCompleted);
+    }
+
+    private void OnDisable()
+    {
+        onQuestStartedEvent?.Unregister(OnQuestStarted);
+        onQuestCompletedEvent?.Unregister(OnQuestCompleted);
+        onObjectiveCompletedEvent?.Unregister(OnObjectiveCompleted);
+        onPhaseCompletedEvent?.Unregister(OnPhaseCompleted);
     }
 
     private void Update()
