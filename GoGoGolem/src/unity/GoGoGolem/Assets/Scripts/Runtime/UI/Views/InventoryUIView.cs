@@ -147,7 +147,7 @@ public class InventoryUIView : MonoBehaviour
         {
             if (index >= slots.Count) break;
 
-            ItemData itemData = Managers.Data?.ItemDB?.GetItem(item.Key);
+            ItemData itemData = Managers.Inventory?.ItemDB?.GetItem(item.Key);
             string displayName = itemData != null ? itemData.itemName : item.Key;
 
             slots[index].SetItem(displayName, item.Value);
@@ -203,7 +203,7 @@ public class InventoryUIView : MonoBehaviour
             return;
         }
 
-        ItemData itemData = Managers.Data?.ItemDB?.GetItem(itemID);
+        ItemData itemData = Managers.Inventory?.ItemDB?.GetItem(itemID);
         if (itemData == null)
         {
             if (itemInfoPanel != null)
