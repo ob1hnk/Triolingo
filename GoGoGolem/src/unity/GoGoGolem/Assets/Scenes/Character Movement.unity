@@ -135,6 +135,7 @@ GameObject:
   - component: {fileID: 111603831}
   - component: {fileID: 111603830}
   - component: {fileID: 111603833}
+  - component: {fileID: 111603834}
   m_Layer: 0
   m_Name: ManagersBootstrap
   m_TagString: Untagged
@@ -194,6 +195,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27840afe5ad4e4ade8965ec29f7885cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  requestAcquireItemEvent: {fileID: 11400000, guid: d031284a599c844f2ac3a990d68e11dc, type: 2}
 --- !u!114 &111603830
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -206,6 +208,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b80d8bd0f00c4619a13ef9fe6754bb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  onGameStateChangedEvent: {fileID: 11400000, guid: bde0530a4fc794714a2ae32d9986394f, type: 2}
 --- !u!114 &111603831
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -219,6 +222,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inventoryPresenter: {fileID: 1310840972}
+  onGameStateChangedEvent: {fileID: 11400000, guid: bde0530a4fc794714a2ae32d9986394f, type: 2}
 --- !u!114 &111603832
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -231,6 +235,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 775b101cc276548a6b3488abcea19d61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  onGameStateChangedEvent: {fileID: 11400000, guid: bde0530a4fc794714a2ae32d9986394f, type: 2}
 --- !u!114 &111603833
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -244,6 +249,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dialogueRunner: {fileID: 182181792}
+  requestStartDialogueEvent: {fileID: 11400000, guid: ca888b404df0e43159ca0269a5b95649, type: 2}
+  onDialogueStartedEvent: {fileID: 11400000, guid: 8dcd5affb2bdc442288b1f7b80d2d56d, type: 2}
+  onDialogueCompletedEvent: {fileID: 11400000, guid: 13d32723c5d854b5ca2eccbae2555d66, type: 2}
+--- !u!114 &111603834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111603825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9751b6e1db1f046778125b6e380de458, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  questDatabase: {fileID: 11400000, guid: 4b0354f72cbf948c38b004eb9364d897, type: 2}
+  onQuestStartedEvent: {fileID: 11400000, guid: 224784a594f964b6ca024d4de7ab5ec9, type: 2}
+  onQuestCompletedEvent: {fileID: 11400000, guid: 3e091b9c2e0d349f596030eccf58e5ca, type: 2}
+  onObjectiveCompletedEvent: {fileID: 11400000, guid: a117d6b4ab93c42d584ad6b04d239c44, type: 2}
+  onPhaseCompletedEvent: {fileID: 11400000, guid: 2d6112b7e7400415aa84ff72a2b34855, type: 2}
+  requestStartQuestEvent: {fileID: 11400000, guid: 87fe1939e402847efa7665ea1344e7b9, type: 2}
+  requestCompletePhaseEvent: {fileID: 11400000, guid: e2da95cd4a1d545b1b66af5c47cc8d21, type: 2}
+  requestStartDialogueEvent: {fileID: 11400000, guid: ca888b404df0e43159ca0269a5b95649, type: 2}
+  autoSave: 1
+  loadOnStart: 1
+  showDebugLogs: 1
 --- !u!1 &181228912
 GameObject:
   m_ObjectHideFlags: 0
@@ -898,6 +929,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemID: ITEM-001
+  requestAcquireItemEvent: {fileID: 11400000, guid: d031284a599c844f2ac3a990d68e11dc, type: 2}
 --- !u!1 &341188001
 GameObject:
   m_ObjectHideFlags: 0
@@ -5795,6 +5827,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemID: ITEM-001
+  requestAcquireItemEvent: {fileID: 11400000, guid: d031284a599c844f2ac3a990d68e11dc, type: 2}
 --- !u!65 &1574805657
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5898,7 +5931,7 @@ GameObject:
   - component: {fileID: 1591497502}
   - component: {fileID: 1591497501}
   m_Layer: 7
-  m_Name: FoodKuromi
+  m_Name: FoodSack
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5917,6 +5950,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemID: ITEM-002
+  requestAcquireItemEvent: {fileID: 11400000, guid: d031284a599c844f2ac3a990d68e11dc, type: 2}
 --- !u!65 &1591497502
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6735,7 +6769,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   npcName: "\uB9C8\uC744 \uC8FC\uBBFC"
-  dialogueText: "\uC548\uB155\uD558\uC138\uC694!"
+  dialogueID: 
   hasQuestAction: 0
   questID: 
   questAction: 0
@@ -6743,6 +6777,9 @@ MonoBehaviour:
   phaseID: 
   onceOnly: 0
   afterInteractionText: 
+  requestStartDialogueEvent: {fileID: 11400000, guid: ca888b404df0e43159ca0269a5b95649, type: 2}
+  requestStartQuestEvent: {fileID: 11400000, guid: 87fe1939e402847efa7665ea1344e7b9, type: 2}
+  requestCompletePhaseEvent: {fileID: 11400000, guid: e2da95cd4a1d545b1b66af5c47cc8d21, type: 2}
 --- !u!1 &2092337100
 GameObject:
   m_ObjectHideFlags: 0
