@@ -10,9 +10,8 @@ public class NPC : MonoBehaviour, IInteractable
     [SerializeField] private string npcName = "마을 주민";
 
     [Header("Dialogue")]
-    [Tooltip("상호작용 시 표시할 대사")]
-    [TextArea(2, 4)]
-    [SerializeField] private string dialogueText = "안녕하세요!";
+    [Tooltip("Yarn 대화 노드 이름 (예: DLG-001)")]
+    [SerializeField] private string dialogueID;
 
     [Header("Quest Settings (Optional)")]
     [Tooltip("퀘스트 기능을 사용하려면 체크")]
@@ -79,27 +78,21 @@ public class NPC : MonoBehaviour, IInteractable
 
         hasInteracted = true;
 
-        // 대사 표시
-        ShowDialogue(dialogueText);
+        // Yarn 대화 시작
+        if (!string.IsNullOrEmpty(dialogueID) && Managers.Dialogue != null)
+        {
+            Managers.Dialogue.StartDialogue(dialogueID);
+        }
+        else
+        {
+            Debug.Log($"[NPC] {npcName}: (대화 ID 미설정)");
+        }
 
         // 퀘스트 액션 실행 (설정되어 있는 경우)
         if (hasQuestAction)
         {
             ExecuteQuestAction();
         }
-    }
-
-    #endregion
-
-    #region Dialogue
-
-    /// <summary>
-    /// 대사 표시
-    /// </summary>
-    private void ShowDialogue(string text)
-    {
-        Debug.Log($"[NPC] {npcName}: {text}");
-        // TODO: 나중에 UI 시스템 연동
     }
 
     #endregion
