@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using Yarn.Unity;
 
@@ -35,7 +36,14 @@ public class DialogueManager : MonoBehaviour
     private void OnEnable()
     {
         if (requestStartDialogueEvent != null)
+        {
             requestStartDialogueEvent.Register(StartDialogue);
+            Debug.Log("[DialogueManager] OnEnable: 이벤트 등록 완료");
+        }
+        else
+        {
+            Debug.LogError("[DialogueManager] OnEnable: requestStartDialogueEvent가 null입니다!");
+        }
     }
 
     private void OnDisable()
@@ -60,6 +68,8 @@ public class DialogueManager : MonoBehaviour
     /// </summary>
     public void StartDialogue(string dialogueID)
     {
+        Debug.Log($"[DialogueManager] StartDialogue 호출됨! dialogueID={dialogueID}");
+
         if (dialogueRunner == null)
         {
             Debug.LogError("[DialogueManager] DialogueRunner가 없습니다!");
@@ -75,8 +85,21 @@ public class DialogueManager : MonoBehaviour
         // QuestData의 contentID는 "DLG-001" 형식, Yarn node는 "DLG_001" 형식
         string nodeName = dialogueID.Replace('-', '_');
 
-        Debug.Log($"[DialogueManager] 대화 시작: {nodeName}");
+        // YarnProject에 노드가 있는지 확인
+        var yarnProject = dialogueRunner.YarnProject;
+        if (yarnProject == null)
+        {
+            Debug.LogError("[DialogueManager] DialogueRunner에 YarnProject가 설정되지 않았습니다!");
+            return;
+        }
+
+        Debug.Log($"[DialogueManager] YarnProject: {yarnProject.name}");
+        Debug.Log($"[DialogueManager] DialogueViews 개수: {dialogueRunner.DialogueViews.Count()}");
+
+        Debug.Log($"[DialogueManager] DialogueRunner.StartDialogue 호출: {nodeName}");
         dialogueRunner.StartDialogue(nodeName);
+        Debug.Log($"[DialogueManager] DialogueRunner.StartDialogue 호출 완료");
+        Debug.Log($"[DialogueManager] IsDialogueRunning: {dialogueRunner.IsDialogueRunning}");
     }
 
     /// <summary>
