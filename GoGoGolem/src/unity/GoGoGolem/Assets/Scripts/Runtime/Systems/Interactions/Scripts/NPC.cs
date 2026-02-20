@@ -86,11 +86,17 @@ public class NPC : MonoBehaviour, IInteractable
         // Yarn 대화 시작
         if (!string.IsNullOrEmpty(dialogueID) && requestStartDialogueEvent != null)
         {
+            Debug.Log($"[NPC] {npcName}: 대화 이벤트 발생! dialogueID={dialogueID}");
             requestStartDialogueEvent.Raise(dialogueID);
+            Debug.Log($"[NPC] {npcName}: 대화 이벤트 Raise 완료");
         }
         else if (string.IsNullOrEmpty(dialogueID))
         {
-            Debug.Log($"[NPC] {npcName}: (대화 ID 미설정)");
+            Debug.LogWarning($"[NPC] {npcName}: (대화 ID 미설정)");
+        }
+        else if (requestStartDialogueEvent == null)
+        {
+            Debug.LogError($"[NPC] {npcName}: requestStartDialogueEvent가 null입니다!");
         }
 
         // 퀘스트 액션 실행 (설정되어 있는 경우)
