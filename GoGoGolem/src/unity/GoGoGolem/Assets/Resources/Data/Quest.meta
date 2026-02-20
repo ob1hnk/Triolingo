@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:GoGoGolem/src/unity/GoGoGolem/Assets/Resources/Data/QuestData.meta
+guid: 7a5dbb7b21ade42e18f240ab8fde38e2
+========
+guid: 751b0799a6332de43b6375fc26fb1e3f
+>>>>>>>> refactor/reorganize-code-structure:GoGoGolem/src/unity/GoGoGolem/Assets/Resources/GestureConfigs.meta
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
