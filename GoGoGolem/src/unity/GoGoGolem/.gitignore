@@ -73,11 +73,9 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # Assets
-/Assets/3DModels/Human Character Dummy/*
 /Assets/3DModels/LoafbrrAssets/*
 /Assets/3DModels/VFX/*
 # .meta 파일은 포함
-!/Assets/3DModels/Human Character Dummy/*.meta
 !/Assets/3DModels/LoafbrrAssets/*.meta
 !/Assets/3DModels/VFX/*.meta
 # Firebase Unity SDK (각 팀원이 .unitypackage로 직접 설치)
