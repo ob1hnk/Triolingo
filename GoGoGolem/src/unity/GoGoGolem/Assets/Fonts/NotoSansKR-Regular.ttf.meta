@@ -1,0 +1,29 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:GoGoGolem/src/unity/GoGoGolem/Assets/Fonts/NotoSansJP-Regular.ttf.meta
+guid: 789e4a0b1ca3e440a9ee19b6a12664ab
+========
+guid: 99624b43753ba4573babd6f9ff3a6a4e
+>>>>>>>> refactor/reorganize-code-structure:GoGoGolem/src/unity/GoGoGolem/Assets/Fonts/NotoSansKR-Regular.ttf.meta
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+<<<<<<<< HEAD:GoGoGolem/src/unity/GoGoGolem/Assets/Fonts/NotoSansJP-Regular.ttf.meta
+  - Noto Sans JP
+========
+  - Noto Sans KR
+>>>>>>>> refactor/reorganize-code-structure:GoGoGolem/src/unity/GoGoGolem/Assets/Fonts/NotoSansKR-Regular.ttf.meta
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
