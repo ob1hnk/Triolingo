@@ -11,7 +11,7 @@ namespace Demo.GestureDetection.UI
   public class GesturePlayView : MonoBehaviour
   {
     [Header("3D Avatar")]
-    [SerializeField] private AvatarLandmarkAnimator _avatarAnimator;
+    [SerializeField] private GolemLandmarkAnimator _golemAnimator;
     
     [Header("UI")]
     [SerializeField] private GestureUIController _gestureUIController;
@@ -74,9 +74,9 @@ namespace Demo.GestureDetection.UI
     /// </summary>
     private void UpdateAvatar(PoseLandmarkerResult poseData, HandLandmarkerResult handData)
     {
-      if (_avatarAnimator != null)
+      if (_golemAnimator != null)
       {
-        _avatarAnimator.UpdateAvatar(poseData, handData);
+        _golemAnimator.UpdateAvatar(poseData, handData);
       }
     }
     
@@ -85,9 +85,9 @@ namespace Demo.GestureDetection.UI
     /// </summary>
     private void ResetAvatar()
     {
-      if (_avatarAnimator != null)
+      if (_golemAnimator != null)
       {
-        _avatarAnimator.ResetToIdle();
+        _golemAnimator.ResetToIdle();
       }
     }
     
