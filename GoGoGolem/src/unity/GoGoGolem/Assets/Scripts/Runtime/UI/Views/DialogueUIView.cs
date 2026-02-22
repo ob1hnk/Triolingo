@@ -30,13 +30,11 @@ public class DialogueUIView : MonoBehaviour
 
     private void OnDialogueStarted()
     {
-        Debug.Log("[DialogueUIView] 대화 시작됨");
-        // 필요 시 플레이어 이동 잠금, 카메라 전환 등 추가
+        GameStateManager.Instance.ChangeState(GameState.Dialogue);
     }
 
     private void OnDialogueCompleted()
     {
-        Debug.Log("[DialogueUIView] 대화 종료됨");
-        // 필요 시 플레이어 이동 해제 등 추가
+        GameStateManager.Instance.ChangeState(GameState.Gameplay);
     }
 }

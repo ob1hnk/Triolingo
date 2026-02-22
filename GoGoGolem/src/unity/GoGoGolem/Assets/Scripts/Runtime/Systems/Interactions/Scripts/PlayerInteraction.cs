@@ -1,44 +1,53 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerInteraction : MonoBehaviour
 {
-    public float interactionRange = 2f; // 상호작용 가능 거리 (구체 반지름)
-    public LayerMask interactableLayer; // 상호작용 가능한 레이어만 선택 (성능 최적화)
-    private IInteractable currentInteractable;
+    public float interactionRange = 2f;
+    public LayerMask interactableLayer;
 
+    private IInteractable currentInteractable;
     private Animator _animator;
     private static int isGatheringHash = Animator.StringToHash("isGathering");
+
+    private GameInputActions.PlayerActionsActions _playerActions;
 
     void Awake()
     {
         _animator = GetComponent<Animator>();
     }
 
+    private void OnEnable()
+    {
+        if (InputModeController.Instance == null) return;
+        _playerActions = InputModeController.Instance.GetPlayerActionsActions();
+        _playerActions.Gather.performed += OnInteract;
+    }
 
+    private void OnDisable()
+    {
+        _playerActions.Gather.performed -= OnInteract;
+    }
+
+    private void OnInteract(InputAction.CallbackContext ctx)
+    {
+        if (currentInteractable != null)
+            PerformInteraction();
+    }
 
     void Update()
     {
         CheckForInteractables();
-
-        if (Input.GetKeyDown(KeyCode.E) && currentInteractable != null)
-        {
-            PerformInteraction();
-        }
     }
-
 
     private void PerformInteraction()
     {
         _animator.SetTrigger(isGatheringHash);
         currentInteractable.Interact();
-        
-        // Debug.Log("상호작용 수행됨: " + currentInteractable.GetInteractText());
     }
-
 
     void CheckForInteractables()
     {
-        // 3D 구체 범위를 탐색합니다.
         Collider[] colliders = Physics.OverlapSphere(transform.position, interactionRange, interactableLayer);
 
         IInteractable closest = null;
