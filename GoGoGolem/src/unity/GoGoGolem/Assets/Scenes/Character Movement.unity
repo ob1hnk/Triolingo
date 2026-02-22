@@ -192,7 +192,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27840afe5ad4e4ade8965ec29f7885cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemCatalogue: {fileID: 0}
+  itemCatalogue: {fileID: 11400000, guid: 0fecc3332b8f546b2b938a7af47549e1, type: 2}
   requestAcquireItemEvent: {fileID: 11400000, guid: d031284a599c844f2ac3a990d68e11dc, type: 2}
 --- !u!114 &111603830
 MonoBehaviour:
@@ -220,7 +220,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inventoryPresenter: {fileID: 1310840972}
-  onGameStateChangedEvent: {fileID: 0}
+  onGameStateChangedEvent: {fileID: 11400000, guid: bde0530a4fc794714a2ae32d9986394f, type: 2}
 --- !u!114 &111603832
 MonoBehaviour:
   m_ObjectHideFlags: 0

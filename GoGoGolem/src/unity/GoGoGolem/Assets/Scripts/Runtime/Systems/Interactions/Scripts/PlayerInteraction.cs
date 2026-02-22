@@ -11,28 +11,51 @@ public class PlayerInteraction : MonoBehaviour
     private static int isGatheringHash = Animator.StringToHash("isGathering");
 
     private GameInputActions.PlayerActionsActions _playerActions;
+    private bool _initialized = false;
 
     void Awake()
     {
         _animator = GetComponent<Animator>();
     }
 
+    private void Start()
+    {
+        if (InputModeController.Instance == null)
+        {
+            Debug.LogError("[PlayerInteraction] InputModeController를 찾을 수 없습니다.");
+            return;
+        }
+
+        _playerActions = InputModeController.Instance.GetPlayerActionsActions();
+        _playerActions.Gather.performed += OnGather;
+        _playerActions.Interact.performed += OnInteract;
+        _initialized = true;
+    }
+
     private void OnEnable()
     {
-        if (InputModeController.Instance == null) return;
-        _playerActions = InputModeController.Instance.GetPlayerActionsActions();
-        _playerActions.Gather.performed += OnInteract;
+        if (!_initialized) return;
+        _playerActions.Gather.performed += OnGather;
+        _playerActions.Interact.performed += OnInteract;
     }
 
     private void OnDisable()
     {
-        _playerActions.Gather.performed -= OnInteract;
+        if (!_initialized) return;
+        _playerActions.Gather.performed -= OnGather;
+        _playerActions.Interact.performed -= OnInteract;
+    }
+
+    private void OnGather(InputAction.CallbackContext ctx)
+    {
+        if (currentInteractable?.InteractionType == InteractionType.Gather)
+            PerformGather();
     }
 
     private void OnInteract(InputAction.CallbackContext ctx)
     {
-        if (currentInteractable != null)
-            PerformInteraction();
+        if (currentInteractable?.InteractionType == InteractionType.Talk)
+            PerformTalk();
     }
 
     void Update()
@@ -40,9 +63,14 @@ public class PlayerInteraction : MonoBehaviour
         CheckForInteractables();
     }
 
-    private void PerformInteraction()
+    private void PerformGather()
     {
         _animator.SetTrigger(isGatheringHash);
+        currentInteractable.Interact();
+    }
+
+    private void PerformTalk()
+    {
         currentInteractable.Interact();
     }
 

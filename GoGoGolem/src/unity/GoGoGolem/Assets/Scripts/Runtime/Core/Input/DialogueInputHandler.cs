@@ -12,8 +12,9 @@ public class DialogueInputHandler : MonoBehaviour
     [SerializeField] private LineAdvancer lineAdvancer;
 
     private GameInputActions.DialogueActions _dialogueActions;
+    private bool _initialized = false;
 
-    private void OnEnable()
+    private void Start()
     {
         if (InputModeController.Instance == null)
         {
@@ -24,10 +25,19 @@ public class DialogueInputHandler : MonoBehaviour
         _dialogueActions = InputModeController.Instance.GetDialogueActions();
         _dialogueActions.Continue.performed += OnContinue;
         _dialogueActions.Skip.performed += OnSkip;
+        _initialized = true;
+    }
+
+    private void OnEnable()
+    {
+        if (!_initialized) return;
+        _dialogueActions.Continue.performed += OnContinue;
+        _dialogueActions.Skip.performed += OnSkip;
     }
 
     private void OnDisable()
     {
+        if (!_initialized) return;
         _dialogueActions.Continue.performed -= OnContinue;
         _dialogueActions.Skip.performed -= OnSkip;
     }

@@ -8,6 +8,7 @@ public class Item : MonoBehaviour, IInteractable
     [Header("Event Channels")]
     [SerializeField] private StringGameEvent requestAcquireItemEvent;
 
+    public InteractionType InteractionType => InteractionType.Gather;
     public string GetInteractText() => "줍기 (E)";
     public string ItemID => itemID;
 

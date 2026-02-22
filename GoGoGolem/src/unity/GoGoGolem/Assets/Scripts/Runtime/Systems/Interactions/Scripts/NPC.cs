@@ -54,6 +54,7 @@ public class NPC : MonoBehaviour, IInteractable
         }
     }
 
+    public InteractionType InteractionType => InteractionType.Talk;
     public string GetInteractText()
     {
         if (onceOnly && hasInteracted)

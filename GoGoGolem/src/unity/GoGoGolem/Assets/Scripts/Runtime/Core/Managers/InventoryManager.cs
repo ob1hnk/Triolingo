@@ -13,8 +13,15 @@ public class InventoryManager : MonoBehaviour
 
     public void Init()
     {
-        ItemDB = itemCatalogue;
-        ItemDB.Initialize();
+        if (itemCatalogue == null)
+        {
+            Debug.LogError("[InventoryManager] itemCatalogue이 Inspector에 연결되지 않았습니다.");
+        }
+        else
+        {
+            ItemDB = itemCatalogue;
+            ItemDB.Initialize();
+        }
 
         Logic = new InventoryLogic();
     }
