@@ -9,6 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 6024122163b574e7dad9cf81aaf1d942, type: 3}
   m_Name: OnGameStateChanged
-  m_EditorClassIdentifier: Assembly-CSharp::GameStateChangeEvent
+  m_EditorClassIdentifier: 

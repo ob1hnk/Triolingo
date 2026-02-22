@@ -323,6 +323,15 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ToggleQuest"",
+                    ""type"": ""Button"",
+                    ""id"": ""43ac564b-4942-49db-90cc-a0624e640100"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -334,6 +343,17 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""ToggleInventory"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4963621b-89fb-4abe-a1ac-114c08758582"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleQuest"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -653,6 +673,7 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
         // Global
         m_Global = asset.FindActionMap("Global", throwIfNotFound: true);
         m_Global_ToggleInventory = m_Global.FindAction("ToggleInventory", throwIfNotFound: true);
+        m_Global_ToggleQuest = m_Global.FindAction("ToggleQuest", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1061,6 +1082,7 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_Global;
     private List<IGlobalActions> m_GlobalActionsCallbackInterfaces = new List<IGlobalActions>();
     private readonly InputAction m_Global_ToggleInventory;
+    private readonly InputAction m_Global_ToggleQuest;
     /// <summary>
     /// Provides access to input actions defined in input action map "Global".
     /// </summary>
@@ -1076,6 +1098,10 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Global/ToggleInventory".
         /// </summary>
         public InputAction @ToggleInventory => m_Wrapper.m_Global_ToggleInventory;
+        /// <summary>
+        /// Provides access to the underlying input action "Global/ToggleQuest".
+        /// </summary>
+        public InputAction @ToggleQuest => m_Wrapper.m_Global_ToggleQuest;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1105,6 +1131,9 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
             @ToggleInventory.started += instance.OnToggleInventory;
             @ToggleInventory.performed += instance.OnToggleInventory;
             @ToggleInventory.canceled += instance.OnToggleInventory;
+            @ToggleQuest.started += instance.OnToggleQuest;
+            @ToggleQuest.performed += instance.OnToggleQuest;
+            @ToggleQuest.canceled += instance.OnToggleQuest;
         }
 
         /// <summary>
@@ -1119,6 +1148,9 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
             @ToggleInventory.started -= instance.OnToggleInventory;
             @ToggleInventory.performed -= instance.OnToggleInventory;
             @ToggleInventory.canceled -= instance.OnToggleInventory;
+            @ToggleQuest.started -= instance.OnToggleQuest;
+            @ToggleQuest.performed -= instance.OnToggleQuest;
+            @ToggleQuest.canceled -= instance.OnToggleQuest;
         }
 
         /// <summary>
@@ -1483,6 +1515,13 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleInventory(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ToggleQuest" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleQuest(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
