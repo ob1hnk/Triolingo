@@ -651,6 +651,14 @@ PrefabInstance:
       propertyPath: yarnProject
       value: 
       objectReference: {fileID: 7545569452688597077, guid: c6409af08ca554bec8143c424cbf3c73, type: 3}
+    - target: {fileID: 8309902628685535410, guid: 52571f68872914e24837210513edea1d, type: 3}
+      propertyPath: dialoguePresenters.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8309902628685535410, guid: 52571f68872914e24837210513edea1d, type: 3}
+      propertyPath: 'dialoguePresenters.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1118579419}
     - target: {fileID: 9078442560890639579, guid: 52571f68872914e24837210513edea1d, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -2295,7 +2303,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 703389231}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
@@ -2372,7 +2380,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c24e299ec69ac4bc1a3610e4274f0532, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialoguePanel: {fileID: 703389231}
   onDialogueStartedEvent: {fileID: 11400000, guid: 8dcd5affb2bdc442288b1f7b80d2d56d, type: 2}
   onDialogueCompletedEvent: {fileID: 11400000, guid: 13d32723c5d854b5ca2eccbae2555d66, type: 2}
 --- !u!1 &712721147
@@ -4286,7 +4293,7 @@ MonoBehaviour:
   lineText: {fileID: 1976248247}
   showCharacterNameInLine: 0
   characterNameText: {fileID: 1447022751}
-  characterNameContainer: {fileID: 703389231}
+  characterNameContainer: {fileID: 1447022749}
   useFadeEffect: 1
   fadeUpDuration: 0.25
   fadeDownDuration: 0.1

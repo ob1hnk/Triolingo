@@ -17,6 +17,7 @@ public class InventoryUIPresenter : MonoBehaviour
     {
         ValidateComponents();
         InitializeInputHandlers();
+        Hide();
 
         if (view != null)
         {
