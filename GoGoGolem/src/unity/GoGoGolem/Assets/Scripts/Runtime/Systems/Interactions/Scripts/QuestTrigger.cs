@@ -2,7 +2,6 @@ using UnityEngine;
 
 /// <summary>
 /// 씬에 배치하여 특정 조건에서 퀘스트를 시작하거나 Phase를 완료시키는 트리거
-/// Managers를 통해 QuestManager에 접근합니다.
 /// </summary>
 public class QuestTrigger : MonoBehaviour
 {
@@ -31,11 +30,14 @@ public class QuestTrigger : MonoBehaviour
     [Tooltip("플레이어 태그")]
     [SerializeField] private string playerTag = "Player";
 
+    [Header("Event Channels")]
+    [SerializeField] private StringGameEvent requestStartQuestEvent;
+    [SerializeField] private CompletePhaseGameEvent requestCompletePhaseEvent;
+
     private bool hasTriggered = false;
 
     private void Start()
     {
-        // Start 액션이면 시작 시 실행
         if (triggerType == TriggerType.OnStart)
         {
             ExecuteTrigger();
@@ -64,9 +66,6 @@ public class QuestTrigger : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 외부에서 호출 가능한 트리거 실행 메서드
-    /// </summary>
     public void ExecuteTrigger()
     {
         if (hasTriggered)
@@ -81,19 +80,12 @@ public class QuestTrigger : MonoBehaviour
             return;
         }
 
-        if (Managers.Quest == null)
-        {
-            Debug.LogError("[QuestTrigger] Managers.Quest is null! Make sure Managers GameObject exists.");
-            return;
-        }
-
         hasTriggered = true;
 
-        // 액션 실행
         switch (action)
         {
             case TriggerAction.StartQuest:
-                Managers.Quest.StartQuest(questID);
+                requestStartQuestEvent?.Raise(questID);
                 Debug.Log($"[QuestTrigger] Started Quest: {questID}");
                 break;
 
@@ -103,49 +95,40 @@ public class QuestTrigger : MonoBehaviour
                     Debug.LogError($"[QuestTrigger] ObjectiveID or PhaseID is empty on {gameObject.name}");
                     return;
                 }
-                Managers.Quest.CompletePhase(questID, objectiveID, phaseID);
+                requestCompletePhaseEvent?.Raise(new CompletePhaseRequest(questID, objectiveID, phaseID));
                 Debug.Log($"[QuestTrigger] Completed Phase: {questID}/{objectiveID}/{phaseID}");
                 break;
         }
 
-        // 트리거 후 파괴
         if (destroyAfterTrigger)
         {
             Destroy(gameObject);
         }
     }
 
-    /// <summary>
-    /// 트리거 타입
-    /// </summary>
     public enum TriggerType
     {
-        OnStart,            // 씬 시작 시
-        OnTriggerEnter,     // Trigger 충돌 시
-        OnCollisionEnter,   // Collision 충돌 시
-        Manual              // 수동 호출 (ExecuteTrigger)
+        OnStart,
+        OnTriggerEnter,
+        OnCollisionEnter,
+        Manual
     }
 
-    /// <summary>
-    /// 트리거 액션
-    /// </summary>
     public enum TriggerAction
     {
-        StartQuest,         // 퀘스트 시작
-        CompletePhase       // Phase 완료
+        StartQuest,
+        CompletePhase
     }
 
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        // 트리거 영역 시각화
         Gizmos.color = hasTriggered ? Color.green : Color.yellow;
         Gizmos.DrawWireSphere(transform.position, 0.5f);
     }
 
     private void OnDrawGizmosSelected()
     {
-        // 선택 시 더 자세한 정보 표시
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireCube(transform.position, Vector3.one);
     }

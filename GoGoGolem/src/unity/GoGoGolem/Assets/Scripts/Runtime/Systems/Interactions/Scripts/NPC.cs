@@ -10,9 +10,8 @@ public class NPC : MonoBehaviour, IInteractable
     [SerializeField] private string npcName = "마을 주민";
 
     [Header("Dialogue")]
-    [Tooltip("상호작용 시 표시할 대사")]
-    [TextArea(2, 4)]
-    [SerializeField] private string dialogueText = "안녕하세요!";
+    [Tooltip("Yarn 대화 노드 이름 (예: DLG-001)")]
+    [SerializeField] private string dialogueID;
 
     [Header("Quest Settings (Optional)")]
     [Tooltip("퀘스트 기능을 사용하려면 체크")]
@@ -38,6 +37,11 @@ public class NPC : MonoBehaviour, IInteractable
     [TextArea(2, 4)]
     [SerializeField] private string afterInteractionText = "";
 
+    [Header("Event Channels")]
+    [SerializeField] private StringGameEvent requestStartDialogueEvent;
+    [SerializeField] private StringGameEvent requestStartQuestEvent;
+    [SerializeField] private CompletePhaseGameEvent requestCompletePhaseEvent;
+
     private bool hasInteracted = false;
 
     #region IInteractable Implementation
@@ -50,6 +54,7 @@ public class NPC : MonoBehaviour, IInteractable
         }
     }
 
+    public InteractionType InteractionType => InteractionType.Talk;
     public string GetInteractText()
     {
         if (onceOnly && hasInteracted)
@@ -79,8 +84,19 @@ public class NPC : MonoBehaviour, IInteractable
 
         hasInteracted = true;
 
-        // 대사 표시
-        ShowDialogue(dialogueText);
+        // Yarn 대화 시작
+        if (!string.IsNullOrEmpty(dialogueID) && requestStartDialogueEvent != null)
+        {
+            requestStartDialogueEvent.Raise(dialogueID);
+        }
+        else if (string.IsNullOrEmpty(dialogueID))
+        {
+            Debug.LogWarning($"[NPC] {npcName}: 대화 ID가 설정되지 않았습니다.");
+        }
+        else if (requestStartDialogueEvent == null)
+        {
+            Debug.LogError($"[NPC] {npcName}: requestStartDialogueEvent가 null입니다!");
+        }
 
         // 퀘스트 액션 실행 (설정되어 있는 경우)
         if (hasQuestAction)
@@ -91,45 +107,19 @@ public class NPC : MonoBehaviour, IInteractable
 
     #endregion
 
-    #region Dialogue
-
-    /// <summary>
-    /// 대사 표시
-    /// </summary>
-    private void ShowDialogue(string text)
-    {
-        Debug.Log($"[NPC] {npcName}: {text}");
-        // TODO: 나중에 UI 시스템 연동
-    }
-
-    #endregion
-
     #region Quest Actions
 
-    /// <summary>
-    /// 퀘스트 관련 액션 실행
-    /// </summary>
     private void ExecuteQuestAction()
     {
-        // Quest ID가 비어있으면 실행 안 함
         if (string.IsNullOrEmpty(questID))
         {
             Debug.LogWarning($"[NPC] {npcName}: Quest ID가 설정되지 않았습니다!");
             return;
         }
 
-        // QuestManager 확인
-        if (Managers.Quest == null)
-        {
-            Debug.LogError($"[NPC] {npcName}: Managers.Quest is null!");
-            return;
-        }
-
-        // 액션 실행
         switch (questAction)
         {
             case NPCQuestAction.None:
-                // 퀘스트 액션 없음
                 break;
 
             case NPCQuestAction.StartQuest:
@@ -146,18 +136,12 @@ public class NPC : MonoBehaviour, IInteractable
         }
     }
 
-    /// <summary>
-    /// 퀘스트 시작 처리
-    /// </summary>
     private void HandleStartQuest()
     {
         Debug.Log($"[NPC] {npcName}에게서 퀘스트를 받았습니다!");
-        Managers.Quest.StartQuest(questID);
+        requestStartQuestEvent?.Raise(questID);
     }
 
-    /// <summary>
-    /// Phase 완료 처리
-    /// </summary>
     private void HandleCompletePhase()
     {
         if (string.IsNullOrEmpty(objectiveID) || string.IsNullOrEmpty(phaseID))
@@ -166,16 +150,14 @@ public class NPC : MonoBehaviour, IInteractable
             return;
         }
 
-        Managers.Quest.CompletePhase(questID, objectiveID, phaseID);
+        requestCompletePhaseEvent?.Raise(new CompletePhaseRequest(questID, objectiveID, phaseID));
         Debug.Log($"[NPC] {npcName}: Phase 완료!");
     }
 
-    /// <summary>
-    /// 퀘스트 완료 처리 (모든 Phase 자동 완료)
-    /// </summary>
     private void HandleCompleteQuest()
     {
-        var quest = Managers.Quest.GetActiveQuest(questID);
+        // 퀘스트 구조 읽기를 위해 QuestManager 직접 접근 (읽기 전용)
+        var quest = Managers.Quest?.GetActiveQuest(questID);
         if (quest == null)
         {
             Debug.LogWarning($"[NPC] {npcName}: Quest {questID}가 활성화되어 있지 않습니다.");
@@ -189,7 +171,8 @@ public class NPC : MonoBehaviour, IInteractable
             {
                 if (!phase.IsCompleted)
                 {
-                    Managers.Quest.CompletePhase(questID, objective.ObjectiveID, phase.PhaseID);
+                    requestCompletePhaseEvent?.Raise(
+                        new CompletePhaseRequest(questID, objective.ObjectiveID, phase.PhaseID));
                 }
             }
         }
@@ -201,9 +184,6 @@ public class NPC : MonoBehaviour, IInteractable
 
     #region Enums
 
-    /// <summary>
-    /// NPC 퀘스트 액션 타입
-    /// </summary>
     public enum NPCQuestAction
     {
         None,           // 퀘스트 액션 없음
@@ -219,7 +199,6 @@ public class NPC : MonoBehaviour, IInteractable
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        // NPC 위치 시각화
         Color gizmoColor = Color.blue;
 
         if (hasInteracted)
@@ -237,19 +216,15 @@ public class NPC : MonoBehaviour, IInteractable
 
     private void OnDrawGizmosSelected()
     {
-        // 선택 시 상호작용 범위 표시
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, 3f);
 
-        // 퀘스트 정보 표시
         if (hasQuestAction && !string.IsNullOrEmpty(questID))
         {
-#if UNITY_EDITOR
             UnityEditor.Handles.Label(
                 transform.position + Vector3.up * 2.5f,
                 $"[{questAction}]\n{questID}"
             );
-#endif
         }
     }
 #endif

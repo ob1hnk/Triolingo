@@ -4,9 +4,9 @@ public class ItemDatabaseTester : MonoBehaviour
 {
     void Start()
     {
-        if (Managers.Data == null || Managers.Data.ItemDB == null)
+        if (Managers.Inventory == null || Managers.Inventory.ItemDB == null)
         {
-            Debug.LogError("ItemDatabaseTester: Managers.Data 또는 ItemDB가 초기화되지 않았습니다.");
+            Debug.LogError("ItemDatabaseTester: Managers.Inventory 또는 ItemDB가 초기화되지 않았습니다.");
             return;
         }
 
@@ -17,7 +17,7 @@ public class ItemDatabaseTester : MonoBehaviour
 
     void DebugItem(string id)
     {
-        ItemData item = Managers.Data.ItemDB.GetItem(id);
+        ItemData item = Managers.Inventory.ItemDB.GetItem(id);
 
         if (item == null)
         {

@@ -1,44 +1,81 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerInteraction : MonoBehaviour
 {
-    public float interactionRange = 2f; // 상호작용 가능 거리 (구체 반지름)
-    public LayerMask interactableLayer; // 상호작용 가능한 레이어만 선택 (성능 최적화)
-    private IInteractable currentInteractable;
+    public float interactionRange = 2f;
+    public LayerMask interactableLayer;
 
+    private IInteractable currentInteractable;
     private Animator _animator;
     private static int isGatheringHash = Animator.StringToHash("isGathering");
+
+    private GameInputActions.PlayerActionsActions _playerActions;
+    private bool _initialized = false;
 
     void Awake()
     {
         _animator = GetComponent<Animator>();
     }
 
+    private void Start()
+    {
+        if (InputModeController.Instance == null)
+        {
+            Debug.LogError("[PlayerInteraction] InputModeController를 찾을 수 없습니다.");
+            return;
+        }
 
+        _playerActions = InputModeController.Instance.GetPlayerActionsActions();
+        _playerActions.Gather.performed += OnGather;
+        _playerActions.Interact.performed += OnInteract;
+        _initialized = true;
+    }
+
+    private void OnEnable()
+    {
+        if (!_initialized) return;
+        _playerActions.Gather.performed += OnGather;
+        _playerActions.Interact.performed += OnInteract;
+    }
+
+    private void OnDisable()
+    {
+        if (!_initialized) return;
+        _playerActions.Gather.performed -= OnGather;
+        _playerActions.Interact.performed -= OnInteract;
+    }
+
+    private void OnGather(InputAction.CallbackContext ctx)
+    {
+        if (currentInteractable?.InteractionType == InteractionType.Gather)
+            PerformGather();
+    }
+
+    private void OnInteract(InputAction.CallbackContext ctx)
+    {
+        if (currentInteractable?.InteractionType == InteractionType.Talk)
+            PerformTalk();
+    }
 
     void Update()
     {
         CheckForInteractables();
-
-        if (Input.GetKeyDown(KeyCode.E) && currentInteractable != null)
-        {
-            PerformInteraction();
-        }
     }
 
-
-    private void PerformInteraction()
+    private void PerformGather()
     {
         _animator.SetTrigger(isGatheringHash);
         currentInteractable.Interact();
-        
-        // Debug.Log("상호작용 수행됨: " + currentInteractable.GetInteractText());
     }
 
+    private void PerformTalk()
+    {
+        currentInteractable.Interact();
+    }
 
     void CheckForInteractables()
     {
-        // 3D 구체 범위를 탐색합니다.
         Collider[] colliders = Physics.OverlapSphere(transform.position, interactionRange, interactableLayer);
 
         IInteractable closest = null;

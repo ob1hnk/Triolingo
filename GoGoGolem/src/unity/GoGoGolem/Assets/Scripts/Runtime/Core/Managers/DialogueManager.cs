@@ -1,144 +1,90 @@
 using UnityEngine;
-using System.Collections;
+using Yarn.Unity;
 
 /// <summary>
 /// 대화 시스템 관리자
-/// DialogueData를 받아서 대화를 재생하고 UI에 표시
+/// Yarn Spinner 3.x의 DialogueRunner를 래핑하여 기존 API를 유지
 /// </summary>
 public class DialogueManager : MonoBehaviour
 {
-    [Header("Dependencies")]
-    [SerializeField] private DialogueDatabase dialogueDatabase;
-    // [SerializeField] private DialogueUI dialogueUI; // TODO: 나중에 추가
-    
-    private DialogueData currentDialogue;
-    private int currentLineIndex = 0;
-    private bool isPlaying = false;
-    
+    [Header("Yarn Spinner")]
+    [SerializeField] private DialogueRunner dialogueRunner;
+
+    [Header("Event Channels")]
+    [SerializeField] private StringGameEvent requestStartDialogueEvent;
+    [SerializeField] private GameEvent onDialogueStartedEvent;
+    [SerializeField] private GameEvent onDialogueCompletedEvent;
+
     private void Awake()
     {
-        if (dialogueDatabase != null)
+        if (dialogueRunner == null)
         {
-            dialogueDatabase.Initialize();
+            dialogueRunner = GetComponentInChildren<DialogueRunner>();
         }
-        else
+
+        if (dialogueRunner == null)
         {
-            Debug.LogError("[DialogueManager] DialogueDatabase is not assigned!");
+            Debug.LogError("[DialogueManager] DialogueRunner가 연결되지 않았습니다!");
+            return;
+        }
+
+        dialogueRunner.onDialogueStart.AddListener(HandleDialogueStart);
+        dialogueRunner.onDialogueComplete.AddListener(HandleDialogueComplete);
+    }
+
+    private void OnEnable()
+    {
+        if (requestStartDialogueEvent != null)
+            requestStartDialogueEvent.Register(StartDialogue);
+    }
+
+    private void OnDisable()
+    {
+        if (requestStartDialogueEvent != null)
+            requestStartDialogueEvent.Unregister(StartDialogue);
+    }
+
+    private void OnDestroy()
+    {
+        if (dialogueRunner != null)
+        {
+            dialogueRunner.onDialogueStart.RemoveListener(HandleDialogueStart);
+            dialogueRunner.onDialogueComplete.RemoveListener(HandleDialogueComplete);
         }
     }
-    
+
     /// <summary>
-    /// 대화 시작 (Dialogue ID로)
+    /// 대화 시작 (Yarn node 이름으로)
+    /// QuestManager의 contentID가 Yarn node 이름과 매핑됨
+    /// 예: "DLG-001" → "DLG_001" (하이픈→언더스코어)
     /// </summary>
     public void StartDialogue(string dialogueID)
     {
-        if (isPlaying)
+        if (dialogueRunner == null)
         {
-            Debug.LogWarning("[DialogueManager] Dialogue is already playing.");
+            Debug.LogError("[DialogueManager] DialogueRunner가 없습니다!");
             return;
         }
-        
-        if (dialogueDatabase == null)
+
+        if (dialogueRunner.IsDialogueRunning)
         {
-            Debug.LogError("[DialogueManager] DialogueDatabase is not assigned!");
+            Debug.LogWarning("[DialogueManager] 대화가 이미 진행 중입니다.");
             return;
         }
-        
-        currentDialogue = dialogueDatabase.GetDialogueData(dialogueID);
-        if (currentDialogue == null)
-        {
-            Debug.LogError($"[DialogueManager] Dialogue {dialogueID} not found.");
-            return;
-        }
-        
-        currentLineIndex = 0;
-        isPlaying = true;
-        
-        Debug.Log($"[DialogueManager] Starting dialogue: {dialogueID}");
-        
-        StartCoroutine(PlayDialogue());
+
+        string nodeName = dialogueID.Replace('-', '_');
+        dialogueRunner.StartDialogue(nodeName);
     }
-    
-    /// <summary>
-    /// Phase ID로 대화 시작 (첫 번째 Dialogue 재생)
-    /// </summary>
-    public void StartDialogueByPhase(string phaseID)
-    {
-        var dialogues = dialogueDatabase.GetDialoguesByPhase(phaseID);
-        if (dialogues.Count > 0)
-        {
-            StartDialogue(dialogues[0].dialogueID);
-        }
-        else
-        {
-            Debug.LogWarning($"[DialogueManager] No dialogue found for phase {phaseID}");
-        }
-    }
-    
-    /// <summary>
-    /// 대화 재생 코루틴
-    /// </summary>
-    private IEnumerator PlayDialogue()
-    {
-        while (currentLineIndex < currentDialogue.dialogueLines.Count)
-        {
-            DialogueLine line = currentDialogue.dialogueLines[currentLineIndex];
-            
-            // 콘솔에 대화 출력 (임시 - UI 구현 전)
-            Debug.Log($"[{line.speaker}] {line.content}");
-            
-            // TODO: UI에 대화 표시
-            // dialogueUI?.ShowDialogueLine(line.speaker, line.content);
-            
-            // 선택지가 있는 경우
-            if (line.isChoice && line.choiceOptions.Count > 0)
-            {
-                Debug.Log($"[Choice] Options: {string.Join(", ", line.choiceOptions)}");
-                // TODO: dialogueUI?.ShowChoices(line.choiceOptions);
-                // TODO: yield return new WaitUntil(() => dialogueUI.HasSelectedChoice());
-                // TODO: int choice = dialogueUI.GetSelectedChoice();
-            }
-            
-            // 다음 라인으로 (스페이스바 또는 마우스 클릭 대기)
-            yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0));
-            
-            currentLineIndex++;
-        }
-        
-        // 대화 종료
-        EndDialogue();
-    }
-    
-    /// <summary>
-    /// 대화 종료
-    /// </summary>
-    private void EndDialogue()
-    {
-        isPlaying = false;
-        currentDialogue = null;
-        currentLineIndex = 0;
-        
-        // TODO: dialogueUI?.HideDialogueUI();
-        
-        Debug.Log("[DialogueManager] Dialogue ended.");
-    }
-    
-    /// <summary>
-    /// 대화 중인지 확인
-    /// </summary>
-    public bool IsPlaying()
-    {
-        return isPlaying;
-    }
-    
-    /// <summary>
-    /// 대화 스킵
-    /// </summary>
+
+    public bool IsPlaying() => dialogueRunner != null && dialogueRunner.IsDialogueRunning;
+
     public void SkipDialogue()
     {
-        if (!isPlaying) return;
-        
-        StopAllCoroutines();
-        EndDialogue();
+        if (dialogueRunner != null && dialogueRunner.IsDialogueRunning)
+            dialogueRunner.Stop();
     }
+
+    private void HandleDialogueStart() => onDialogueStartedEvent?.Raise();
+
+    private void HandleDialogueComplete() => onDialogueCompletedEvent?.Raise();
 }

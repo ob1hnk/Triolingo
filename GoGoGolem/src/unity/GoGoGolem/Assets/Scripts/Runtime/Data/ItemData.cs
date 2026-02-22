@@ -2,7 +2,7 @@ using UnityEngine;
 
 public enum ItemType { Item, Skill, Reward }
 
-[CreateAssetMenu(fileName = "NewItem", menuName = "GoGoGolem/Item")]
+[CreateAssetMenu(fileName = "NewItem", menuName = "Inventory/Item")]
 public class ItemData : ScriptableObject
 {
     public string itemID;
