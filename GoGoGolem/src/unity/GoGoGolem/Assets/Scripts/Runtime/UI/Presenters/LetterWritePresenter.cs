@@ -60,7 +60,10 @@ namespace UI.Presenters
 
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
             {
-                HandleSendRequested(view.LetterContent);
+                bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                if (!shiftHeld)
+                    HandleSendRequested(view.LetterContent);
+                // Shift+Enter면 TMP_InputField가 줄바꿈 처리
             }
             else if (Input.GetKeyDown(KeyCode.Escape))
             {

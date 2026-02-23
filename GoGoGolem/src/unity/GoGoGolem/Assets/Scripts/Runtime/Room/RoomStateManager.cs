@@ -42,6 +42,7 @@ public class RoomStateManager : MonoBehaviour
     [SerializeField] private Light    sunLight;
     [SerializeField] private float    dayLightIntensity  = 1.2f;
     [SerializeField] private float    fadeDuration       = 1.5f;
+    [SerializeField] private Color nightAmbientColor = new Color(0.1176f, 0.1176f, 0.1961f);
 
     [Header("Night View")]
     [SerializeField] private GameObject nightView;
@@ -121,7 +122,8 @@ public class RoomStateManager : MonoBehaviour
         if (_fadeLightCoroutine != null) StopCoroutine(_fadeLightCoroutine);
         _fadeLightCoroutine = StartCoroutine(FadeLightCoroutine(sunLight, 0f, fadeDuration, () =>
         {
-            // 조명이 꺼진 후 밤 뷰 전환
+            // 조명이 꺼진 후 GameObject 비활성화 + 밤 뷰 전환
+            if (sunLight != null) sunLight.gameObject.SetActive(false);
             if (nightView != null) nightView.SetActive(true);
         }));
 
@@ -193,17 +195,21 @@ public class RoomStateManager : MonoBehaviour
         }
 
         float startIntensity = light.intensity;
+        Color startAmbient   = RenderSettings.ambientLight;
+        Color targetAmbient  = targetIntensity > 0f ? startAmbient : nightAmbientColor;
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
-            light.intensity = Mathf.Lerp(startIntensity, targetIntensity, t);
+            light.intensity             = Mathf.Lerp(startIntensity, targetIntensity, t);
+            RenderSettings.ambientLight = Color.Lerp(startAmbient, targetAmbient, t);
             yield return null;
         }
 
-        light.intensity = targetIntensity;
+        light.intensity             = targetIntensity;
+        RenderSettings.ambientLight = targetAmbient;
         onComplete?.Invoke();
     }
 
