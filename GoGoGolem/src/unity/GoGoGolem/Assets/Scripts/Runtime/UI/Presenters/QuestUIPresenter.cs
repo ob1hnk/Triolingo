@@ -14,6 +14,7 @@ public class QuestUIPresenter : MonoBehaviour
     [Header("Event Channels")]
     [SerializeField] private QuestGameEvent onQuestStartedEvent;
     [SerializeField] private QuestGameEvent onQuestCompletedEvent;
+    [SerializeField] private QuestObjectiveGameEvent onObjectiveCompletedEvent;
 
     private QuestManager questManager;
     private GameInputActions.GlobalActions _globalActions;
@@ -42,6 +43,7 @@ public class QuestUIPresenter : MonoBehaviour
 
         onQuestStartedEvent?.Register(OnQuestStarted);
         onQuestCompletedEvent?.Register(OnQuestCompleted);
+        onObjectiveCompletedEvent?.Register(OnObjectiveCompleted);
 
         LoadActiveQuests();
         view.Hide();
@@ -63,6 +65,7 @@ public class QuestUIPresenter : MonoBehaviour
     {
         onQuestStartedEvent?.Unregister(OnQuestStarted);
         onQuestCompletedEvent?.Unregister(OnQuestCompleted);
+        onObjectiveCompletedEvent?.Unregister(OnObjectiveCompleted);
     }
 
     private void OnToggleQuest(InputAction.CallbackContext ctx)
@@ -99,6 +102,11 @@ public class QuestUIPresenter : MonoBehaviour
     private void OnQuestCompleted(Quest quest)
     {
         view.RemoveQuestEntry(quest.QuestID);
+    }
+
+    private void OnObjectiveCompleted(QuestObjective objective)
+    {
+        view.UpdateObjectiveCompleted(objective.ObjectiveID);
     }
 
     private void LoadActiveQuests()

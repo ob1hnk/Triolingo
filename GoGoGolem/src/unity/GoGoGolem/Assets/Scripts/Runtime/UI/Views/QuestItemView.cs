@@ -18,6 +18,7 @@ public class QuestItemView : MonoBehaviour
 
     private string questId;
     private Dictionary<string, ObjectiveItemView> objectiveViews = new Dictionary<string, ObjectiveItemView>();
+    private List<string> objectiveOrder = new List<string>();
 
     public void Initialize(string questId, QuestType questType, string questName, List<QuestObjective> objectives)
     {
@@ -36,23 +37,34 @@ public class QuestItemView : MonoBehaviour
 
         questNameText.text = questName;
 
-        foreach (var objective in objectives)
-            AddObjective(objective);
+        for (int i = 0; i < objectives.Count; i++)
+            AddObjective(objectives[i], i == 0);
     }
 
-    private void AddObjective(QuestObjective objective)
+    private void AddObjective(QuestObjective objective, bool visible)
     {
         var obj = Instantiate(objectiveItemPrefab, objectiveListParent);
         var objectiveView = obj.GetComponent<ObjectiveItemView>();
 
         string displayText = string.IsNullOrEmpty(objective.Description) ? objective.ObjectiveID : objective.Description;
         objectiveView.Initialize(objective.ObjectiveID, displayText, objective.IsCompleted);
+        objectiveView.SetVisible(visible);
         objectiveViews[objective.ObjectiveID] = objectiveView;
+        objectiveOrder.Add(objective.ObjectiveID);
     }
 
     public void SetObjectiveCompleted(string objectiveId)
     {
-        if (objectiveViews.TryGetValue(objectiveId, out var objectiveView))
-            objectiveView.SetCompleted(true);
+        if (!objectiveViews.TryGetValue(objectiveId, out var objectiveView)) return;
+
+        objectiveView.SetCompleted(true);
+
+        int idx = objectiveOrder.IndexOf(objectiveId);
+        if (idx >= 0 && idx + 1 < objectiveOrder.Count)
+        {
+            var nextId = objectiveOrder[idx + 1];
+            if (objectiveViews.TryGetValue(nextId, out var nextView))
+                nextView.SetVisible(true);
+        }
     }
 }

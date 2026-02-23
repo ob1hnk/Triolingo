@@ -59,6 +59,12 @@ public class QuestUIView : MonoBehaviour
         }
     }
 
+    public void UpdateObjectiveCompleted(string objectiveId)
+    {
+        foreach (var questItemView in questItemViews.Values)
+            questItemView.SetObjectiveCompleted(objectiveId);
+    }
+
     public void ClearAllQuests()
     {
         foreach (var view in questItemViews.Values)

@@ -32,6 +32,11 @@ public class ObjectiveItemView : MonoBehaviour
         isCompleted = completed;
         UpdateVisual();
     }
+
+    public void SetVisible(bool visible)
+    {
+        gameObject.SetActive(visible);
+    }
     
     /// <summary>
     /// 시각적 업데이트
