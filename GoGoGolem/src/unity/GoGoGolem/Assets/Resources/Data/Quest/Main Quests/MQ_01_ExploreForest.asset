@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31af469c9572040379921f5f49bb778c, type: 3}
+  m_Name: MQ_01_ExploreForest
+  m_EditorClassIdentifier: 
+  questID: MQ-01
+  questName: "\uC232\uC744 \uD0D0\uD5D8\uD558\uC790"
+  summary: "\uB9C8\uC744 \uC678\uACFD \uC232\uC5D0\uC11C \uC4F0\uB7EC\uC9C4 \uB098\uBB34\uB97C
+    \uCE58\uC6B0\uBA70 \uACE8\uB818\uC758 \uB2A5\uB825\uC744 \uC2DC\uD5D8\uD558\uACE0,
+    \uB3CC\uBC1C \uD589\uB3D9\uC744 \uD1B5\uD574 \uACE8\uB818\uACFC\uC758 \uC720\uB300\uAC10\uC744
+    \uD615\uC131\uD558\uB294 \uD29C\uD1A0\uB9AC\uC5BC \uC131\uACA9\uC758 \uD018\uC2A4\uD2B8"
+  questType: 0
+  objectives:
+  - objectiveID: MQ-01-OBJ-01
+    description: "\uB098\uBB34\uB97C \uCE58\uC6B0\uC790"
+    phases:
+    - phaseID: MQ-01-P01
+      phaseType: 0
+      contentID: DLG-001
+      description: "\uC2DC\uC791 - \uC232 \uC785\uAD6C \uB3C4\uCC29, \uC8FC\uC778\uACF5
+        \uB300\uC0AC (\uC790\uB3D9 \uD2B8\uB9AC\uAC70)"
+      conditionIDs: []
+      actionIDs: []
+    - phaseID: MQ-01-P02
+      phaseType: 2
+      contentID: EVT-001
+      description: "\uC7A5\uC560\uBB3C \uC870\uC6B0 - \uC4F0\uB7EC\uC9C4 \uB098\uBB34
+        \uC55E\uC5D0\uC11C \uBA48\uCDA4 (\uC774\uB3D9 \uC81C\uD55C)"
+      conditionIDs: []
+      actionIDs: []
+    - phaseID: MQ-01-P03
+      phaseType: 1
+      contentID: INT-001
+      description: "\uD50C\uB808\uC774\uC5B4 \uC120\uD0DD - \uC120\uD0DD\uC9C0 UI
+        \uCD9C\uB825"
+      conditionIDs: []
+      actionIDs: []
+    - phaseID: MQ-01-P04
+      phaseType: 2
+      contentID: EVT-002
+      description: "\uC0C1\uD638\uC791\uC6A9 \uC5F0\uCD9C - \uACE8\uB818 \uC560\uB2C8\uBA54\uC774\uC158
+        \uC2E4\uD589"
+      conditionIDs: []
+      actionIDs: []
+    - phaseID: MQ-01-P05
+      phaseType: 2
+      contentID: EVT-003
+      description: "\uB3CC\uBC1C \uC774\uBCA4\uD2B8 - \uBE44 \uD30C\uD2F0\uD074,
+        \uACE8\uB818 \uB098\uBB47\uC78E \uC218\uC9D1"
+      conditionIDs: []
+      actionIDs: []
+    - phaseID: MQ-01-P06
+      phaseType: 4
+      contentID: ITEM-001
+      description: "\uC644\uB8CC - \uB098\uBB47\uC78E \uC544\uC774\uD15C \uD68D\uB4DD
+        (Objective \uC644\uB8CC)"
+      conditionIDs: []
+      actionIDs: []
+  reward:
+    rewardID: RWD-001
+    itemIDs:
+    - ITEM-001
+    gold: 0
+    experience: 100

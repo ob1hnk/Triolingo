@@ -1,0 +1,7 @@
+{
+    "projectFileVersion": 3,
+    "sourceFilePatterns": [
+        "**/*.yarn"
+    ],
+    "baseLanguage": "ko"
+}

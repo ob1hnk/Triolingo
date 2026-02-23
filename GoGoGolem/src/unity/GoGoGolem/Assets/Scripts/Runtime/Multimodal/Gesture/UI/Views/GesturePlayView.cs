@@ -5,24 +5,13 @@ using Mediapipe.Tasks.Vision.PoseLandmarker;
 namespace Demo.GestureDetection.UI
 {
   /// <summary>
-  /// 화면 표시 데이터 (Presenter → View 전달용)
-  /// </summary>
-  public struct DisplayData
-  {
-    public PoseLandmarkerResult PoseData;
-    public HandLandmarkerResult HandData;
-    public GestureResult GestureResult;
-    public bool HasValidData;
-  }
-
-  /// <summary>
   /// 제스처 플레이 화면 (View) - Scene 오브젝트 및 시각적 요소 관리
   /// Presenter는 View 내부 구조를 알지 못함 (캡슐화)
   /// </summary>
   public class GesturePlayView : MonoBehaviour
   {
     [Header("3D Avatar")]
-    [SerializeField] private AvatarLandmarkAnimator _avatarAnimator;
+    [SerializeField] private GolemLandmarkAnimator _golemAnimator;
     
     [Header("UI")]
     [SerializeField] private GestureUIController _gestureUIController;
@@ -43,10 +32,8 @@ namespace Demo.GestureDetection.UI
     /// <summary>
     /// View 초기화
     /// </summary>
-    public void Initialize(GestureType targetGesture, float debounceDuration)
+    public void Initialize(GestureType targetGesture)
     {
-      _debounceDuration = debounceDuration;
-      
       // UI Controller 설정
       if (_gestureUIController != null)
       {
@@ -56,9 +43,6 @@ namespace Demo.GestureDetection.UI
       // Scene 오브젝트 활성화
       if (_backgroundObjects != null)
         _backgroundObjects.SetActive(true);
-      
-      if (_targetObjects != null)
-        _targetObjects.SetActive(true);
       
       Debug.Log("[GesturePlayView] Initialized");
     }
@@ -90,9 +74,9 @@ namespace Demo.GestureDetection.UI
     /// </summary>
     private void UpdateAvatar(PoseLandmarkerResult poseData, HandLandmarkerResult handData)
     {
-      if (_avatarAnimator != null)
+      if (_golemAnimator != null)
       {
-        _avatarAnimator.UpdateAvatar(poseData, handData);
+        _golemAnimator.UpdateAvatar(poseData, handData);
       }
     }
     
@@ -101,9 +85,9 @@ namespace Demo.GestureDetection.UI
     /// </summary>
     private void ResetAvatar()
     {
-      if (_avatarAnimator != null)
+      if (_golemAnimator != null)
       {
-        _avatarAnimator.ResetToIdle();
+        _golemAnimator.ResetToIdle();
       }
     }
     

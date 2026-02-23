@@ -2,23 +2,43 @@ using UnityEngine;
 
 public class InventoryManager : MonoBehaviour
 {
+    [Header("Data")]
+    [SerializeField] private ItemDatabaseSO itemCatalogue;
+
+    [Header("Event Channels")]
+    [SerializeField] private StringGameEvent requestAcquireItemEvent;
+
     public InventoryLogic Logic { get; private set; }
+    public ItemDatabase ItemDB { get; private set; }
 
     public void Init()
     {
+        ItemDB = new ItemDatabase();
+        ItemDB.LoadDatabase(itemCatalogue);
+
         Logic = new InventoryLogic();
     }
 
-    // 외부(퀘스트, 충돌체)에서 호출할 메서드
+    private void OnEnable()
+    {
+        if (requestAcquireItemEvent != null)
+            requestAcquireItemEvent.Register(AcquireItem);
+    }
+
+    private void OnDisable()
+    {
+        if (requestAcquireItemEvent != null)
+            requestAcquireItemEvent.Unregister(AcquireItem);
+    }
+
     public void AcquireItem(string itemID)
     {
-        // DB에 존재하는 아이템인지 먼저 확인
-        var itemData = Managers.Data.ItemDB.GetItem(itemID);
+        var itemData = ItemDB.GetItem(itemID);
         if (itemData == null)
         {
             Debug.LogWarning($"DB에 존재하지 않는 아이템 ID: {itemID}");
+            return;
         }
         Logic.AddItem(itemID);
-        Debug.Log($"아이템 획득: {itemData.itemName}");
     }
 }

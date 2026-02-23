@@ -2,24 +2,14 @@ using UnityEngine;
 
 public class ItemDatabaseTester : MonoBehaviour
 {
-    private ItemDatabase itemDatabase;
-
     void Start()
     {
-        itemDatabase = new ItemDatabase();
-
-        TextAsset csvData = Resources.Load<TextAsset>("Data/Items");
-
-        if (csvData == null)
+        if (Managers.Inventory == null || Managers.Inventory.ItemDB == null)
         {
-            Debug.LogError("CSV Load Failed: Resources/Data/Items.csv not found");
+            Debug.LogError("ItemDatabaseTester: Managers.Inventory 또는 ItemDB가 초기화되지 않았습니다.");
             return;
         }
 
-
-        itemDatabase.LoadDatabase();
-
-        // 테스트
         DebugItem("ITEM-001");
         DebugItem("SKILL-001");
         DebugItem("RWD-001");
@@ -27,16 +17,16 @@ public class ItemDatabaseTester : MonoBehaviour
 
     void DebugItem(string id)
     {
-        ItemData item = itemDatabase.GetItem(id);
+        ItemData item = Managers.Inventory.ItemDB.GetItem(id);
 
         if (item == null)
         {
-            Debug.LogError($"❌ Item not found: {id}");
+            Debug.LogError($"Item not found: {id}");
             return;
         }
 
         Debug.Log(
-            $"✅ [{item.itemID}] {item.itemName}\n" +
+            $"[{item.itemID}] {item.itemName}\n" +
             $"- Type: {item.type}\n" +
             $"- Phase: {item.phase}\n" +
             $"- Desc: {item.description}\n" +

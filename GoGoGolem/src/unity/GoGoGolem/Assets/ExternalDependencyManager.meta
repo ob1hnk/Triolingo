@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:GoGoGolem/src/unity/GoGoGolem/Assets/ExternalDependencyManager.meta
 guid: 189615292712b4a6a803e6fa670c7d29
+========
+guid: 4692af039728d435fbed1ea830d8e6be
+>>>>>>>> feat/inventory-system:GoGoGolem/src/unity/GoGoGolem/Assets/Editor Default Resources.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
