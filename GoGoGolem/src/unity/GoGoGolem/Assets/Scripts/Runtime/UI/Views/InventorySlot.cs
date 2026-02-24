@@ -1,21 +1,19 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using TMPro;
 
 public class InventorySlot : MonoBehaviour, IPointerClickHandler
 {
     [Header("UI References")]
     [SerializeField] private Image borderImage;
     [SerializeField] private Image backgroundImage;
-    [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI countText;
 
-    [Header("Colors")]
-    [SerializeField] private Color normalColor = Color.white;
-    [SerializeField] private Color selectedColor = Color.yellow;
-    [SerializeField] private Color emptyBackgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
-    [SerializeField] private Color filledBackgroundColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+    [Header("Sprites")]
+    [SerializeField] private Sprite borderSprite;
+    [SerializeField] private Sprite backgroundNormalSprite;
+    [SerializeField] private Sprite backgroundSelectedSprite;
 
     private int slotIndex = -1;
 
@@ -26,30 +24,24 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
         slotIndex = index;
     }
 
-    public void SetItem(string itemName, int count)
+    public void SetItem(int count)
     {
-        if (nameText != null)
-            nameText.text = itemName;
-
         if (countText != null)
             countText.text = count > 1 ? count.ToString() : string.Empty;
 
         if (backgroundImage != null)
-            backgroundImage.color = filledBackgroundColor;
+            backgroundImage.sprite = backgroundNormalSprite;
 
         gameObject.SetActive(true);
     }
 
     public void ShowAsEmpty()
     {
-        if (nameText != null)
-            nameText.text = string.Empty;
-
         if (countText != null)
             countText.text = string.Empty;
 
         if (backgroundImage != null)
-            backgroundImage.color = emptyBackgroundColor;
+            backgroundImage.sprite = backgroundNormalSprite;
 
         SetSelected(false);
         gameObject.SetActive(true);
@@ -63,9 +55,10 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
     public void SetSelected(bool selected)
     {
         if (borderImage != null)
-        {
-            borderImage.color = selected ? selectedColor : normalColor;
-        }
+            borderImage.sprite = borderSprite;
+
+        if (backgroundImage != null)
+            backgroundImage.sprite = selected ? backgroundSelectedSprite : backgroundNormalSprite;
     }
 
     public void OnPointerClick(PointerEventData eventData)
