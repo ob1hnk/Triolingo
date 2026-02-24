@@ -125,7 +125,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1554780055}
+    m_TransformParent: {fileID: 1797448819}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a768592906671bc448990416a3e37f3e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -133,7 +133,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a768592906671bc448990416a3e37f3e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.27
+      value: -0.26999998
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a768592906671bc448990416a3e37f3e, type: 3}
       propertyPath: m_LocalPosition.z
@@ -217,7 +217,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1554780055}
+    m_TransformParent: {fileID: 1797448819}
     m_Modifications:
     - target: {fileID: 5170110761865662019, guid: f7cf1105cf65b37459fdeb9e6e710c23, type: 3}
       propertyPath: m_Name
@@ -531,6 +531,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: WindAura
       objectReference: {fileID: 0}
+    - target: {fileID: 207745087118991948, guid: e656699b143494148a872961a9feb410, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 525212336222792600, guid: e656699b143494148a872961a9feb410, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.5
@@ -594,7 +598,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1554780055}
+    m_TransformParent: {fileID: 1797448819}
     m_Modifications:
     - target: {fileID: 5837416382139512120, guid: 9cb857e8baa086f46861807d24e244e6, type: 3}
       propertyPath: m_Name
@@ -1468,7 +1472,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1554780055}
+    m_TransformParent: {fileID: 1797448819}
     m_Modifications:
     - target: {fileID: 5170110761865662019, guid: f7cf1105cf65b37459fdeb9e6e710c23, type: 3}
       propertyPath: m_Name
@@ -1500,11 +1504,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5545124063776412921, guid: f7cf1105cf65b37459fdeb9e6e710c23, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 5545124063776412921, guid: f7cf1105cf65b37459fdeb9e6e710c23, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 5545124063776412921, guid: f7cf1105cf65b37459fdeb9e6e710c23, type: 3}
       propertyPath: m_LocalRotation.z
@@ -2174,6 +2178,8 @@ PlayableDirector:
     value: {fileID: 1554780056}
   - key: {fileID: -5060115914688613430, guid: 2f9de0241a66540489fbc362f9fd67a5, type: 2}
     value: {fileID: 898197228}
+  - key: {fileID: -5096277280905939991, guid: 2f9de0241a66540489fbc362f9fd67a5, type: 2}
+    value: {fileID: 1797448821}
   m_ExposedReferences:
     m_References: []
 --- !u!1 &1094205031
@@ -2233,17 +2239,17 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Wow! Flying!
+  m_text: "\uC6B0\uC640! \uB0A0\uC544\uAC04\uB2E4!"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 3f5c05ef14383452c99a018a291744a7, type: 2}
+  m_sharedMaterial: {fileID: -6193203460992081240, guid: 3f5c05ef14383452c99a018a291744a7, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278720813
+  m_fontColor: {r: 0.17610055, g: 0.09890653, b: 0.031565174, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -2260,13 +2266,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -3080,10 +3086,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2486766}
-  - {fileID: 744600008}
-  - {fileID: 243610840}
-  - {fileID: 9149381}
+  - {fileID: 1797448819}
   m_Father: {fileID: 1842373969}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &1554780056
@@ -3179,13 +3182,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1742802888}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 297083594}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1842373969}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1755505738 stripped
 GameObject:
@@ -3333,6 +3336,103 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1774961575}
   m_CullTransparentMesh: 1
+--- !u!1 &1797448818
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1797448819}
+  - component: {fileID: 1797448821}
+  - component: {fileID: 1797448820}
+  m_Layer: 0
+  m_Name: Shake Root
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1797448819
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797448818}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2486766}
+  - {fileID: 744600008}
+  - {fileID: 243610840}
+  - {fileID: 9149381}
+  m_Father: {fileID: 1554780055}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1797448820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797448818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23cc2b6513c847b40ac3b7d375e714d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _shakeSpeed: 2.5
+  _shakeAmount: 5
+  _fadeSpeed: 2
+--- !u!114 &1797448821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1797448818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e52de21a22b6dd44c9cc19f810c65059, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Events:
+    m_Signals:
+    - {fileID: 11400000, guid: ea90163bf3d836f43a9e29bfba9ea596, type: 2}
+    - {fileID: 11400000, guid: 573c65b5611f42b43949bfb22fb8f4c0, type: 2}
+    m_Events:
+    - m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1797448820}
+          m_TargetAssemblyTypeName: Demo.GestureDetection.WindShakeController, Assembly-CSharp
+          m_MethodName: StartShake
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    - m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1797448820}
+          m_TargetAssemblyTypeName: Demo.GestureDetection.WindShakeController, Assembly-CSharp
+          m_MethodName: StopShake
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
 --- !u!1 &1842199126
 GameObject:
   m_ObjectHideFlags: 0
@@ -3439,6 +3539,7 @@ Transform:
   - {fileID: 1173384393}
   - {fileID: 1755505741}
   - {fileID: 1554780055}
+  - {fileID: 1742802889}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1904784544 stripped
@@ -4973,4 +5074,3 @@ SceneRoots:
   - {fileID: 721241768}
   - {fileID: 1842373969}
   - {fileID: 671093180}
-  - {fileID: 1742802889}
