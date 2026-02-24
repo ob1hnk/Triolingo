@@ -31,7 +31,7 @@ public class PlayerInteraction : MonoBehaviour
     {
         _animator.SetTrigger(isGatheringHash);
         currentInteractable.Interact();
-        
+
         // Debug.Log("상호작용 수행됨: " + currentInteractable.GetInteractText());
     }
 
