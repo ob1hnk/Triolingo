@@ -310,6 +310,9 @@ namespace Demo.GestureDetection
       }
 
       ChangeState(GestureSceneState.Success);
+
+      _gesturePlayView?.FreezeGolem();
+
       director.stopped += OnSuccessTimelineStopped;
       director.Play();
       Debug.Log($"[GestureSceneController] Success Timeline started: {director.name}");

@@ -151,6 +151,12 @@ namespace Demo.GestureDetection.UI
         _gestureUIController.SetTargetGesture(newGesture);
       }
     }
+
+    // Avatar Freeze Public API
+    public void FreezeGolem()
+    {
+      _golemAnimator?.FreezePosition();
+    }
     
     /// <summary>
     /// Annotation 표시 토글
