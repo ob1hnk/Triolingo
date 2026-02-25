@@ -4,13 +4,12 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 퀘스트 로그 내 개별 퀘스트 항목.
-/// 퀘스트 이름과 그 퀘스트에 속한 모든 Phase를 표시한다.
+/// 퀘스트 이름과 그 퀘스트에 속한 모든 Objective를 표시한다.
 /// </summary>
 public class QuestItemView : MonoBehaviour
 {
     [Header("Quest Header")]
-    [SerializeField] private TextMeshProUGUI questTypeText;
-    [SerializeField] private TextMeshProUGUI questNameText;
+    [SerializeField] private TextMeshProUGUI questHeaderText;
 
     [Header("Objective List")]
     [SerializeField] private Transform objectiveListParent;
@@ -24,18 +23,8 @@ public class QuestItemView : MonoBehaviour
     {
         this.questId = questId;
 
-        if (questType == QuestType.MainQuest)
-        {
-            questTypeText.text = "<메인퀘스트>";
-            questTypeText.color = new Color(1f, 0.86f, 0f);
-        }
-        else
-        {
-            questTypeText.text = "<서브퀘스트>";
-            questTypeText.color = new Color(0.39f, 0.78f, 1f);
-        }
-
-        questNameText.text = questName;
+        string typeLabel = questType == QuestType.MainQuest ? "<메인>" : "<서브>";
+        questHeaderText.text = $"{typeLabel} {questName}";
 
         for (int i = 0; i < objectives.Count; i++)
             AddObjective(objectives[i], i == 0);

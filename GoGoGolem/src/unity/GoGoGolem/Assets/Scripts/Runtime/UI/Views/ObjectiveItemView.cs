@@ -20,7 +20,7 @@ public class ObjectiveItemView : MonoBehaviour
         this.objectiveId = objectiveId;
         this.isCompleted = completed;
         
-        objectiveText.text = text;
+        objectiveText.text = "• " + text;
         UpdateVisual();
     }
     
