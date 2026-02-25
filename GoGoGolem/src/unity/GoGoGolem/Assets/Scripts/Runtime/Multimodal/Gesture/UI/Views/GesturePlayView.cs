@@ -1,6 +1,8 @@
 using UnityEngine;
 using Mediapipe.Tasks.Vision.HandLandmarker;
 using Mediapipe.Tasks.Vision.PoseLandmarker;
+using System.Reflection;
+using UnityEngine.UI;
 
 namespace Demo.GestureDetection.UI
 {
@@ -15,6 +17,9 @@ namespace Demo.GestureDetection.UI
     
     [Header("UI")]
     [SerializeField] private GestureUIController _gestureUIController;
+
+    [Header("Hold Progress")]
+    [SerializeField] private Image _holdProgressImage;
     
     [Header("Annotations (Optional)")]
     [SerializeField] private Component _handAnnotationController;
@@ -43,6 +48,12 @@ namespace Demo.GestureDetection.UI
       // Scene 오브젝트 활성화
       if (_backgroundObjects != null)
         _backgroundObjects.SetActive(true);
+
+      if(_holdProgressImage != null)
+      {
+        _holdProgressImage.fillAmount = 0f;
+        _holdProgressImage.gameObject.SetActive(false);
+      }
       
       Debug.Log("[GesturePlayView] Initialized");
     }
@@ -56,6 +67,7 @@ namespace Demo.GestureDetection.UI
       if (!data.HasValidData)
       {
         ResetAvatar();
+        UpdateHoldProgressBar(0f, false);
         return;
       }
       
@@ -64,9 +76,22 @@ namespace Demo.GestureDetection.UI
       
       // 3. UI 업데이트 (Debounce 적용)
       UpdateGestureUI(data.GestureResult);
+      UpdateHoldProgressBar(data.HoldProgress, data.ShowProgress);
       
       // 4. Annotation 그리기
       DrawAnnotations(data.HandData, data.PoseData);
+    }
+
+    /// <summary>
+    /// 원형 진행 바 업데이트
+    /// </summary>
+    private void UpdateHoldProgressBar(float progress, bool show)
+    {
+      if (_holdProgressImage == null) return;
+
+      _holdProgressImage.gameObject.SetActive(show);
+      if (show)
+        _holdProgressImage.fillAmount = progress;
     }
     
     /// <summary>

@@ -54,6 +54,8 @@ namespace Demo.GestureDetection
     [Header("Settings")]
     [SerializeField] private float _debounceDuration = 0.2f; // UI 깜빡임 방지
     [SerializeField] private float _requiredHoldDuration = 3f; // 제스처 유지 시간
+    [Tooltip("진행 바가 나타나기 시작하는 홀드 시간 (초)")]
+    [SerializeField] private float _progressShowThreshold = 2f;
 
     // Quest 연동 (읽기용)
     [Header("Quest - Objective IDs")]
@@ -252,7 +254,8 @@ namespace Demo.GestureDetection
         targetGesture: _targetGesture,
         thresholds: _sceneConfig?.thresholds,
         onSuccess: OnGestureSuccess,
-        requiredHoldDuration:  _requiredHoldDuration
+        requiredHoldDuration:  _requiredHoldDuration,
+        progressShowThreshold: _progressShowThreshold
       );
       
       // 3. 플레이 시작
