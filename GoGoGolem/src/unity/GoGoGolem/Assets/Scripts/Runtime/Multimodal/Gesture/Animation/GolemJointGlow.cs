@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 public class GolemJointGlow : MonoBehaviour
 {
@@ -50,10 +51,12 @@ public class GolemJointGlow : MonoBehaviour
     };
 
     private List<GameObject> glowSpheres = new List<GameObject>();
+    private bool _isGlowActive = false;
 
     void Start()
     {
         CreateGlowSpheres();
+        SetGlowActive(false);
     }
 
     Material CreateLayerMaterial(float alpha)
@@ -84,7 +87,7 @@ public class GolemJointGlow : MonoBehaviour
             Transform joint = FindDeepChild(transform, jointName);
             if (joint == null)
             {
-                Debug.LogWarning($"Joint not found: {jointName}");
+                UnityEngine.Debug.LogWarning($"Joint not found: {jointName}");
                 continue;
             }
 
@@ -136,5 +139,28 @@ public class GolemJointGlow : MonoBehaviour
             if (result != null) return result;
         }
         return null;
+    }
+
+    // public API
+    // timeline 조절
+    public void ShowGlow()
+    {
+        if (_isGlowActive) return;
+        _isGlowActive = true;
+        SetGlowActive(true);
+        UnityEngine.Debug.Log("ShowGlow!!");
+    }
+
+    public void HideGlow()
+    {
+        _isGlowActive = false;
+        SetGlowActive(false);
+        UnityEngine.Debug.Log("HideGlow!!");
+    }
+
+    private void SetGlowActive(bool active)
+    {
+        foreach (var sphere in glowSpheres)
+            if (sphere != null) sphere.SetActive(active);
     }
 }

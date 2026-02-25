@@ -1353,6 +1353,8 @@ PlayableDirector:
     value: {fileID: 1986153304}
   - key: {fileID: -5678324791519482019, guid: 23324dfaaa86f5b4da2ebdfc4a58e83d, type: 2}
     value: {fileID: 1742802891}
+  - key: {fileID: -1544657530240113958, guid: 23324dfaaa86f5b4da2ebdfc4a58e83d, type: 2}
+    value: {fileID: 1827844385}
   m_ExposedReferences:
     m_References: []
 --- !u!1 &671093178
@@ -2454,6 +2456,8 @@ PlayableDirector:
     value: {fileID: 1797448821}
   - key: {fileID: 5033949133447552305, guid: 2f9de0241a66540489fbc362f9fd67a5, type: 2}
     value: {fileID: 731958012}
+  - key: {fileID: 6323229762049936638, guid: 2f9de0241a66540489fbc362f9fd67a5, type: 2}
+    value: {fileID: 1827844385}
   m_ExposedReferences:
     m_References: []
 --- !u!1 &1094205031
@@ -3484,7 +3488,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1554780055
 Transform:
   m_ObjectHideFlags: 0
@@ -3973,6 +3977,67 @@ MonoBehaviour:
         - m_Target: {fileID: 1797448820}
           m_TargetAssemblyTypeName: Demo.GestureDetection.WindShakeController, Assembly-CSharp
           m_MethodName: StopShake
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+--- !u!1 &1827844382 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9049442038488592871, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+  m_PrefabInstance: {fileID: 3758740566829965695}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1827844384 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8867601303741291691, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+  m_PrefabInstance: {fileID: 3758740566829965695}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1827844382}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7308f4ef5f936045afb990265dce4fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1827844385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1827844382}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e52de21a22b6dd44c9cc19f810c65059, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Events:
+    m_Signals:
+    - {fileID: 11400000, guid: 07e519e258e4167458b68fe6b97b919b, type: 2}
+    - {fileID: 11400000, guid: 1dcf555b10dac924aa4ef426f0a91125, type: 2}
+    m_Events:
+    - m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1827844384}
+          m_TargetAssemblyTypeName: GolemJointGlow, Assembly-CSharp
+          m_MethodName: ShowGlow
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    - m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1827844384}
+          m_TargetAssemblyTypeName: GolemJointGlow, Assembly-CSharp
+          m_MethodName: HideGlow
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -4768,7 +4833,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 9049442038488592871, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1827844385}
   m_SourcePrefab: {fileID: 100100000, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
 --- !u!1 &5158692484287934010
 GameObject:
