@@ -41,7 +41,6 @@ namespace Demo.GestureDetection
     [SerializeField] private UI.GesturePlayView _gesturePlayView;
 
     [Header("Tutorial")]
-    [SerializeField] private Tutorial.GestureTutorialManager _tutorialManager;
     [Tooltip("OBJ-02 전용 튜토리얼 Timeline. null이면 튜토리얼 없이 바로 Playing.")]
     [SerializeField] private PlayableDirector _tutorialDirector;
 
@@ -133,9 +132,7 @@ namespace Demo.GestureDetection
       _targetGesture = _sceneConfig != null ? _sceneConfig.targetGesture : GestureType.Wind;
       
       // OBJ-02일 때만 튜토리얼 먼저 실행
-      bool needsTutorial = _tutorialManager != null
-        && _tutorialDirector != null
-        && _currentObjectiveID == _objectiveID_NoFly;
+      bool needsTutorial =  _tutorialDirector != null && _currentObjectiveID == _objectiveID_NoFly;
 
       if (needsTutorial)
         EnterTutorialState();

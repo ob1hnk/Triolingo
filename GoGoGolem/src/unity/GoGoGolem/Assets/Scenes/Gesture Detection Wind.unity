@@ -2045,7 +2045,6 @@ Transform:
   - {fileID: 1266644735}
   - {fileID: 1089892970}
   - {fileID: 1596214717}
-  - {fileID: 1303811517}
   - {fileID: 1966528229}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3003,50 +3002,6 @@ MonoBehaviour:
   _pulseSpeed: 2
   _pulseIntensity: 0.2
   _targetGesture: 1
---- !u!1 &1303811516
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1303811517}
-  - component: {fileID: 1303811518}
-  m_Layer: 0
-  m_Name: TutorialManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1303811517
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1303811516}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 867750020}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1303811518
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1303811516}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7edbf3e488192e942817be3e4d34a9b0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1383265119
 GameObject:
   m_ObjectHideFlags: 0
@@ -4463,7 +4418,6 @@ MonoBehaviour:
   _sceneConfig: {fileID: 11400000, guid: 13daab74e7124fa4ca19cb8ac20ed685, type: 2}
   _gestureDetector: {fileID: 1596214718}
   _gesturePlayView: {fileID: 743251078}
-  _tutorialManager: {fileID: 1303811518}
   _tutorialDirector: {fileID: 1407397756}
   _successDirector1: {fileID: 562553841}
   _successDirector2: {fileID: 1093221657}
