@@ -26,6 +26,7 @@ namespace Demo.GestureDetection.UI
     // 성공 판정 (3초 유지)
     private float _holdStartTime = -1f;
     private float _requiredHoldDuration = 3f;
+    private float _progressShowThreshold = 2f;
     private bool _successTriggered = false;
     
     // 성공 콜백
@@ -40,13 +41,15 @@ namespace Demo.GestureDetection.UI
       GestureType targetGesture,
       GestureThresholdData thresholds,
       System.Action<GestureType> onSuccess,
-      float requiredHoldDuration = 3f)
+      float requiredHoldDuration = 3f,
+      float progressShowThreshold = 2f)
     {
       _view = view;
       _gestureDetector = detector;
       _targetGesture = targetGesture;
       _onGestureSuccess = onSuccess;
       _requiredHoldDuration = requiredHoldDuration;
+      _progressShowThreshold = progressShowThreshold;
 
       // 상태 초기화
       _holdStartTime = -1f;
@@ -62,7 +65,7 @@ namespace Demo.GestureDetection.UI
         _gestureDetector.OnLandmarksUpdated += OnLandmarksUpdated;
       }
       
-      Debug.Log($"[GesturePlayPresenter] Initialized - Target: {targetGesture}, HoldDuration: {requiredHoldDuration}s");
+      UnityEngine.Debug.Log($"[GesturePlayPresenter] Initialized - Target: {targetGesture}, HoldDuration: {requiredHoldDuration}s");
     }
     
     /// <summary>
@@ -73,7 +76,7 @@ namespace Demo.GestureDetection.UI
       if (_gestureDetector != null)
       {
         _gestureDetector.Play();
-        Debug.Log("[GesturePlayPresenter] Play started");
+        UnityEngine.Debug.Log("[GesturePlayPresenter] Play started");
       }
     }
     
@@ -113,7 +116,7 @@ namespace Demo.GestureDetection.UI
         if (_holdStartTime < 0f)
         {
           _holdStartTime = Time.time;
-          Debug.Log($"[GesturePlayPresenter] Hold started: {gestureResult.Type}");
+          UnityEngine.Debug.Log($"[GesturePlayPresenter] Hold started: {gestureResult.Type}");
         }
         else
         {
@@ -123,7 +126,7 @@ namespace Demo.GestureDetection.UI
           if (holdDuration >= _requiredHoldDuration)
           {
             _successTriggered = true;
-            Debug.Log($"[GesturePlayPresenter] Gesture SUCCESS! Held for {holdDuration:F1}s");
+            UnityEngine.Debug.Log($"[GesturePlayPresenter] Gesture SUCCESS! Held for {holdDuration:F1}s");
             _onGestureSuccess?.Invoke(gestureResult.Type);
           }
         }
@@ -141,7 +144,8 @@ namespace Demo.GestureDetection.UI
         HandData = handResult,
         GestureResult = gestureResult,
         HasValidData = true,
-        HoldProgress = CalculateHoldProgress()
+        HoldProgress = CalculateHoldProgress(),
+        ShowProgress = ShouldShowProgress()
       });
       
       // 5. 메모리 정리 (Pose segmentation masks)
@@ -155,7 +159,7 @@ namespace Demo.GestureDetection.UI
     {
       if (_holdStartTime >= 0f)
       {
-        Debug.Log("[GesturePlayPresenter] Hold interrupted");
+        UnityEngine.Debug.Log("[GesturePlayPresenter] Hold interrupted");
         _holdStartTime = -1f;
       }
     }
@@ -170,6 +174,12 @@ namespace Demo.GestureDetection.UI
       
       float elapsed = Time.time - _holdStartTime;
       return Mathf.Clamp01(elapsed / _requiredHoldDuration);
+    }
+
+    private bool ShouldShowProgress()
+    {
+      if(_holdStartTime < 0f || _successTriggered) return false;
+      return (Time.time - _holdStartTime) >= _progressShowThreshold;
     }
     
     /// <summary>
@@ -221,7 +231,7 @@ namespace Demo.GestureDetection.UI
       _targetGesture = newGesture;
       _gestureRecognizer?.SetActiveGesture(newGesture);
       _view?.SetTargetGesture(newGesture);
-      Debug.Log($"[GesturePlayPresenter] Target gesture changed to: {newGesture}");
+      UnityEngine.Debug.Log($"[GesturePlayPresenter] Target gesture changed to: {newGesture}");
     }
     
     /// <summary>
@@ -241,7 +251,7 @@ namespace Demo.GestureDetection.UI
         _gestureDetector.Stop();
       }
       
-      Debug.Log("[GesturePlayPresenter] Cleaned up");
+      UnityEngine.Debug.Log("[GesturePlayPresenter] Cleaned up");
     }
   }
 }

@@ -214,6 +214,9 @@ namespace Demo.GestureDetection
     private float _fingerLayerWeight = 0f;
     private float _fingerLayerFadeSpeed = 5f;
 
+    // 성공 timeline 멈춤 제어용
+    private bool _isFrozen = false;
+
     // ─────────────────────────────────────────────────────────────────────────
     // Unity lifecycle
     // ─────────────────────────────────────────────────────────────────────────
@@ -318,25 +321,28 @@ namespace Demo.GestureDetection
         _lastDataTime  = Time.time;
       }
 
-      if (_hasCachedData && (Time.time - _lastDataTime <= _dataTimeout))
+      if (!_isFrozen)
       {
-        ProcessMovement(snap);
-
-        if (_fingerLayerIndex >= 0)
+        if (_hasCachedData && (Time.time - _lastDataTime <= _dataTimeout))
         {
-          _fingerLayerWeight = Mathf.Lerp(_fingerLayerWeight, 0f, Time.deltaTime * _fingerLayerFadeSpeed);
-          _animator.SetLayerWeight(_fingerLayerIndex, _fingerLayerWeight);
+          ProcessMovement(snap);
+
+          if (_fingerLayerIndex >= 0)
+          {
+            _fingerLayerWeight = Mathf.Lerp(_fingerLayerWeight, 0f, Time.deltaTime * _fingerLayerFadeSpeed);
+            _animator.SetLayerWeight(_fingerLayerIndex, _fingerLayerWeight);
+          }
         }
-      }
-      else
-      {
-        // 화면 밖 → rest position으로 부드럽게 복귀
-        ReturnTargetsToRest();
-
-        if (_fingerLayerIndex >= 0)
+        else
         {
-          _fingerLayerWeight = Mathf.Lerp(_fingerLayerWeight, 1f, Time.deltaTime * _fingerLayerFadeSpeed);
-          _animator.SetLayerWeight(_fingerLayerIndex, _fingerLayerWeight);
+          // 화면 밖 → rest position으로 부드럽게 복귀
+          ReturnTargetsToRest();
+
+          if (_fingerLayerIndex >= 0)
+          {
+            _fingerLayerWeight = Mathf.Lerp(_fingerLayerWeight, 1f, Time.deltaTime * _fingerLayerFadeSpeed);
+            _animator.SetLayerWeight(_fingerLayerIndex, _fingerLayerWeight);
+          }
         }
       }
 
@@ -597,8 +603,19 @@ namespace Demo.GestureDetection
     // ─────────────────────────────────────────────────────────────────────────
     // 공통 유틸
     // ─────────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 성공 타임라인 진입 시 현재 손 위치를 고정
+    /// </summary>
+    public void FreezePosition()
+    {
+      _isFrozen = true;
+      Debug.Log("[GolemLandmarkAnimator] Position FROZEN");
+    }
+
     public void ResetToIdle()
     {
+      _isFrozen = false;
       if (_leftArmIK  != null) _leftArmIK.weight  = 0f;
       if (_rightArmIK != null) _rightArmIK.weight = 0f;
       if (_fingerLayerIndex >= 0) _animator.SetLayerWeight(_fingerLayerIndex, 1f);

@@ -17,11 +17,17 @@ namespace Demo.GestureDetection
 
   /// <summary>
   /// 제스처 씬 전체 흐름 제어 Controller
-  /// - 상태 관리
-  /// - 이벤트 버스 통신
+  ///
   /// - Entry
-  ///     ├─ IsFirstTime? → Tutorial → Playing(3초) → Success → Exit
-  ///     └─ (no)                    → Playing(3초) → Success → Exit
+  ///     ├─ OBJ-02 → Tutorial → Playing(3초) → Success(Director1) → Exit
+  ///     └─ OBJ-04            → Playing(3초) → Success(Director2) → Exit
+  /// 
+  /// [튜토리얼 재시청]
+  /// Playing 중 왼쪽 위 버튼 → RewatchTutorial() → Tutorial → Playing
+  /// 
+  /// [Quest 연동 - TODO: 한나님 작업 완료 후]
+  /// - Managers.Quest 연동 활성화
+  /// - _requestCompletePhaseEvent SO 연결
   /// </summary>
   public class GestureSceneController : MonoBehaviour
   {
@@ -35,26 +41,51 @@ namespace Demo.GestureDetection
     [SerializeField] private UI.GesturePlayView _gesturePlayView;
 
     [Header("Tutorial")]
-    [SerializeField] private Tutorial.GestureTutorialManager _tutorialManager;
-    [Tooltip("씬별 튜토리얼 Timeline. null이면 튜토리얼 없이 바로 Playing.")]
+    [Tooltip("OBJ-02 전용 튜토리얼 Timeline. null이면 튜토리얼 없이 바로 Playing.")]
     [SerializeField] private PlayableDirector _tutorialDirector;
 
     [Header("Success")]
-    [Tooltip("성공 연출 Timeline. null이면 바로 Exit.")]
-    [SerializeField] private PlayableDirector _successDirector;
+    [Tooltip("OBJ-02(NoFly) 성공 연출 Timeline.")]
+    [SerializeField] private PlayableDirector _successDirector1;
+    [Tooltip("OBJ-04(Fly) 성공 연출 Timeline.")]
+    [SerializeField] private PlayableDirector _successDirector2;
 
     [Header("Settings")]
     [SerializeField] private float _debounceDuration = 0.2f; // UI 깜빡임 방지
     [SerializeField] private float _requiredHoldDuration = 3f; // 제스처 유지 시간
+    [Tooltip("진행 바가 나타나기 시작하는 홀드 시간 (초)")]
+    [SerializeField] private float _progressShowThreshold = 2f;
 
-    // Presenter
-    private UI.GesturePlayPresenter _gesturePlayPresenter;
+    // Quest 연동 (읽기용)
+    [Header("Quest - Objective IDs")]
+    [SerializeField] private string _objectiveID_NoFly = "MQ-02-OBJ-02";
+    [SerializeField] private string _objectiveID_Fly   = "MQ-02-OBJ-04";
+
+    // Quest 연동 (쓰기용 - SO 이벤트 버스)
+    [Header("Quest - Write (한나님 작업 완료 후 연결)")]
+    [Tooltip("QuestManager의 requestCompletePhaseEvent와 동일한 SO")]
+    [SerializeField] private CompletePhaseGameEvent _requestCompletePhaseEvent;
+    [SerializeField] private string _questID      = "MQ-02";
+    [SerializeField] private string _phaseID_NoFly = "MQ-02-P05";
+    [SerializeField] private string _phaseID_Fly   = "MQ-02-P09";
+
+    // 씬 오브젝트
+    [Header("Scene Objects (Quest-Driven)")]
+    [SerializeField] private GameObject _flyItem;    // OBJ-04에서 활성화
+    [SerializeField] private GameObject _noFlyItem;  // OBJ-02에서 활성화
     
-    // 씬 상태
-    private GestureSceneState _state = GestureSceneState.Entry;
+    // 테스트용 ─────────────────────────────────────────
+    [Header("--- DEBUG (테스트용) ---")]
+    [Tooltip("체크하면 Managers.Quest 무시하고 아래 설정으로 강제 적용")]
+    [SerializeField] private bool _debugOverride = true;
+    [Tooltip("true = OBJ-04(Fly), false = OBJ-02(NoFly)")]
+    [SerializeField] private bool _debugIsFly = false;
 
-    // 현재 타겟 제스처 (Config 또는 직접 설정)
+    // 내부 상태
+    private UI.GesturePlayPresenter _gesturePlayPresenter;
+    private GestureSceneState _state = GestureSceneState.Entry;
     private GestureType _targetGesture;
+    private string _currentObjectiveID;
 
     private void Start()
     {
@@ -68,6 +99,9 @@ namespace Demo.GestureDetection
       {
         ExitScene();
       }
+      // DEBUG: Enter 키로 강제 성공
+      if (_debugOverride && Input.GetKeyDown(KeyCode.Return) && _state == GestureSceneState.Playing)
+        OnGestureSuccess(_targetGesture);
     }
     
     private void OnDestroy()
@@ -80,9 +114,6 @@ namespace Demo.GestureDetection
     
     // ========== 상태 전환 메서드 ==========
     
-    /// <summary>
-    /// Entry 상태 진입
-    /// </summary>
     private void EnterEntryState()
     {
       ChangeState(GestureSceneState.Entry);
@@ -93,13 +124,15 @@ namespace Demo.GestureDetection
         Debug.LogError("[GestureSceneController] Component validation failed!");
         return;
       }
+
+      // Quest 기반 씬 오브젝트 초기화
+      SetupSceneObjectsByQuest();
       
       // Config에서 타겟 제스처 로드
       _targetGesture = _sceneConfig != null ? _sceneConfig.targetGesture : GestureType.Wind;
       
-      bool needsTutorial = _tutorialManager != null
-                && _tutorialDirector != null
-                && _tutorialManager.IsFirstTime(_targetGesture);
+      // OBJ-02일 때만 튜토리얼 먼저 실행
+      bool needsTutorial =  _tutorialDirector != null && _currentObjectiveID == _objectiveID_NoFly;
 
       if (needsTutorial)
         EnterTutorialState();
@@ -108,15 +141,52 @@ namespace Demo.GestureDetection
     }
 
     /// <summary>
-    /// Tutorial 상태 진입
+    /// Quest 세팅
+    /// </summary>
+    private void SetupSceneObjectsByQuest()
+    {
+
+      // ── 테스트 모드: Inspector에서 직접 제어 ──
+      if (_debugOverride)
+      {
+        string objectiveID = _debugIsFly ? _objectiveID_Fly : _objectiveID_NoFly;
+        ApplyObjectiveSetup(objectiveID);
+        Debug.LogWarning($"[GestureSceneController] DEBUG OVERRIDE 활성 → {objectiveID}");
+        return;
+      }
+
+      // ── 실제 Quest 연동 (한나님 작업 완료 후 사용) ──
+      if (Managers.Quest == null)
+      {
+        Debug.LogWarning("[GestureSceneController] Managers.Quest가 없습니다. NoFly 기본값으로 진행합니다.");
+        ApplyObjectiveSetup(_objectiveID_NoFly);
+        return;
+      }
+
+      if (Managers.Quest.IsQuestActive(_objectiveID_Fly) ||
+        Managers.Quest.IsQuestCompleted(_objectiveID_NoFly))
+        ApplyObjectiveSetup(_objectiveID_Fly);
+      else
+        ApplyObjectiveSetup(_objectiveID_NoFly);
+    }
+
+    private void ApplyObjectiveSetup(string objectiveID)
+    {
+      _currentObjectiveID = objectiveID;
+      bool isFly = (objectiveID == _objectiveID_Fly);
+      if (_flyItem != null)   _flyItem.SetActive(isFly);
+      if (_noFlyItem != null) _noFlyItem.SetActive(!isFly);
+      Debug.Log($"[GestureSceneController] Objective={objectiveID} → FlyItem={isFly}, NoFlyItem={!isFly}");
+    }
+
+    /// <summary>
+    /// Tutorial
     /// </summary>
     private void EnterTutorialState()
     {
       ChangeState(GestureSceneState.Tutorial);
-
       _tutorialDirector.stopped += OnTutorialTimelineStopped;
       _tutorialDirector.Play();
-
       Debug.Log("[GestureSceneController] Tutorial Timeline started");
     }
 
@@ -126,25 +196,41 @@ namespace Demo.GestureDetection
     private void OnTutorialTimelineStopped(PlayableDirector _)
     {
       UnsubscribeTutorialEvents();
-      _tutorialManager.MarkAsLearned(_targetGesture);
       EnterPlayingState();
-    }
-
-    /// <summary>
-    /// 스킵 버튼 → Timeline 마지막 프레임으로 점프 → stopped 이벤트 자동 발행
-    /// </summary>
-    public void SkipTutorial()
-    {
-      if (_state != GestureSceneState.Tutorial || _tutorialDirector == null) return;
-        _tutorialDirector.time = _tutorialDirector.duration;
-        _tutorialDirector.Evaluate();
-        _tutorialDirector.Stop();  // stopped 이벤트 발행
     }
 
     private void UnsubscribeTutorialEvents()
     {
       if (_tutorialDirector != null)
         _tutorialDirector.stopped -= OnTutorialTimelineStopped;
+    }
+
+    /// <summary>
+    /// 스킵 버튼: Timeline 마지막 프레임으로 점프 → stopped 이벤트 자동 발행
+    /// </summary>
+    public void SkipTutorial()
+    {
+      if (_state != GestureSceneState.Tutorial || _tutorialDirector == null) return;
+        _tutorialDirector.time = _tutorialDirector.duration;
+        _tutorialDirector.Evaluate();
+        _tutorialDirector.Stop();
+    }
+
+    /// <summary>
+    /// 재시청 버튼: Playing 중 언제든 튜토리얼로 돌아갈 수 있음.
+    /// Presenter를 일시 정지하고 Tutorial 상태로 전환.
+    /// </summary>
+    public void RewatchTutorial()
+    {
+      if (_tutorialDirector == null) return;
+      if (_state != GestureSceneState.Playing) return;
+
+      // Presenter 일시 정지 (완전 Cleanup 아님 — 재생 재개를 위해 유지)
+      _gesturePlayPresenter?.Cleanup();
+      _gesturePlayPresenter = null;
+
+      _tutorialDirector.time = 0;
+      EnterTutorialState();
     }
     
     /// <summary>
@@ -165,7 +251,8 @@ namespace Demo.GestureDetection
         targetGesture: _targetGesture,
         thresholds: _sceneConfig?.thresholds,
         onSuccess: OnGestureSuccess,
-        requiredHoldDuration:  _requiredHoldDuration
+        requiredHoldDuration:  _requiredHoldDuration,
+        progressShowThreshold: _progressShowThreshold
       );
       
       // 3. 플레이 시작
@@ -183,13 +270,39 @@ namespace Demo.GestureDetection
       _gesturePlayPresenter?.Cleanup();
       _gesturePlayPresenter = null;
 
+      NotifyQuestPhaseComplete();
       EnterSuccessState();
+    }
+
+    // Quest 완료 알림
+
+    private void NotifyQuestPhaseComplete()
+    {
+      if (_requestCompletePhaseEvent == null)
+      {
+        Debug.LogWarning("[GestureSceneController] CompletePhaseGameEvent가 연결되지 않았습니다. Quest 진행이 업데이트되지 않습니다.");
+        return;
+      }
+
+      string phaseID = (_currentObjectiveID == _objectiveID_Fly) ? _phaseID_Fly : _phaseID_NoFly;
+
+      _requestCompletePhaseEvent.Raise(new CompletePhaseRequest
+      {
+        QuestID     = _questID,
+        ObjectiveID = _currentObjectiveID,
+        PhaseID     = phaseID
+      });
+
+      Debug.Log($"[GestureSceneController] Phase 완료 요청: Quest={_questID}, Obj={_currentObjectiveID}, Phase={phaseID}");
     }
 
     private void EnterSuccessState()
     {
-      // Success Timeline이 없으면 바로 Exit
-      if (_successDirector == null)
+      PlayableDirector director = (_currentObjectiveID == _objectiveID_Fly)
+        ? _successDirector2
+        : _successDirector1;
+
+      if (director == null)
       {
         Debug.Log("[GestureSceneController] No Success Timeline → Exit");
         ExitScene();
@@ -198,22 +311,25 @@ namespace Demo.GestureDetection
 
       ChangeState(GestureSceneState.Success);
 
-      _successDirector.stopped += OnSuccessTimelineStopped;
-      _successDirector.Play();
+      _gesturePlayView?.FreezeGolem();
 
-      Debug.Log("[GestureSceneController] Success Timeline started");
+      director.stopped += OnSuccessTimelineStopped;
+      director.Play();
+      Debug.Log($"[GestureSceneController] Success Timeline started: {director.name}");
     }
 
-    private void OnSuccessTimelineStopped(PlayableDirector _)
+    private void OnSuccessTimelineStopped(PlayableDirector director)
     {
-      UnsubscribeSuccessEvents();
+      director.stopped -= OnSuccessTimelineStopped;
       ExitScene();
     }
 
     private void UnsubscribeSuccessEvents()
     {
-      if (_successDirector != null)
-        _successDirector.stopped -= OnSuccessTimelineStopped;
+      if (_successDirector1 != null)
+        _successDirector1.stopped -= OnSuccessTimelineStopped;
+      if (_successDirector2 != null)
+        _successDirector2.stopped -= OnSuccessTimelineStopped;
     }
     
     /// <summary>
@@ -233,7 +349,7 @@ namespace Demo.GestureDetection
       GestureSceneEvents.RaiseGestureSceneExit();
       Debug.Log("[GestureSceneController] Scene exit requested");
       
-      // TODO: 실제 씬 전환
+      // TODO: 실제 씬 전환. 한나님
       // SceneManager.LoadScene("MainScene");
     }
     
