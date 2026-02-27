@@ -71,6 +71,9 @@ public class GolemDialogueSceneController : MonoBehaviour
         if (_isInDialogueMode) return;
         _isInDialogueMode = true;
 
+        // 게임 상태 알림 (InputModeController가 Q키 등 불필요한 입력을 차단하도록)
+        GameStateManager.Instance?.ChangeState(GameState.Dialogue);
+
         // 1. 대화 카메라로 전환
         if (dialogueVirtualCamera != null)
             dialogueVirtualCamera.Priority = dialogueCamPriority;
@@ -134,6 +137,9 @@ public class GolemDialogueSceneController : MonoBehaviour
 
         uiView.Hide();
         _isInDialogueMode = false;
+
+        // 게임 상태 복구
+        GameStateManager.Instance?.ChangeState(GameState.Gameplay);
     }
 
     // ── 이벤트 핸들러 ─────────────────────────────────────

@@ -82,6 +82,10 @@ public class InputModeController : MonoBehaviour
                 EnableUIInput();
                 break;
 
+            case GameState.Dialogue:
+                // 대화 중에는 추가 입력 없음 (Space/Esc는 GolemDialogueSceneController가 직접 처리)
+                break;
+
             case GameState.Paused:
                 // 일시정지 시에는 특정 입력만 활성화
                 break;
@@ -98,6 +102,10 @@ public class InputModeController : MonoBehaviour
 
             case GameState.InventoryUI:
                 DisableUIInput();
+                break;
+
+            case GameState.Dialogue:
+                DisableGameplayInput();
                 break;
         }
     }
