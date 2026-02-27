@@ -94,6 +94,12 @@ public class QuestUIPresenter : MonoBehaviour
         view.Hide();
     }
 
+    public void Toggle()
+    {
+        if (_isVisible) Hide();
+        else if (GameStateManager.Instance.CurrentState == GameState.Gameplay) Show();
+    }
+
     private void OnQuestStarted(Quest quest)
     {
         view.AddQuestEntry(quest.QuestID, quest.QuestType, quest.QuestName, quest.GetAllObjectives());
