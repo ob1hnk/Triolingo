@@ -2,84 +2,58 @@ using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
 
+/// <summary>
+/// 퀘스트 로그 내 개별 퀘스트 항목.
+/// 퀘스트 이름과 그 퀘스트에 속한 모든 Objective를 표시한다.
+/// </summary>
 public class QuestItemView : MonoBehaviour
 {
     [Header("Quest Header")]
-    [SerializeField] private TextMeshProUGUI questTypeText;
-    [SerializeField] private TextMeshProUGUI questNameText;
-    
-    [Header("Objectives")]
+    [SerializeField] private TextMeshProUGUI questHeaderText;
+
+    [Header("Objective List")]
     [SerializeField] private Transform objectiveListParent;
     [SerializeField] private GameObject objectiveItemPrefab;
-    
+
     private string questId;
     private Dictionary<string, ObjectiveItemView> objectiveViews = new Dictionary<string, ObjectiveItemView>();
-    
-    /// <summary>
-    /// 퀘스트 아이템 초기화
-    /// </summary>
-    public void Initialize(string questId, QuestType questType, string questName)
+    private List<string> objectiveOrder = new List<string>();
+
+    public void Initialize(string questId, QuestType questType, string questName, List<QuestObjective> objectives)
     {
         this.questId = questId;
-        
-        // 퀘스트 타입 설정
-        if (questType == QuestType.MainQuest)
-        {
-            questTypeText.text = "<메인퀘스트>";
-            questTypeText.color = new Color(1f, 0.86f, 0f); // 노란색
-        }
-        else
-        {
-            questTypeText.text = "<서브퀘스트>";
-            questTypeText.color = new Color(0.39f, 0.78f, 1f); // 하늘색
-        }
-        
-        // 퀘스트 이름 설정
-        questNameText.text = questName;
+
+        string typeLabel = questType == QuestType.MainQuest ? "<메인>" : "<서브>";
+        questHeaderText.text = $"{typeLabel} {questName}";
+
+        for (int i = 0; i < objectives.Count; i++)
+            AddObjective(objectives[i], i == 0);
     }
-    
-    /// <summary>
-    /// 목표 추가
-    /// </summary>
-    public void AddObjective(string objectiveId, string objectiveText)
+
+    private void AddObjective(QuestObjective objective, bool visible)
     {
-        if (objectiveViews.ContainsKey(objectiveId))
-        {
-            Debug.LogWarning($"Objective {objectiveId} already exists.");
-            return;
-        }
-        
-        GameObject objectiveObj = Instantiate(objectiveItemPrefab, objectiveListParent);
-        ObjectiveItemView objectiveView = objectiveObj.GetComponent<ObjectiveItemView>();
-        
-        if (objectiveView != null)
-        {
-            objectiveView.Initialize(objectiveId, objectiveText, false);
-            objectiveViews.Add(objectiveId, objectiveView);
-        }
+        var obj = Instantiate(objectiveItemPrefab, objectiveListParent);
+        var objectiveView = obj.GetComponent<ObjectiveItemView>();
+
+        string displayText = string.IsNullOrEmpty(objective.Description) ? objective.ObjectiveID : objective.Description;
+        objectiveView.Initialize(objective.ObjectiveID, displayText, objective.IsCompleted);
+        objectiveView.SetVisible(visible);
+        objectiveViews[objective.ObjectiveID] = objectiveView;
+        objectiveOrder.Add(objective.ObjectiveID);
     }
-    
-    /// <summary>
-    /// 목표 완료 처리
-    /// </summary>
-    public void CompleteObjective(string objectiveId)
+
+    public void SetObjectiveCompleted(string objectiveId)
     {
-        if (objectiveViews.TryGetValue(objectiveId, out ObjectiveItemView objectiveView))
+        if (!objectiveViews.TryGetValue(objectiveId, out var objectiveView)) return;
+
+        objectiveView.SetCompleted(true);
+
+        int idx = objectiveOrder.IndexOf(objectiveId);
+        if (idx >= 0 && idx + 1 < objectiveOrder.Count)
         {
-            objectiveView.SetCompleted(true);
+            var nextId = objectiveOrder[idx + 1];
+            if (objectiveViews.TryGetValue(nextId, out var nextView))
+                nextView.SetVisible(true);
         }
-    }
-    
-    /// <summary>
-    /// 모든 목표 제거
-    /// </summary>
-    public void ClearObjectives()
-    {
-        foreach (var objectiveView in objectiveViews.Values)
-        {
-            if (objectiveView != null)
-                Destroy(objectiveView.gameObject);
-        }
-        objectiveViews.Clear();
     }
 }

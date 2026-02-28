@@ -9,12 +9,19 @@ public class InventoryManager : MonoBehaviour
     [SerializeField] private StringGameEvent requestAcquireItemEvent;
 
     public InventoryLogic Logic { get; private set; }
-    public ItemDatabase ItemDB { get; private set; }
+    public ItemDatabaseSO ItemDB { get; private set; }
 
     public void Init()
     {
-        ItemDB = new ItemDatabase();
-        ItemDB.LoadDatabase(itemCatalogue);
+        if (itemCatalogue == null)
+        {
+            Debug.LogError("[InventoryManager] itemCatalogue이 Inspector에 연결되지 않았습니다.");
+        }
+        else
+        {
+            ItemDB = itemCatalogue;
+            ItemDB.Initialize();
+        }
 
         Logic = new InventoryLogic();
     }

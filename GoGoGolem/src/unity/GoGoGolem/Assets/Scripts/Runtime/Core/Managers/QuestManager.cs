@@ -45,8 +45,6 @@ public class QuestManager : MonoBehaviour
             requestStartQuestEvent.Register(HandleStartQuestRequest);
         if (requestCompletePhaseEvent != null)
             requestCompletePhaseEvent.Register(HandleCompletePhaseRequest);
-        if (onQuestCompletedEvent != null)
-            onQuestCompletedEvent.Register(OnQuestCompleted);
         if (onObjectiveCompletedEvent != null)
             onObjectiveCompletedEvent.Register(OnObjectiveCompleted);
         if (onPhaseCompletedEvent != null)
@@ -59,8 +57,6 @@ public class QuestManager : MonoBehaviour
             requestStartQuestEvent.Unregister(HandleStartQuestRequest);
         if (requestCompletePhaseEvent != null)
             requestCompletePhaseEvent.Unregister(HandleCompletePhaseRequest);
-        if (onQuestCompletedEvent != null)
-            onQuestCompletedEvent.Unregister(OnQuestCompleted);
         if (onObjectiveCompletedEvent != null)
             onObjectiveCompletedEvent.Unregister(OnObjectiveCompleted);
         if (onPhaseCompletedEvent != null)
@@ -69,10 +65,10 @@ public class QuestManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
+#if !UNITY_EDITOR
         if (autoSave && isInitialized)
-        {
             SaveProgress();
-        }
+#endif
     }
 
     #endregion
@@ -108,7 +104,9 @@ public class QuestManager : MonoBehaviour
 
         if (loadOnStart)
         {
+#if !UNITY_EDITOR
             LoadProgress();
+#endif
         }
     }
 
@@ -208,7 +206,11 @@ public class QuestManager : MonoBehaviour
         // Quest 완료 체크
         if (quest.IsCompleted())
         {
+            progressTracker.MoveToCompleted(quest);
             onQuestCompletedEvent?.Raise(quest);
+
+            if (showDebugLogs)
+                Debug.Log($"[QuestManager] Quest Completed: {quest.QuestName}");
         }
 
         if (autoSave)
@@ -383,21 +385,12 @@ public class QuestManager : MonoBehaviour
     public void DeleteSaveFile()
     {
         saveSystem?.DeleteSaveFile();
+        progressTracker?.ClearAll();
     }
 
     #endregion
 
     #region Event Handlers (Notifications)
-
-    private void OnQuestCompleted(Quest quest)
-    {
-        progressTracker.MoveToCompleted(quest);
-
-        if (showDebugLogs)
-        {
-            Debug.Log($"[QuestManager] Quest Completed: {quest.QuestName}");
-        }
-    }
 
     private void OnObjectiveCompleted(QuestObjective objective)
     {

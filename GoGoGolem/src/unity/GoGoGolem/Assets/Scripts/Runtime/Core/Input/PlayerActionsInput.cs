@@ -39,4 +39,6 @@ public class PlayerActionsInput : MonoBehaviour, GameInputActions.IPlayerActions
 
         GatherPressed = true;
     }
+
+    public void OnInteract(InputAction.CallbackContext context) { }
 }

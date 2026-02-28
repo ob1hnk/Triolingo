@@ -9,6 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 18f7e5e1e748f477e8e375dde62694f1, type: 3}
   m_Name: OnObjectiveCompleted
-  m_EditorClassIdentifier: Assembly-CSharp::QuestObjectiveGameEvent
+  m_EditorClassIdentifier: 
