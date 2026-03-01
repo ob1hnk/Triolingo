@@ -12,15 +12,15 @@ using UnityEngine;
 /// 초기 상태: Collider는 비활성(낮에는 잠들기 불가)
 /// RoomStateManager가 낮→밤 전환 후 Collider를 활성화
 /// </summary>
-public class BedInteraction : MonoBehaviour, IInteractable
+public class BedInteraction : MonoBehaviour//, IInteractable
 {
-    public event Action OnSlept;
+    // public event Action OnSlept;
 
-    public string GetInteractText() => "잠들기 (E)";
+    // public string GetInteractText() => "잠들기 (E)";
 
-    public void Interact()
-    {
-        Debug.Log("[BedInteraction] 잠들기 시작");
-        OnSlept?.Invoke();
-    }
+    // public void Interact()
+    // {
+    //     Debug.Log("[BedInteraction] 잠들기 시작");
+    //     OnSlept?.Invoke();
+    // }
 }

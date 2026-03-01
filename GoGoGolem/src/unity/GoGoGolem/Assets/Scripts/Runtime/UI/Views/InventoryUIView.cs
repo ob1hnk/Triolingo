@@ -147,7 +147,7 @@ public class InventoryUIView : MonoBehaviour
         {
             if (index >= slots.Count) break;
 
-            slots[index].SetItem(item.Value);
+            slots[index].SetItem();
             indexToItemID[index] = item.Key;
             index++;
         }

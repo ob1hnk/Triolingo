@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class QuestUIPresenter : MonoBehaviour
 {
-    [SerializeField] private QuestUIView view;
+    [SerializeField] private QuestLogView view;
 
     [Header("Event Channels")]
     [SerializeField] private QuestGameEvent onQuestStartedEvent;
@@ -24,7 +24,7 @@ public class QuestUIPresenter : MonoBehaviour
     private void Awake()
     {
         if (view == null)
-            view = GetComponent<QuestUIView>();
+            view = GetComponent<QuestLogView>();
     }
 
     private void Start()
