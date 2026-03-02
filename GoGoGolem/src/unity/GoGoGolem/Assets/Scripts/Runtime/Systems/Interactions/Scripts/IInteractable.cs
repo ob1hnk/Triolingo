@@ -1,5 +1,12 @@
+public enum InteractionType
+{
+    Gather, // 아이템 줍기
+    Talk,   // NPC 대화
+}
+
 public interface IInteractable
 {
-    string GetInteractText(); // 화면에 표시할 메시지 (예: "대화하기", "줍기")
-    void Interact();          // 실제 실행될 기능
+    InteractionType InteractionType { get; }
+    string GetInteractText();
+    void Interact();
 }

@@ -17,6 +17,7 @@ public class InventoryUIPresenter : MonoBehaviour
     {
         ValidateComponents();
         InitializeInputHandlers();
+        Hide();
 
         if (view != null)
         {
@@ -116,6 +117,15 @@ public class InventoryUIPresenter : MonoBehaviour
         }
 
         isInventoryLogicInitialized = false;
+    }
+
+    public void Toggle()
+    {
+        var state = GameStateManager.Instance.CurrentState;
+        if (state == GameState.Gameplay)
+            GameStateManager.Instance.ChangeState(GameState.InventoryUI);
+        else if (state == GameState.InventoryUI)
+            GameStateManager.Instance.ChangeState(GameState.Gameplay);
     }
 
     public void Show()

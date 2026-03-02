@@ -20,7 +20,7 @@ public class ObjectiveItemView : MonoBehaviour
         this.objectiveId = objectiveId;
         this.isCompleted = completed;
         
-        objectiveText.text = text;
+        objectiveText.text = "• " + text;
         UpdateVisual();
     }
     
@@ -31,6 +31,11 @@ public class ObjectiveItemView : MonoBehaviour
     {
         isCompleted = completed;
         UpdateVisual();
+    }
+
+    public void SetVisible(bool visible)
+    {
+        gameObject.SetActive(visible);
     }
     
     /// <summary>
