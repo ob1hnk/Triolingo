@@ -21,6 +21,8 @@ public class GolemInteractable : MonoBehaviour, IInteractable
         return Managers.Quest.IsQuestCompleted(requiredQuestId);
     }
 
+    public InteractionType InteractionType => InteractionType.Talk;
+
     public string GetInteractText()
     {
         return IsQuestGatePassed() ? "대화하기" : string.Empty;
