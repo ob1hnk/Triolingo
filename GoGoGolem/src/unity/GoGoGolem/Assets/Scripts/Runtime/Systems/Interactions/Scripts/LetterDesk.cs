@@ -21,6 +21,8 @@ public class LetterDesk : MonoBehaviour, IInteractable
 
     public void SetMode(DeskMode mode) => _mode = mode;
 
+    public InteractionType InteractionType => InteractionType.Talk;
+
     public string GetInteractText() =>
         _mode == DeskMode.Write ? "편지 쓰기 (E)" : "편지 읽기 (E)";
 

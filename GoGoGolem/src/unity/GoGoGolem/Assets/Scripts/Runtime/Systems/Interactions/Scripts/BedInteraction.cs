@@ -16,6 +16,7 @@ public class BedInteraction : MonoBehaviour, IInteractable
 {
     public event Action OnSlept;
 
+    public InteractionType InteractionType => InteractionType.Talk;
     public string GetInteractText() => "잠들기 (E)";
 
     public void Interact()
