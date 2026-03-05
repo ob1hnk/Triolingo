@@ -48,4 +48,29 @@ public class InventoryManager : MonoBehaviour
         }
         Logic.AddItem(itemID);
     }
+
+    public void UseItem(string itemID)
+    {
+        var zone = ItemUsableZone.Current;
+        if (zone == null)
+        {
+            Debug.Log("[InventoryManager] 아이템을 사용할 수 있는 위치가 아닙니다.");
+            return;
+        }
+
+        if (!zone.Accepts(itemID))
+        {
+            Debug.Log($"[InventoryManager] 이 위치에서는 '{itemID}'을 사용할 수 없습니다.");
+            return;
+        }
+
+        if (!Logic.HasItem(itemID))
+        {
+            Debug.LogWarning($"[InventoryManager] 인벤토리에 '{itemID}'이 없습니다.");
+            return;
+        }
+
+        Logic.RemoveItem(itemID);
+        zone.SpawnItem();
+    }
 }

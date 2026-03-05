@@ -10,41 +10,39 @@ using UI.Presenters;
 ///   3. Inspector에서 letterWritePresenter, letterReadPresenter 연결
 ///   4. RoomStateManager.HandleFlyInComplete()에서 SetMode(DeskMode.Read) 호출
 /// </summary>
-public class LetterDesk : MonoBehaviour, IInteractable
+public class LetterDesk : MonoBehaviour //, IInteractable
 {
-    public enum DeskMode { Write, Read }
+    // public enum DeskMode { Write, Read }
 
-    [SerializeField] private LetterWritePresenter letterWritePresenter;
-    [SerializeField] private LetterReadPresenter  letterReadPresenter;
+    // [SerializeField] private LetterWritePresenter letterWritePresenter;
+    // [SerializeField] private LetterReadPresenter  letterReadPresenter;
 
-    private DeskMode _mode = DeskMode.Write;
+    // private DeskMode _mode = DeskMode.Write;
 
-    public void SetMode(DeskMode mode) => _mode = mode;
+    // public void SetMode(DeskMode mode) => _mode = mode;
 
-    public InteractionType InteractionType => InteractionType.Talk;
+    // public string GetInteractText() =>
+    //     _mode == DeskMode.Write ? "편지 쓰기 (E)" : "편지 읽기 (E)";
 
-    public string GetInteractText() =>
-        _mode == DeskMode.Write ? "편지 쓰기 (E)" : "편지 읽기 (E)";
-
-    public void Interact()
-    {
-        if (_mode == DeskMode.Write)
-        {
-            if (letterWritePresenter == null)
-            {
-                Debug.LogError("[LetterDesk] LetterWritePresenter가 연결되지 않았습니다.");
-                return;
-            }
-            letterWritePresenter.Open();
-        }
-        else
-        {
-            if (letterReadPresenter == null)
-            {
-                Debug.LogError("[LetterDesk] LetterReadPresenter가 연결되지 않았습니다.");
-                return;
-            }
-            letterReadPresenter.Open();
-        }
-    }
+    // public void Interact()
+    // {
+    //     if (_mode == DeskMode.Write)
+    //     {
+    //         if (letterWritePresenter == null)
+    //         {
+    //             Debug.LogError("[LetterDesk] LetterWritePresenter가 연결되지 않았습니다.");
+    //             return;
+    //         }
+    //         letterWritePresenter.Open();
+    //     }
+    //     else
+    //     {
+    //         if (letterReadPresenter == null)
+    //         {
+    //             Debug.LogError("[LetterDesk] LetterReadPresenter가 연결되지 않았습니다.");
+    //             return;
+    //         }
+    //         letterReadPresenter.Open();
+    //     }
+    //}
 }

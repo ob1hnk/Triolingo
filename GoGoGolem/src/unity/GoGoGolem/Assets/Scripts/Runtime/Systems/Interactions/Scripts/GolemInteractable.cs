@@ -5,7 +5,7 @@ using UnityEngine;
 /// PlayerInteraction의 E키 감지 시스템과 연동됨
 /// requiredQuestId 퀘스트 완료 후 상호작용 활성화
 /// </summary>
-public class GolemInteractable : MonoBehaviour, IInteractable
+public class GolemInteractable : MonoBehaviour//, IInteractable
 {
     [Header("Quest Gate")]
     [Tooltip("완료되어야 상호작용 가능한 퀘스트 ID. 비워두면 항상 활성화 (테스트용)")]

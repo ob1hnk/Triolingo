@@ -87,7 +87,6 @@ public class InventoryUIPresenter : MonoBehaviour
 
         uiInput.Navigate.performed += OnNavigate;
         uiInput.Point.performed += OnPoint;
-        uiInput.Scroll.performed += OnScroll;
         uiInput.Submit.performed += OnSubmit;
         uiInput.Cancel.performed += OnCancel;
 
@@ -100,7 +99,6 @@ public class InventoryUIPresenter : MonoBehaviour
 
         uiInput.Navigate.performed -= OnNavigate;
         uiInput.Point.performed -= OnPoint;
-        uiInput.Scroll.performed -= OnScroll;
         uiInput.Submit.performed -= OnSubmit;
         uiInput.Cancel.performed -= OnCancel;
 
@@ -169,13 +167,8 @@ public class InventoryUIPresenter : MonoBehaviour
             return;
         }
 
-        int previousIndex = selectedIndex;
         selectedIndex = view.MoveSelection(selectedIndex, direction);
-
-        if (previousIndex != selectedIndex)
-        {
-            ShowSelectedItemInfo();
-        }
+        ShowSelectedItemInfo();
     }
 
     private void OnPoint(InputAction.CallbackContext context)
@@ -195,18 +188,14 @@ public class InventoryUIPresenter : MonoBehaviour
         ShowSelectedItemInfo();
     }
 
-    private void OnScroll(InputAction.CallbackContext context)
-    {
-        if (view == null) return;
-
-        Vector2 scrollValue = context.ReadValue<Vector2>();
-        view.Scroll(scrollValue.y);
-    }
-
     private void OnSubmit(InputAction.CallbackContext context)
     {
         if (!context.performed || view == null) return;
         if (selectedIndex < 0) return;
+
+        string itemID = view.GetItemIDAt(selectedIndex);
+        if (!string.IsNullOrEmpty(itemID))
+            Managers.Inventory.UseItem(itemID);
 
         ShowSelectedItemInfo();
     }

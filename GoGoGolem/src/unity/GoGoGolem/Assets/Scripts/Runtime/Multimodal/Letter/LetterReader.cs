@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
-using Firebase.Firestore;
+// using Firebase.Firestore;
 
 namespace Multimodal.Letter
 {
@@ -29,143 +29,143 @@ namespace Multimodal.Letter
     /// </summary>
     public class LetterReader : MonoBehaviour
     {
-        #region Inspector Fields
-        [Header("Debug")]
-        [SerializeField] private bool enableDebugLogs = true;
-        #endregion
+        // #region Inspector Fields
+        // [Header("Debug")]
+        // [SerializeField] private bool enableDebugLogs = true;
+        // #endregion
 
-        #region Events
-        public event Action<string, string> OnError; // error_code, error_message
-        #endregion
+        // #region Events
+        // public event Action<string, string> OnError; // error_code, error_message
+        // #endregion
 
-        #region Private Fields
-        private const string CollectionName = "letter_responses";
-        private FirebaseFirestore _db;
-        #endregion
+        // #region Private Fields
+        // private const string CollectionName = "letter_responses";
+        // private FirebaseFirestore _db;
+        // #endregion
 
-        #region Unity Lifecycle
-        private void Awake()
-        {
-            _db = FirebaseFirestore.DefaultInstance;
-            DebugLog("LetterReader initialized");
-        }
-        #endregion
+        // #region Unity Lifecycle
+        // private void Awake()
+        // {
+        //     _db = FirebaseFirestore.DefaultInstance;
+        //     DebugLog("LetterReader initialized");
+        // }
+        // #endregion
 
-        #region Public API
-        /// task_id로 편지 응답 조회
-        public async Task<LetterResponse> FetchResponseByTaskIdAsync(string taskId)
-        {
-            if (string.IsNullOrWhiteSpace(taskId))
-            {
-                OnError?.Invoke("INVALID_INPUT", "Task ID cannot be empty");
-                return null;
-            }
+        // #region Public API
+        // /// task_id로 편지 응답 조회
+        // public async Task<LetterResponse> FetchResponseByTaskIdAsync(string taskId)
+        // {
+        //     if (string.IsNullOrWhiteSpace(taskId))
+        //     {
+        //         OnError?.Invoke("INVALID_INPUT", "Task ID cannot be empty");
+        //         return null;
+        //     }
 
-            try
-            {
-                DebugLog($"Fetching response for task: {taskId}");
+        //     try
+        //     {
+        //         DebugLog($"Fetching response for task: {taskId}");
 
-                var query = _db.Collection(CollectionName)
-                    .WhereEqualTo("task_id", taskId)
-                    .Limit(1);
+        //         var query = _db.Collection(CollectionName)
+        //             .WhereEqualTo("task_id", taskId)
+        //             .Limit(1);
 
-                var snapshot = await query.GetSnapshotAsync();
+        //         var snapshot = await query.GetSnapshotAsync();
 
-                if (snapshot.Count == 0)
-                {
-                    DebugLog($"No letter response found for task: {taskId}");
-                    return null;
-                }
+        //         if (snapshot.Count == 0)
+        //         {
+        //             DebugLog($"No letter response found for task: {taskId}");
+        //             return null;
+        //         }
 
-                var doc = snapshot.Documents.First();
-                var response = DocumentToLetterResponse(doc);
+        //         var doc = snapshot.Documents.First();
+        //         var response = DocumentToLetterResponse(doc);
 
-                DebugLog($"Letter response found: {response.Id} for task: {taskId}");
-                return response;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[LetterReader] Fetch by task ID failed: {ex.Message}");
-                OnError?.Invoke("FETCH_FAILED", ex.Message);
-                return null;
-            }
-        }
+        //         DebugLog($"Letter response found: {response.Id} for task: {taskId}");
+        //         return response;
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Debug.LogError($"[LetterReader] Fetch by task ID failed: {ex.Message}");
+        //         OnError?.Invoke("FETCH_FAILED", ex.Message);
+        //         return null;
+        //     }
+        // }
 
-        /// user_id에 해당하는 모든 편지 응답 조회
-        public async Task<LetterResponse[]> FetchAllResponsesAsync(string userId)
-        {
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                OnError?.Invoke("INVALID_INPUT", "User ID cannot be empty");
-                return Array.Empty<LetterResponse>();
-            }
+        // /// user_id에 해당하는 모든 편지 응답 조회
+        // public async Task<LetterResponse[]> FetchAllResponsesAsync(string userId)
+        // {
+        //     if (string.IsNullOrWhiteSpace(userId))
+        //     {
+        //         OnError?.Invoke("INVALID_INPUT", "User ID cannot be empty");
+        //         return Array.Empty<LetterResponse>();
+        //     }
 
-            try
-            {
-                DebugLog($"Fetching all responses for user: {userId}");
+        //     try
+        //     {
+        //         DebugLog($"Fetching all responses for user: {userId}");
 
-                var query = _db.Collection(CollectionName)
-                    .WhereEqualTo("user_id", userId)
-                    .OrderByDescending("created_at");
+        //         var query = _db.Collection(CollectionName)
+        //             .WhereEqualTo("user_id", userId)
+        //             .OrderByDescending("created_at");
 
-                var snapshot = await query.GetSnapshotAsync();
+        //         var snapshot = await query.GetSnapshotAsync();
 
-                var docs = snapshot.Documents.ToList();
-                var responses = new LetterResponse[docs.Count];
-                for (int i = 0; i < docs.Count; i++)
-                {
-                    responses[i] = DocumentToLetterResponse(docs[i]);
-                }
+        //         var docs = snapshot.Documents.ToList();
+        //         var responses = new LetterResponse[docs.Count];
+        //         for (int i = 0; i < docs.Count; i++)
+        //         {
+        //             responses[i] = DocumentToLetterResponse(docs[i]);
+        //         }
 
-                DebugLog($"Found {responses.Length} letter responses");
-                return responses;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[LetterReader] Fetch all failed: {ex.Message}");
-                OnError?.Invoke("FETCH_FAILED", ex.Message);
-                return Array.Empty<LetterResponse>();
-            }
-        }
-        #endregion
+        //         DebugLog($"Found {responses.Length} letter responses");
+        //         return responses;
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Debug.LogError($"[LetterReader] Fetch all failed: {ex.Message}");
+        //         OnError?.Invoke("FETCH_FAILED", ex.Message);
+        //         return Array.Empty<LetterResponse>();
+        //     }
+        // }
+        // #endregion
 
-        #region Helpers
-        private LetterResponse DocumentToLetterResponse(DocumentSnapshot doc)
-        {
-            var dict = doc.ToDictionary();
+        // #region Helpers
+        // private LetterResponse DocumentToLetterResponse(DocumentSnapshot doc)
+        // {
+        //     var dict = doc.ToDictionary();
 
-            var response = new LetterResponse
-            {
-                Id = doc.Id,
-                TaskId = dict.ContainsKey("task_id") ? dict["task_id"]?.ToString() : "",
-                UserId = dict.ContainsKey("user_id") ? dict["user_id"]?.ToString() : "",
-                UserLetter = dict.ContainsKey("user_letter") ? dict["user_letter"]?.ToString() : "",
-                GeneratedResponseLetter = dict.ContainsKey("generated_response_letter")
-                    ? dict["generated_response_letter"]?.ToString() : "",
-            };
+        //     var response = new LetterResponse
+        //     {
+        //         Id = doc.Id,
+        //         TaskId = dict.ContainsKey("task_id") ? dict["task_id"]?.ToString() : "",
+        //         UserId = dict.ContainsKey("user_id") ? dict["user_id"]?.ToString() : "",
+        //         UserLetter = dict.ContainsKey("user_letter") ? dict["user_letter"]?.ToString() : "",
+        //         GeneratedResponseLetter = dict.ContainsKey("generated_response_letter")
+        //             ? dict["generated_response_letter"]?.ToString() : "",
+        //     };
 
-            if (dict.ContainsKey("created_at") && dict["created_at"] is Timestamp createdTs)
-            {
-                response.CreatedAt = createdTs.ToDateTime();
-            }
+        //     if (dict.ContainsKey("created_at") && dict["created_at"] is Timestamp createdTs)
+        //     {
+        //         response.CreatedAt = createdTs.ToDateTime();
+        //     }
 
-            if (dict.ContainsKey("updated_at") && dict["updated_at"] is Timestamp updatedTs)
-            {
-                response.UpdatedAt = updatedTs.ToDateTime();
-            }
+        //     if (dict.ContainsKey("updated_at") && dict["updated_at"] is Timestamp updatedTs)
+        //     {
+        //         response.UpdatedAt = updatedTs.ToDateTime();
+        //     }
 
-            return response;
-        }
-        #endregion
+        //     return response;
+        // }
+        // #endregion
 
-        #region Debug
-        private void DebugLog(string message)
-        {
-            if (enableDebugLogs)
-            {
-                Debug.Log($"[LetterReader] {message}");
-            }
-        }
-        #endregion
+        // #region Debug
+        // private void DebugLog(string message)
+        // {
+        //     if (enableDebugLogs)
+        //     {
+        //         Debug.Log($"[LetterReader] {message}");
+        //     }
+        // }
+        // #endregion
     }
 }

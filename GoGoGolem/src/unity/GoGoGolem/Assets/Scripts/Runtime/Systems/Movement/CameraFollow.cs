@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Unity.Cinemachine;
 using UnityEngine.InputSystem;
 
@@ -66,8 +67,8 @@ public class CameraFollow : MonoBehaviour
         
         // Zoom based on mouse scroll wheel
         float scrollInput = Input.mouseScrollDelta.y;
-        
-        if (Mathf.Abs(scrollInput) > 0.01f)
+
+        if (Mathf.Abs(scrollInput) > 0.01f && !EventSystem.current.IsPointerOverGameObject())
         {
             _targetFOV -= scrollInput * _cameraZoomSpeed;
         }

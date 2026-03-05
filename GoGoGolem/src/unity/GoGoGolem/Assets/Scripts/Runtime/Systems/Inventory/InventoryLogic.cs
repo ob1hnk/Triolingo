@@ -28,6 +28,14 @@ public class InventoryLogic
 
     public bool HasItem(string id) => items.ContainsKey(id) && items[id] > 0;
 
+    public void RemoveItem(string id, int count = 1)
+    {
+        if (!items.ContainsKey(id)) return;
+        items[id] -= count;
+        if (items[id] <= 0) items.Remove(id);
+        OnInventoryChanged?.Invoke();
+    }
+
     public Dictionary<string, int> GetAllItems() => items;
-    
+
 }
