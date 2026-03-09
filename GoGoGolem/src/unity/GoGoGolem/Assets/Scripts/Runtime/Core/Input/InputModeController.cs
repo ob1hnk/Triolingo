@@ -77,13 +77,13 @@ public class InputModeController : MonoBehaviour
             case GameState.Gameplay:
                 EnableGameplayInput();
                 break;
-
             case GameState.InventoryUI:
                 EnableUIInput();
                 break;
-
+            case GameState.Dialogue:
+                EnableDialogueInput();
+                break;
             case GameState.Paused:
-                // 일시정지 시에는 특정 입력만 활성화
                 break;
         }
     }
@@ -95,9 +95,11 @@ public class InputModeController : MonoBehaviour
             case GameState.Gameplay:
                 DisableGameplayInput();
                 break;
-
             case GameState.InventoryUI:
                 DisableUIInput();
+                break;
+            case GameState.Dialogue:
+                DisableDialogueInput();
                 break;
         }
     }
@@ -126,6 +128,16 @@ public class InputModeController : MonoBehaviour
         input.UI.Disable();
     }
 
+    private void EnableDialogueInput()
+    {
+        input.Dialogue.Enable();
+    }
+
+    private void DisableDialogueInput()
+    {
+        input.Dialogue.Disable();
+    }
+
     private void OnDestroy()
     {
         if (input == null) return;
@@ -135,10 +147,14 @@ public class InputModeController : MonoBehaviour
         input.PlayerActions.Disable();
         input.CameraControl.Disable();
         input.UI.Disable();
+        input.Dialogue.Disable();
 
         input.Dispose();
     }
 
-    // Presenter가 접근할 수 있도록 제공
+    // 각 시스템이 접근할 수 있도록 제공
+    public GameInputActions.GlobalActions GetGlobalActions() => input.Global;
     public GameInputActions.UIActions GetUIActions() => input.UI;
+    public GameInputActions.PlayerActionsActions GetPlayerActionsActions() => input.PlayerActions;
+    public GameInputActions.DialogueActions GetDialogueActions() => input.Dialogue;
 }
