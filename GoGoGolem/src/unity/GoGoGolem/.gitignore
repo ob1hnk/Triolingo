@@ -75,20 +75,34 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
-# Assets
+# Assets - 에셋 폴더 내용 무시 (단, .meta와 MyAssets 제외)
 /Assets/3DModels/VFX/**
-/Assets/3DModels/polyperfect/**
-/Assets/3DModels/Forest/**
-# .meta 파일은 포함
-!/Assets/3DModels/VFX/**/
 !/Assets/3DModels/VFX/**/*.meta
-!/Assets/3DModels/polyperfect/**/
+
+/Assets/3DModels/polyperfect/**
 !/Assets/3DModels/polyperfect/**/*.meta
-!/Assets/3DModels/Forest/**/
-!/Assets/3DModels/Forest/**/*.meta
-# 만든 파일들은 포함
+
+# 만든 파일은 추가
+/Assets/3DModels/Forest/**
 !/Assets/3DModels/Forest/MyAssets/
 !/Assets/3DModels/Forest/MyAssets/**
+!/Assets/3DModels/Forest/**/*.meta
+
+/Assets/3DModels/Handpainted_Grass_and_Ground_Textures/**
+!/Assets/3DModels/Handpainted_Grass_and_Ground_Textures/**/*.meta
+
+/Assets/3DModels/LowPolyTreePack/**
+!/Assets/3DModels/LowPolyTreePack/**/*.meta
+
+/Assets/3DModels/Nature Pack - PBA - URP/**
+!/Assets/3DModels/Nature Pack - PBA - URP/**/*.meta
+
+/Assets/3DModels/SimpleLowPolyNature/**
+!/Assets/3DModels/SimpleLowPolyNature/**/*.meta
+
+/Assets/3DModels/SimpleNaturePack/**
+!/Assets/3DModels/SimpleNaturePack/**/*.meta
+
 # Firebase Unity SDK (각 팀원이 .unitypackage로 직접 설치)
 /[Aa]ssets/Firebase/
 /[Aa]ssets/Firebase.meta
