@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// 범용 NPC 클래스. 대화 시작을 담당한다.
@@ -34,12 +35,54 @@ public class NPC : MonoBehaviour, IInteractable
     private SpeechBubbleView _speechBubble;
     private NPCQuestHandler _questHandler;
 
+    // 말풍선 활성 중에만 사용하는 로컬 InputAction (Enter, Space, 클릭)
+    private InputAction _bubbleAdvanceAction;
+
     public InteractionType InteractionType => InteractionType.Talk;
 
     private void Awake()
     {
         _speechBubble = GetComponentInChildren<SpeechBubbleView>(true);
         _questHandler = GetComponent<NPCQuestHandler>();
+
+        _bubbleAdvanceAction = new InputAction("SpeechBubbleAdvance", InputActionType.Button);
+        _bubbleAdvanceAction.AddBinding("<Keyboard>/enter");
+        _bubbleAdvanceAction.AddBinding("<Keyboard>/space");
+        _bubbleAdvanceAction.AddBinding("<Mouse>/leftButton");
+        _bubbleAdvanceAction.performed += OnBubbleAdvance;
+    }
+
+    private void OnDestroy()
+    {
+        _bubbleAdvanceAction.performed -= OnBubbleAdvance;
+        _bubbleAdvanceAction.Dispose();
+    }
+
+    private void OnBubbleAdvance(InputAction.CallbackContext ctx)
+    {
+        AdvanceSpeechBubble();
+    }
+
+    private void AdvanceSpeechBubble()
+    {
+        if (dialogueLines == null || dialogueLines.Length == 0) return;
+
+        if (_currentLineIndex < dialogueLines.Length)
+        {
+            if (_speechBubble != null)
+                _speechBubble.Show(dialogueLines[_currentLineIndex]);
+            _currentLineIndex++;
+        }
+        else
+        {
+            if (_speechBubble != null)
+                _speechBubble.Hide();
+            _bubbleAdvanceAction.Disable();
+            _currentLineIndex = 0;
+
+            if (onceOnly)
+                hasInteracted = true;
+        }
     }
 
     public string GetActionLabel()
@@ -67,24 +110,11 @@ public class NPC : MonoBehaviour, IInteractable
             return;
         }
 
-        // 말풍선 모드
+        // 말풍선 모드 — 첫 E키 입력으로 시작, 이후 Enter/Space/클릭으로 진행
         if (dialogueLines != null && dialogueLines.Length > 0)
         {
-            if (_currentLineIndex < dialogueLines.Length)
-            {
-                if (_speechBubble != null)
-                    _speechBubble.Show(dialogueLines[_currentLineIndex]);
-                _currentLineIndex++;
-            }
-            else
-            {
-                if (_speechBubble != null)
-                    _speechBubble.Hide();
-                _currentLineIndex = 0;
-
-                if (onceOnly)
-                    hasInteracted = true;
-            }
+            _bubbleAdvanceAction.Enable();
+            AdvanceSpeechBubble();
             return;
         }
 

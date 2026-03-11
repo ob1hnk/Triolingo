@@ -12,6 +12,9 @@ public class InventoryUIPresenter : MonoBehaviour
 
     private bool isInputInitialized = false;
     private bool isInventoryLogicInitialized = false;
+    private bool _isVisible = false;
+
+    public bool IsVisible => _isVisible;
 
     private void Awake()
     {
@@ -135,6 +138,7 @@ public class InventoryUIPresenter : MonoBehaviour
             InitializeInventoryLogic();
         }
 
+        _isVisible = true;
         canvasGroup.alpha = 1f;
         canvasGroup.interactable = true;
         canvasGroup.blocksRaycasts = true;
@@ -147,6 +151,7 @@ public class InventoryUIPresenter : MonoBehaviour
     {
         if (canvasGroup == null) return;
 
+        _isVisible = false;
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;

@@ -21,6 +21,8 @@ public class QuestUIPresenter : MonoBehaviour
     private bool _initialized = false;
     private bool _isVisible = false;
 
+    public bool IsVisible => _isVisible;
+
     private void Awake()
     {
         if (view == null)

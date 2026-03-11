@@ -19,6 +19,11 @@ public class GotItemToastPresenter : MonoBehaviour
     private InventoryLogic _inventoryLogic;
     private Coroutine _hideCoroutine;
 
+    private void Awake()
+    {
+        if (toastRoot != null) toastRoot.SetActive(false);
+    }
+
     private void Start()
     {
         if (Managers.Instance == null || Managers.Inventory == null)
@@ -35,8 +40,6 @@ public class GotItemToastPresenter : MonoBehaviour
         }
 
         _inventoryLogic.OnItemAdded += ShowToast;
-
-        if (toastRoot != null) toastRoot.SetActive(false);
     }
 
     private void OnDestroy()
@@ -47,7 +50,8 @@ public class GotItemToastPresenter : MonoBehaviour
 
     private void ShowToast(string itemID, int count)
     {
-        ItemData data = Managers.Inventory?.ItemDB?.GetItem(itemID);
+        var inventory = Managers.Inventory;
+        ItemData data = inventory != null && inventory.ItemDB != null ? inventory.ItemDB.GetItem(itemID) : null;
 
         if (iconImage != null)
         {

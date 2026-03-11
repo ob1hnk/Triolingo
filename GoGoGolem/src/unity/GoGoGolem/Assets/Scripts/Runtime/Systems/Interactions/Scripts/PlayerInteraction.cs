@@ -28,7 +28,7 @@ public class PlayerInteraction : MonoBehaviour
 
         _playerActions = InputModeController.Instance.GetPlayerActionsActions();
         _playerActions.Gather.performed += OnGather;
-        _playerActions.Interact.performed += OnInteract;
+        _playerActions.InteractNPC.performed += OnInteract;
         _initialized = true;
     }
 
@@ -36,14 +36,14 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (!_initialized) return;
         _playerActions.Gather.performed += OnGather;
-        _playerActions.Interact.performed += OnInteract;
+        _playerActions.InteractNPC.performed += OnInteract;
     }
 
     private void OnDisable()
     {
         if (!_initialized) return;
         _playerActions.Gather.performed -= OnGather;
-        _playerActions.Interact.performed -= OnInteract;
+        _playerActions.InteractNPC.performed -= OnInteract;
     }
 
     private void OnGather(InputAction.CallbackContext ctx)

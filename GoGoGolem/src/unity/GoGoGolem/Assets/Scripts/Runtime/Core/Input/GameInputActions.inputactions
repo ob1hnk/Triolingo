@@ -163,7 +163,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Interact",
+                    "name": "InteractNPC",
                     "type": "Button",
                     "id": "f1a2b3c4-d5e6-7f8a-9b0c-d1e2f3a4b5c6",
                     "expectedControlType": "",
