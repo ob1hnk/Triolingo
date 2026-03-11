@@ -22,6 +22,7 @@ public class QuestUIPresenter : MonoBehaviour
     private bool _isVisible = false;
 
     public bool IsVisible => _isVisible;
+    public event System.Action<bool> OnVisibilityChanged;
 
     private void Awake()
     {
@@ -88,12 +89,14 @@ public class QuestUIPresenter : MonoBehaviour
     {
         _isVisible = true;
         view.Show();
+        OnVisibilityChanged?.Invoke(true);
     }
 
     public void Hide()
     {
         _isVisible = false;
         view.Hide();
+        OnVisibilityChanged?.Invoke(false);
     }
 
     public void Toggle()

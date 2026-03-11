@@ -15,6 +15,7 @@ public class InventoryUIPresenter : MonoBehaviour
     private bool _isVisible = false;
 
     public bool IsVisible => _isVisible;
+    public event System.Action<bool> OnVisibilityChanged;
 
     private void Awake()
     {
@@ -145,6 +146,7 @@ public class InventoryUIPresenter : MonoBehaviour
 
         ResetSelection();
         Refresh();
+        OnVisibilityChanged?.Invoke(true);
     }
 
     public void Hide()
@@ -155,6 +157,7 @@ public class InventoryUIPresenter : MonoBehaviour
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;
+        OnVisibilityChanged?.Invoke(false);
     }
 
     private void OnNavigate(InputAction.CallbackContext context)

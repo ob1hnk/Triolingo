@@ -1,25 +1,19 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// HUD 버튼 Presenter.
-/// 퀘스트 로그 버튼(Tab 동작)과 인벤토리 버튼(Q 동작)을 처리한다.
-/// 각 패널의 열림/닫힘 상태에 따라 버튼 아이콘을 교체한다.
-/// </summary>
 public class HUDPresenter : MonoBehaviour
 {
     [Header("Buttons")]
     [SerializeField] private Button questLogButton;
     [SerializeField] private Button inventoryButton;
 
-    [Header("Button Icons")]
-    [SerializeField] private Image questButtonIcon;
-    [SerializeField] private Sprite questIconDefault;
-    [SerializeField] private Sprite questIconActive;
+    [Header("Quest Button Icons")]
+    [SerializeField] private GameObject questIconClosed;
+    [SerializeField] private GameObject questIconOpen;
 
-    [SerializeField] private Image inventoryButtonIcon;
-    [SerializeField] private Sprite inventoryIconDefault;
-    [SerializeField] private Sprite inventoryIconActive;
+    [Header("Inventory Button Icons")]
+    [SerializeField] private GameObject inventoryIconClosed;
+    [SerializeField] private GameObject inventoryIconOpen;
 
     [Header("References")]
     [SerializeField] private QuestUIPresenter questUIPresenter;
@@ -29,37 +23,48 @@ public class HUDPresenter : MonoBehaviour
     {
         if (questLogButton != null) questLogButton.onClick.AddListener(OnQuestLogButtonClicked);
         if (inventoryButton != null) inventoryButton.onClick.AddListener(OnInventoryButtonClicked);
+
+        if (questUIPresenter != null) questUIPresenter.OnVisibilityChanged += SetQuestIcon;
+        if (inventoryUIPresenter != null) inventoryUIPresenter.OnVisibilityChanged += SetInventoryIcon;
+
+        SetQuestIcon(false);
+        SetInventoryIcon(false);
     }
 
     private void OnDestroy()
     {
         if (questLogButton != null) questLogButton.onClick.RemoveListener(OnQuestLogButtonClicked);
         if (inventoryButton != null) inventoryButton.onClick.RemoveListener(OnInventoryButtonClicked);
+
+        if (questUIPresenter != null) questUIPresenter.OnVisibilityChanged -= SetQuestIcon;
+        if (inventoryUIPresenter != null) inventoryUIPresenter.OnVisibilityChanged -= SetInventoryIcon;
     }
 
     private void OnQuestLogButtonClicked()
     {
         if (questUIPresenter == null) return;
+        if (inventoryUIPresenter != null && inventoryUIPresenter.IsVisible)
+            inventoryUIPresenter.Toggle();
         questUIPresenter.Toggle();
-        UpdateQuestIcon();
     }
 
     private void OnInventoryButtonClicked()
     {
         if (inventoryUIPresenter == null) return;
+        if (questUIPresenter != null && questUIPresenter.IsVisible)
+            questUIPresenter.Hide();
         inventoryUIPresenter.Toggle();
-        UpdateInventoryIcon();
     }
 
-    private void UpdateQuestIcon()
+    private void SetQuestIcon(bool isOpen)
     {
-        if (questButtonIcon == null) return;
-        questButtonIcon.sprite = questUIPresenter.IsVisible ? questIconActive : questIconDefault;
+        if (questIconClosed != null) questIconClosed.SetActive(!isOpen);
+        if (questIconOpen != null) questIconOpen.SetActive(isOpen);
     }
 
-    private void UpdateInventoryIcon()
+    private void SetInventoryIcon(bool isOpen)
     {
-        if (inventoryButtonIcon == null) return;
-        inventoryButtonIcon.sprite = inventoryUIPresenter.IsVisible ? inventoryIconActive : inventoryIconDefault;
+        if (inventoryIconClosed != null) inventoryIconClosed.SetActive(!isOpen);
+        if (inventoryIconOpen != null) inventoryIconOpen.SetActive(isOpen);
     }
 }
