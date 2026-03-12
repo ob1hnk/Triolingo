@@ -3,6 +3,7 @@ using UnityEngine;
 public class UIManager : MonoBehaviour
 {
     [SerializeField] private InventoryUIPresenter inventoryPresenter;
+    [SerializeField] private QuestUIPresenter questPresenter;
     [SerializeField] private SettingsPresenter settingsPresenter;
 
     [Header("Event Channels")]
@@ -58,6 +59,7 @@ public class UIManager : MonoBehaviour
     private void HandleInventoryOpen()
     {
         Time.timeScale = 0f;
+        questPresenter?.Hide();
         inventoryPresenter?.Show();
     }
 

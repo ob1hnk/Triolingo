@@ -277,7 +277,7 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Interact"",
+                    ""action"": ""InteractNPC"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -917,7 +917,7 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Gather => m_Wrapper.m_PlayerActions_Gather;
         /// <summary>
-        /// Provides access to the underlying input action "PlayerActions/InteractNPC".
+        /// Provides access to the underlying input action "PlayerActions/Interact".
         /// </summary>
         public InputAction @InteractNPC => m_Wrapper.m_PlayerActions_InteractNPC;
         /// <summary>
@@ -1124,9 +1124,6 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Global/ToggleQuest".
         /// </summary>
         public InputAction @ToggleQuest => m_Wrapper.m_Global_ToggleQuest;
-        /// <summary>
-        /// Provides access to the underlying input action "Global/TogglePause".
-        /// </summary>
         public InputAction @TogglePause => m_Wrapper.m_Global_TogglePause;
         /// <summary>
         /// Provides access to the underlying input action map instance.
@@ -1511,7 +1508,7 @@ public partial class @GameInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnGather(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "InteractNPC" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Interact" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
