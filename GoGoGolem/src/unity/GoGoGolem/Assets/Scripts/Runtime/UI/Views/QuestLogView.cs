@@ -11,6 +11,7 @@ public class QuestLogView : MonoBehaviour
     [SerializeField] private CanvasGroup canvasGroup;
     [SerializeField] private Transform questListParent;
     [SerializeField] private GameObject questItemPrefab;
+    [SerializeField] private GameObject noQuestText;
 
     private Dictionary<string, QuestItemView> questItemViews = new Dictionary<string, QuestItemView>();
 
@@ -20,6 +21,7 @@ public class QuestLogView : MonoBehaviour
             canvasGroup = GetComponent<CanvasGroup>();
 
         Hide();
+        RefreshNoQuestText();
     }
 
     public void Show()
@@ -48,6 +50,7 @@ public class QuestLogView : MonoBehaviour
         var questItemView = obj.GetComponent<QuestItemView>();
         questItemView.Initialize(questId, questType, questName, objectives);
         questItemViews.Add(questId, questItemView);
+        RefreshNoQuestText();
     }
 
     public void RemoveQuestEntry(string questId)
@@ -56,6 +59,7 @@ public class QuestLogView : MonoBehaviour
         {
             Destroy(view.gameObject);
             questItemViews.Remove(questId);
+            RefreshNoQuestText();
         }
     }
 
@@ -70,5 +74,12 @@ public class QuestLogView : MonoBehaviour
         foreach (var view in questItemViews.Values)
             if (view != null) Destroy(view.gameObject);
         questItemViews.Clear();
+        RefreshNoQuestText();
+    }
+
+    private void RefreshNoQuestText()
+    {
+        if (noQuestText != null)
+            noQuestText.SetActive(questItemViews.Count == 0);
     }
 }
