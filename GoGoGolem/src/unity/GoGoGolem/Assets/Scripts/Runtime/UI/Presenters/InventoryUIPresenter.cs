@@ -223,8 +223,23 @@ public class InventoryUIPresenter : MonoBehaviour
     {
         if (!isInventoryLogicInitialized || inventoryLogic == null || view == null) return;
 
-        var items = inventoryLogic.GetAllItems();
+        var allItems = inventoryLogic.GetAllItems();
+        var itemDB = Managers.Inventory?.ItemDB;
+
+        var items = new System.Collections.Generic.Dictionary<string, int>();
+        var skills = new System.Collections.Generic.Dictionary<string, int>();
+
+        foreach (var kv in allItems)
+        {
+            var data = itemDB?.GetItem(kv.Key);
+            if (data != null && data.type == ItemType.Skill)
+                skills[kv.Key] = kv.Value;
+            else
+                items[kv.Key] = kv.Value;
+        }
+
         view.Render(items);
+        view.RenderSkills(skills);
     }
 
     private void ResetSelection()

@@ -13,6 +13,10 @@ public class InventoryUIView : MonoBehaviour
     [SerializeField] private int columns = 4;
     [SerializeField] private int initialSlotCount = 4;
 
+    [Header("Empty State")]
+    [SerializeField] private GameObject noItemText;
+    [SerializeField] private GameObject noSkillText;
+
     [Header("Item Info Panel")]
     [SerializeField] private ItemInfoPanel itemInfoPanel;
 
@@ -160,7 +164,12 @@ public class InventoryUIView : MonoBehaviour
             slots[i].ShowAsEmpty();
         }
 
-        if (items == null || items.Count == 0) return;
+        bool isEmpty = items == null || items.Count == 0;
+        foreach (var slot in slots)
+            slot.gameObject.SetActive(!isEmpty);
+        if (noItemText != null) noItemText.SetActive(isEmpty);
+
+        if (isEmpty) return;
 
         int requiredSlots = items.Count;
         if (requiredSlots > slots.Count)
@@ -181,6 +190,14 @@ public class InventoryUIView : MonoBehaviour
             indexToItemID[index] = item.Key;
             index++;
         }
+    }
+
+    public void RenderSkills(Dictionary<string, int> skills)
+    {
+        bool isEmpty = skills == null || skills.Count == 0;
+        foreach (var slot in skillSlots)
+            slot.gameObject.SetActive(!isEmpty);
+        if (noSkillText != null) noSkillText.SetActive(isEmpty);
     }
 
     public void SelectItem(int index)
