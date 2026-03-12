@@ -6,6 +6,7 @@ public class HUDPresenter : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button questLogButton;
     [SerializeField] private Button inventoryButton;
+    [SerializeField] private Button pauseButton;
 
     [Header("Quest Button Icons")]
     [SerializeField] private GameObject questIconClosed;
@@ -23,10 +24,10 @@ public class HUDPresenter : MonoBehaviour
     {
         if (questLogButton != null) questLogButton.onClick.AddListener(OnQuestLogButtonClicked);
         if (inventoryButton != null) inventoryButton.onClick.AddListener(OnInventoryButtonClicked);
+        if (pauseButton != null) pauseButton.onClick.AddListener(OnPauseButtonClicked);
 
         if (questUIPresenter != null) questUIPresenter.OnVisibilityChanged += SetQuestIcon;
         if (inventoryUIPresenter != null) inventoryUIPresenter.OnVisibilityChanged += SetInventoryIcon;
-
         SetQuestIcon(false);
         SetInventoryIcon(false);
     }
@@ -35,6 +36,7 @@ public class HUDPresenter : MonoBehaviour
     {
         if (questLogButton != null) questLogButton.onClick.RemoveListener(OnQuestLogButtonClicked);
         if (inventoryButton != null) inventoryButton.onClick.RemoveListener(OnInventoryButtonClicked);
+        if (pauseButton != null) pauseButton.onClick.RemoveListener(OnPauseButtonClicked);
 
         if (questUIPresenter != null) questUIPresenter.OnVisibilityChanged -= SetQuestIcon;
         if (inventoryUIPresenter != null) inventoryUIPresenter.OnVisibilityChanged -= SetInventoryIcon;
@@ -56,6 +58,13 @@ public class HUDPresenter : MonoBehaviour
         inventoryUIPresenter.Toggle();
     }
 
+    private void OnPauseButtonClicked()
+    {
+        if (questUIPresenter != null && questUIPresenter.IsVisible)
+            questUIPresenter.Hide();
+        InputModeController.Instance.HandlePauseToggle();
+    }
+
     private void SetQuestIcon(bool isOpen)
     {
         if (questIconClosed != null) questIconClosed.SetActive(!isOpen);
@@ -67,4 +76,5 @@ public class HUDPresenter : MonoBehaviour
         if (inventoryIconClosed != null) inventoryIconClosed.SetActive(!isOpen);
         if (inventoryIconOpen != null) inventoryIconOpen.SetActive(isOpen);
     }
+
 }
