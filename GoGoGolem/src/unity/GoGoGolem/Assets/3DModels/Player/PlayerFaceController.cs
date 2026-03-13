@@ -19,16 +19,15 @@ public class PlayerFaceController : MonoBehaviour
     public void SetExpression(FaceExpression expression)
     {
         int i = (int)expression;
-        eyebrows.sharedMaterial.SetTexture("_MainTex", eyebrowTextures[i]);
-        eyes.sharedMaterial.SetTexture("_MainTex", eyeTextures[i]);
-        mouth.sharedMaterial.SetTexture("_MainTex", mouthTextures[i]);
+        eyebrows.material.SetTexture("_MainTex", eyebrowTextures[i]);
+        eyes.material.SetTexture("_MainTex", eyeTextures[i]);
+        mouth.material.SetTexture("_MainTex", mouthTextures[i]);
     }
 
-    void OnValidate()
+    void Update()
     {
-        if (eyebrows != null && eyes != null && mouth != null &&
-        eyebrows.sharedMaterial != null && eyes.sharedMaterial != null && mouth.sharedMaterial != null &&
-        eyebrowTextures != null && eyeTextures != null && mouthTextures != null)
+        #if UNITY_EDITOR
         SetExpression(currentExpression);
+        #endif
     }
 }
