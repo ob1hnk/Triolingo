@@ -181,12 +181,14 @@ public class InventoryUIView : MonoBehaviour
             }
         }
 
+        var itemDB = Managers.Inventory?.ItemDB;
         int index = 0;
         foreach (var item in items)
         {
             if (index >= slots.Count) break;
 
-            slots[index].SetItem();
+            var data = itemDB?.GetItem(item.Key);
+            slots[index].SetItem(data?.icon);
             indexToItemID[index] = item.Key;
             index++;
         }

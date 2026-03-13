@@ -7,6 +7,7 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
     [Header("UI References")]
     [SerializeField] private Image borderImage;
     [SerializeField] private Image backgroundImage;
+    [SerializeField] private Image iconImage;
 
     [Header("Sprites")]
     [SerializeField] private Sprite borderSprite;
@@ -22,10 +23,16 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
         slotIndex = index;
     }
 
-    public void SetItem()
+    public void SetItem(Sprite icon = null)
     {
         if (backgroundImage != null)
             backgroundImage.sprite = backgroundNormalSprite;
+
+        if (iconImage != null)
+        {
+            iconImage.sprite = icon;
+            iconImage.enabled = icon != null;
+        }
 
         gameObject.SetActive(true);
     }
@@ -34,6 +41,12 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
     {
         if (backgroundImage != null)
             backgroundImage.sprite = backgroundNormalSprite;
+
+        if (iconImage != null)
+        {
+            iconImage.sprite = null;
+            iconImage.enabled = false;
+        }
 
         SetSelected(false);
         gameObject.SetActive(true);
