@@ -155,7 +155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   faceRenderer: {fileID: 8481241854412394287}
-  currentEmotion: 5
+  currentEmotion: 0
   faceColor: {r: 0.23270428, g: 0.23270428, b: 0.23270428, a: 1}
 --- !u!1 &1486986558932745631
 GameObject:
@@ -582,6 +582,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2594878746716287414}
+  - component: {fileID: 3921132792910312067}
   m_Layer: 0
   m_Name: World Golem
   m_TagString: Untagged
@@ -606,6 +607,28 @@ Transform:
   - {fileID: 6195651159060361172}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &3921132792910312067
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7431533587824991313}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: baf00796d92809f48b75fe8973b04030, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &8104003461970656635
 GameObject:
   m_ObjectHideFlags: 0
