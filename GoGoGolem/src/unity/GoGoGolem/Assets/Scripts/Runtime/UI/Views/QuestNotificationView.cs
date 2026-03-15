@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 
@@ -11,6 +12,8 @@ public class QuestNotificationView : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI questNameText;
     [SerializeField] private TextMeshProUGUI questStateText;
+    [SerializeField] private GameObject questStateObject;
+    [SerializeField] private HorizontalLayoutGroup backgroundLayoutGroup;
     [SerializeField] private float displayDuration = 3f;
 
     private Coroutine _dismissCoroutine;
@@ -27,9 +30,16 @@ public class QuestNotificationView : MonoBehaviour
         questNameText.text = questHeader;
 
         bool hasState = !string.IsNullOrEmpty(stateText);
-        questStateText.gameObject.SetActive(hasState);
+        questStateObject.SetActive(hasState);
         if (hasState)
             questStateText.text = stateText;
+
+        if (backgroundLayoutGroup != null)
+        {
+            var padding = backgroundLayoutGroup.padding;
+            padding.right = hasState ? 10 : 20;
+            backgroundLayoutGroup.padding = padding;
+        }
 
         gameObject.SetActive(true);
 

@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public enum InteractionType
 {
     Gather,      // 아이템 줍기
@@ -9,6 +11,7 @@ public enum InteractionType
 public interface IInteractable
 {
     InteractionType InteractionType { get; }
-    string GetInteractText();
+    string GetActionLabel();
+    Sprite GetKeyHintSprite();
     void Interact();
 }
