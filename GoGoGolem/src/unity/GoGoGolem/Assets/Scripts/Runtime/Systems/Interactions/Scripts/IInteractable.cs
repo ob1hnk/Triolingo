@@ -3,7 +3,8 @@ using UnityEngine;
 public enum InteractionType
 {
     Gather,      // 아이템 줍기
-    Talk,        // NPC 대화
+    TalkNPC,     // NPC 대화
+    TalkGolem,   // 골렘 대화
     WriteLetter, // 편지 쓰기 / 읽기
     Sleep,       // 잠들기
 }

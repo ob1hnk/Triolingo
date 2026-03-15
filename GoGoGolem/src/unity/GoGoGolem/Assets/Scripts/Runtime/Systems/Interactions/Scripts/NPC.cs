@@ -38,7 +38,7 @@ public class NPC : MonoBehaviour, IInteractable
     // 말풍선 활성 중에만 사용하는 로컬 InputAction (Enter, Space, 클릭)
     private InputAction _bubbleAdvanceAction;
 
-    public InteractionType InteractionType => InteractionType.Talk;
+    public InteractionType InteractionType => InteractionType.TalkNPC;
 
     private void Awake()
     {
