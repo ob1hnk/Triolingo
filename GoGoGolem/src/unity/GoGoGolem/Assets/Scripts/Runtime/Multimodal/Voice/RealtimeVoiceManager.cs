@@ -120,7 +120,7 @@ namespace Multimodal.Voice
         /// 2. 스트리밍 시작
         /// 3. 마이크 시작
         /// 4. 오디오 전송 시작
-        public async Task StartVoice(string language = "ko")
+        public async Task StartVoice(string language = "ko", QuestContextPayload questContext = null)
         {
             if (_isVoiceActive)
             {
@@ -140,7 +140,7 @@ namespace Multimodal.Voice
 
                 // 2. 스트리밍 시작
                 _currentSessionId = Guid.NewGuid().ToString();
-                await _realtimeClient.StartStreamAsync(_currentSessionId, language);
+                await _realtimeClient.StartStreamAsync(_currentSessionId, language, questContext);
 
                 // 3. 마이크 시작 (24kHz)
                 if (!_micRecorder.StartRecording(sampleRate))
