@@ -1,14 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using TMPro;
 
 public class InventorySlot : MonoBehaviour, IPointerClickHandler
 {
     [Header("UI References")]
     [SerializeField] private Image borderImage;
     [SerializeField] private Image backgroundImage;
-    [SerializeField] private TextMeshProUGUI countText;
+    [SerializeField] private Image iconImage;
 
     [Header("Sprites")]
     [SerializeField] private Sprite borderSprite;
@@ -24,24 +23,30 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
         slotIndex = index;
     }
 
-    public void SetItem(int count)
+    public void SetItem(Sprite icon = null)
     {
-        if (countText != null)
-            countText.text = count > 1 ? count.ToString() : string.Empty;
-
         if (backgroundImage != null)
             backgroundImage.sprite = backgroundNormalSprite;
+
+        if (iconImage != null)
+        {
+            iconImage.sprite = icon;
+            iconImage.enabled = icon != null;
+        }
 
         gameObject.SetActive(true);
     }
 
     public void ShowAsEmpty()
     {
-        if (countText != null)
-            countText.text = string.Empty;
-
         if (backgroundImage != null)
             backgroundImage.sprite = backgroundNormalSprite;
+
+        if (iconImage != null)
+        {
+            iconImage.sprite = null;
+            iconImage.enabled = false;
+        }
 
         SetSelected(false);
         gameObject.SetActive(true);

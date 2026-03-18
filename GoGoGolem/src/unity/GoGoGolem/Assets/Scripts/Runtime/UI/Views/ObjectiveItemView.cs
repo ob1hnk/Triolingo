@@ -10,7 +10,7 @@ public class ObjectiveItemView : MonoBehaviour
     
     // 색상 설정
     private Color completedColor = new Color(0.47f, 0.47f, 0.47f); // 어두운 회색
-    private Color incompleteColor = new Color(0.86f, 0.86f, 0.86f); // 밝은 회색
+    private Color incompleteColor = Color.white;
     
     /// <summary>
     /// 목표 초기화
@@ -20,7 +20,7 @@ public class ObjectiveItemView : MonoBehaviour
         this.objectiveId = objectiveId;
         this.isCompleted = completed;
         
-        objectiveText.text = "• " + text;
+        objectiveText.text = " • " + text;
         UpdateVisual();
     }
     
@@ -47,7 +47,6 @@ public class ObjectiveItemView : MonoBehaviour
         {
             // 완료: 어두운 색 + 취소선
             objectiveText.color = completedColor;
-            objectiveText.fontStyle = FontStyles.Strikethrough;
         }
         else
         {

@@ -42,6 +42,8 @@ public class InputModeController : MonoBehaviour
 
         // Q 키는 인벤토리 토글만 담당
         input.Global.ToggleInventory.performed += _ => HandleInventoryToggle();
+        // ESC 키는 pause 토글 담당
+        input.Global.TogglePause.performed += _ => HandlePauseToggle();
 
         // 초기 상태에 맞는 입력 활성화
         EnableGameplayInput();
@@ -56,6 +58,20 @@ public class InputModeController : MonoBehaviour
             GameStateManager.Instance.ChangeState(GameState.InventoryUI);
         }
         else if (currentState == GameState.InventoryUI)
+        {
+            GameStateManager.Instance.ChangeState(GameState.Gameplay);
+        }
+    }
+
+    public void HandlePauseToggle()
+    {
+        var currentState = GameStateManager.Instance.CurrentState;
+
+        if (currentState == GameState.Gameplay)
+        {
+            GameStateManager.Instance.ChangeState(GameState.Paused);
+        }
+        else if (currentState == GameState.Paused)
         {
             GameStateManager.Instance.ChangeState(GameState.Gameplay);
         }

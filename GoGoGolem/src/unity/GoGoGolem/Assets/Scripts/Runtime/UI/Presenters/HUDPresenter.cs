@@ -1,15 +1,20 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// HUD 버튼 Presenter.
-/// 퀘스트 로그 버튼(Tab 동작)과 인벤토리 버튼(Q 동작)을 처리한다.
-/// </summary>
 public class HUDPresenter : MonoBehaviour
 {
     [Header("Buttons")]
     [SerializeField] private Button questLogButton;
     [SerializeField] private Button inventoryButton;
+    [SerializeField] private Button pauseButton;
+
+    [Header("Quest Button Icons")]
+    [SerializeField] private GameObject questIconClosed;
+    [SerializeField] private GameObject questIconOpen;
+
+    [Header("Inventory Button Icons")]
+    [SerializeField] private GameObject inventoryIconClosed;
+    [SerializeField] private GameObject inventoryIconOpen;
 
     [Header("References")]
     [SerializeField] private QuestUIPresenter questUIPresenter;
@@ -17,23 +22,59 @@ public class HUDPresenter : MonoBehaviour
 
     private void Start()
     {
-        questLogButton?.onClick.AddListener(OnQuestLogButtonClicked);
-        inventoryButton?.onClick.AddListener(OnInventoryButtonClicked);
+        if (questLogButton != null) questLogButton.onClick.AddListener(OnQuestLogButtonClicked);
+        if (inventoryButton != null) inventoryButton.onClick.AddListener(OnInventoryButtonClicked);
+        if (pauseButton != null) pauseButton.onClick.AddListener(OnPauseButtonClicked);
+
+        if (questUIPresenter != null) questUIPresenter.OnVisibilityChanged += SetQuestIcon;
+        if (inventoryUIPresenter != null) inventoryUIPresenter.OnVisibilityChanged += SetInventoryIcon;
+        SetQuestIcon(false);
+        SetInventoryIcon(false);
     }
 
     private void OnDestroy()
     {
-        questLogButton?.onClick.RemoveListener(OnQuestLogButtonClicked);
-        inventoryButton?.onClick.RemoveListener(OnInventoryButtonClicked);
+        if (questLogButton != null) questLogButton.onClick.RemoveListener(OnQuestLogButtonClicked);
+        if (inventoryButton != null) inventoryButton.onClick.RemoveListener(OnInventoryButtonClicked);
+        if (pauseButton != null) pauseButton.onClick.RemoveListener(OnPauseButtonClicked);
+
+        if (questUIPresenter != null) questUIPresenter.OnVisibilityChanged -= SetQuestIcon;
+        if (inventoryUIPresenter != null) inventoryUIPresenter.OnVisibilityChanged -= SetInventoryIcon;
     }
 
     private void OnQuestLogButtonClicked()
     {
-        questUIPresenter?.Toggle();
+        if (questUIPresenter == null) return;
+        if (inventoryUIPresenter != null && inventoryUIPresenter.IsVisible)
+            inventoryUIPresenter.Toggle();
+        questUIPresenter.Toggle();
     }
 
     private void OnInventoryButtonClicked()
     {
-        inventoryUIPresenter?.Toggle();
+        if (inventoryUIPresenter == null) return;
+        if (questUIPresenter != null && questUIPresenter.IsVisible)
+            questUIPresenter.Hide();
+        inventoryUIPresenter.Toggle();
     }
+
+    private void OnPauseButtonClicked()
+    {
+        if (questUIPresenter != null && questUIPresenter.IsVisible)
+            questUIPresenter.Hide();
+        InputModeController.Instance.HandlePauseToggle();
+    }
+
+    private void SetQuestIcon(bool isOpen)
+    {
+        if (questIconClosed != null) questIconClosed.SetActive(!isOpen);
+        if (questIconOpen != null) questIconOpen.SetActive(isOpen);
+    }
+
+    private void SetInventoryIcon(bool isOpen)
+    {
+        if (inventoryIconClosed != null) inventoryIconClosed.SetActive(!isOpen);
+        if (inventoryIconOpen != null) inventoryIconOpen.SetActive(isOpen);
+    }
+
 }

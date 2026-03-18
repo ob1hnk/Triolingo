@@ -4,25 +4,21 @@ public class InventoryLogic
 {
     // 아이템 ID와 개수를 저장하는 딕셔너리
     private Dictionary<string, int> items = new Dictionary<string, int>();
-    
+
     // 데이터 변경 시 UI에 알리기 위한 이벤트
     public event Action OnInventoryChanged;
+
+    // 아이템이 추가될 때 발생 (itemID, count)
+    public event Action<string, int> OnItemAdded;
 
     public void AddItem(string id, int count = 1)
     {
         if (items.ContainsKey(id))
-        {
             items[id] += count;
-        }
         else
-        {
             items[id] = count;
-        }
 
-        int subscriberCount = OnInventoryChanged?.GetInvocationList().Length ?? 0;
-
-
-        // 구독 중인 UI가 있다면 신호를 보냄
+        OnItemAdded?.Invoke(id, count);
         OnInventoryChanged?.Invoke();
     }
 
