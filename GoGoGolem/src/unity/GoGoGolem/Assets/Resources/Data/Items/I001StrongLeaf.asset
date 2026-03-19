@@ -18,4 +18,4 @@ MonoBehaviour:
   phase: MQ-01-P06
   description: "\uD06C\uACE0 \uD2BC\uD2BC\uD55C \uB098\uBB47\uC78E"
   usage: "MQ-02\uC5D0\uC11C \uB099\uD558\uC0B0\uC73C\uB85C \uC0AC\uC6A9"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: e12af8eac59a2436a8042c34aa6d6b49, type: 3}

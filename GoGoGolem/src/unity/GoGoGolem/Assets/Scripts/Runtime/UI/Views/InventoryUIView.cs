@@ -5,19 +5,33 @@ using UnityEngine.UI;
 public class InventoryUIView : MonoBehaviour
 {
     [Header("Slot Settings")]
-    [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private Transform slotContainer;
+    [SerializeField] private Transform skillSlotContainer;
     [SerializeField] private InventorySlot slotPrefab;
 
     [Header("Grid Settings")]
     [SerializeField] private int columns = 4;
-    [SerializeField] private int initialSlotCount = 8;
+    [SerializeField] private int initialSlotCount = 4;
+
+    [Header("Empty State")]
+    [SerializeField] private GameObject noItemText;
+    [SerializeField] private GameObject noSkillText;
 
     [Header("Item Info Panel")]
     [SerializeField] private ItemInfoPanel itemInfoPanel;
 
     private List<InventorySlot> slots = new();
+    private List<InventorySlot> skillSlots = new();
     private Dictionary<int, string> indexToItemID = new();
+
+    private int TotalSlotCount => slots.Count + skillSlots.Count;
+
+    private InventorySlot GetSlotAt(int index)
+    {
+        if (index < slots.Count) return slots[index];
+        int skillIndex = index - slots.Count;
+        return skillIndex < skillSlots.Count ? skillSlots[skillIndex] : null;
+    }
 
     public System.Action<int> OnSlotClicked;
 
@@ -79,6 +93,8 @@ public class InventoryUIView : MonoBehaviour
         {
             CreateSlot(i);
         }
+
+        RegisterSkillSlots();
     }
 
     private void CreateSlot(int index)
@@ -93,15 +109,33 @@ public class InventoryUIView : MonoBehaviour
         slots.Add(newSlot);
     }
 
+    private void RegisterSkillSlots()
+    {
+        foreach (var slot in skillSlots)
+            if (slot != null) slot.OnSlotClicked -= HandleSlotClick;
+        skillSlots.Clear();
+
+        if (skillSlotContainer == null) return;
+
+        int startIndex = slots.Count;
+        for (int i = 0; i < skillSlotContainer.childCount; i++)
+        {
+            var slot = skillSlotContainer.GetChild(i).GetComponent<InventorySlot>();
+            if (slot == null) continue;
+            slot.SetIndex(startIndex + i);
+            slot.OnSlotClicked += HandleSlotClick;
+            skillSlots.Add(slot);
+        }
+    }
+
     private void ClearAllSlotObjects()
     {
         foreach (var slot in slots)
-        {
-            if (slot != null)
-            {
-                slot.OnSlotClicked -= HandleSlotClick;
-            }
-        }
+            if (slot != null) slot.OnSlotClicked -= HandleSlotClick;
+
+        foreach (var slot in skillSlots)
+            if (slot != null) slot.OnSlotClicked -= HandleSlotClick;
+        skillSlots.Clear();
 
         int childCount = slotContainer.childCount;
         for (int i = childCount - 1; i >= 0; i--)
@@ -130,7 +164,12 @@ public class InventoryUIView : MonoBehaviour
             slots[i].ShowAsEmpty();
         }
 
-        if (items == null || items.Count == 0) return;
+        bool isEmpty = items == null || items.Count == 0;
+        foreach (var slot in slots)
+            slot.gameObject.SetActive(!isEmpty);
+        if (noItemText != null) noItemText.SetActive(isEmpty);
+
+        if (isEmpty) return;
 
         int requiredSlots = items.Count;
         if (requiredSlots > slots.Count)
@@ -142,15 +181,25 @@ public class InventoryUIView : MonoBehaviour
             }
         }
 
+        var itemDB = Managers.Inventory?.ItemDB;
         int index = 0;
         foreach (var item in items)
         {
             if (index >= slots.Count) break;
 
-            slots[index].SetItem(item.Value);
+            var data = itemDB?.GetItem(item.Key);
+            slots[index].SetItem(data?.icon);
             indexToItemID[index] = item.Key;
             index++;
         }
+    }
+
+    public void RenderSkills(Dictionary<string, int> skills)
+    {
+        bool isEmpty = skills == null || skills.Count == 0;
+        foreach (var slot in skillSlots)
+            slot.gameObject.SetActive(!isEmpty);
+        if (noSkillText != null) noSkillText.SetActive(isEmpty);
     }
 
     public void SelectItem(int index)
@@ -159,8 +208,8 @@ public class InventoryUIView : MonoBehaviour
 
         if (IsValidIndex(index))
         {
-            slots[index].SetSelected(true);
-            ScrollToItem(index);
+            var slot = GetSlotAt(index);
+            if (slot != null) slot.SetSelected(true);
         }
     }
 
@@ -174,14 +223,12 @@ public class InventoryUIView : MonoBehaviour
     public void ClearSelection()
     {
         foreach (var slot in slots)
-        {
             slot.SetSelected(false);
-        }
+        foreach (var slot in skillSlots)
+            slot.SetSelected(false);
 
         if (itemInfoPanel != null)
-        {
             itemInfoPanel.ShowEmpty();
-        }
     }
 
     public void ShowItemInfo(int index)
@@ -219,14 +266,6 @@ public class InventoryUIView : MonoBehaviour
         return indexToItemID.ContainsKey(index);
     }
 
-    public void Scroll(float delta)
-    {
-        if (scrollRect == null) return;
-
-        float scrollSensitivity = 0.1f;
-        scrollRect.verticalNormalizedPosition += delta * scrollSensitivity;
-        scrollRect.verticalNormalizedPosition = Mathf.Clamp01(scrollRect.verticalNormalizedPosition);
-    }
 
     public void UpdatePointer(Vector2 mousePos)
     {
@@ -239,7 +278,7 @@ public class InventoryUIView : MonoBehaviour
 
     private bool IsValidIndex(int index)
     {
-        return index >= 0 && index < slots.Count;
+        return index >= 0 && index < TotalSlotCount;
     }
 
     private int CalculateNextIndex(int currentIndex, Vector2 direction)
@@ -254,15 +293,11 @@ public class InventoryUIView : MonoBehaviour
 
         col = Mathf.Clamp(col, 0, columns - 1);
 
-        int maxRow = (slots.Count - 1) / columns;
+        int maxRow = (TotalSlotCount - 1) / columns;
         row = Mathf.Clamp(row, 0, maxRow);
 
         int nextIndex = row * columns + col;
         return IsValidIndex(nextIndex) ? nextIndex : currentIndex;
     }
 
-    private void ScrollToItem(int index)
-    {
-        if (scrollRect == null || slotContainer == null) return;
-    }
 }

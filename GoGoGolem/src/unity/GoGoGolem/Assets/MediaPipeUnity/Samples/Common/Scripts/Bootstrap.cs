@@ -86,7 +86,30 @@ namespace Mediapipe.Unity.Sample
         _appSettings.BuildWebCamSource(), _appSettings.BuildStaticImageSource(), _appSettings.BuildVideoSource());
       ImageSourceProvider.Switch(_appSettings.defaultImageSource);
 
+      // 메인 씬 Settings에서 저장된 카메라 선택을 적용
+      ApplySavedCameraSelection();
+
       isFinished = true;
+    }
+
+    private void ApplySavedCameraSelection()
+    {
+      const string PrefKeyCamera = "Settings_CameraName";
+      string savedName = PlayerPrefs.GetString(PrefKeyCamera, null);
+      if (string.IsNullOrEmpty(savedName)) return;
+
+      var imageSource = ImageSourceProvider.ImageSource;
+      if (imageSource == null) return;
+
+      var names = imageSource.sourceCandidateNames;
+      if (names == null) return;
+
+      int index = System.Array.IndexOf(names, savedName);
+      if (index >= 0)
+      {
+        imageSource.SelectSource(index);
+        Debug.Log($"[Bootstrap] 저장된 카메라 적용: {savedName} (index {index})");
+      }
     }
 
     private void DecideInferenceMode()
