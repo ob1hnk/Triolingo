@@ -1,0 +1,12 @@
+title: DLG_INTRO
+tags: phase:INTRO
+---
+<<declare $playerName = "">>
+
+// 인트로 씬: 첫 대화 후 플레이어 이름 입력
+내레이터: 어서 와. 오랫동안 기다리고 있었어.
+내레이터: 먼저 네 이름을 알고 싶구나.
+<<request_name_input>>
+내레이터: {$playerName}... 좋은 이름이네.
+내레이터: 자, 이제 시작해 볼까?
+===
