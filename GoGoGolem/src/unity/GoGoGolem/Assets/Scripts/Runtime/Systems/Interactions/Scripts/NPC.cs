@@ -1,66 +1,124 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// 범용 NPC 클래스. 대화 시작을 담당한다.
 /// 퀘스트 액션이 필요한 경우 같은 GameObject에 NPCQuestHandler를 추가한다.
+///
+/// 대화 방식:
+///   - dialogueID가 설정된 경우 → Yarn 대화 (핵심 NPC)
+///   - dialogueLines가 설정된 경우 → 말풍선 출력 (일반 NPC)
 /// </summary>
 public class NPC : MonoBehaviour, IInteractable
 {
-    [Header("NPC Info")]
-    [SerializeField] private string npcName = "마을 주민";
-
-    [Header("Dialogue")]
-    [Tooltip("Yarn 대화 노드 이름 (예: DLG-001)")]
+    [Header("Dialogue (Yarn — 핵심 NPC)")]
+    [Tooltip("Yarn 대화 노드 이름 (예: DLG-001). 비우면 말풍선 모드 사용.")]
     [SerializeField] private string dialogueID;
+
+    [Header("Dialogue (Speech Bubble — 일반 NPC)")]
+    [Tooltip("E키를 누를 때마다 순서대로 출력할 대사. 마지막 대사 이후 말풍선이 닫힘.")]
+    [TextArea(2, 4)]
+    [SerializeField] private string[] dialogueLines;
 
     [Header("Options")]
     [Tooltip("한 번만 상호작용 가능")]
     [SerializeField] private bool onceOnly = false;
 
-    [Tooltip("상호작용 후 대사")]
-    [TextArea(2, 4)]
-    [SerializeField] private string afterInteractionText = "";
+    [Header("Prompt")]
+    [SerializeField] private InteractionPromptData promptData;
 
     [Header("Event Channels")]
     [SerializeField] private StringGameEvent requestStartDialogueEvent;
 
     private bool hasInteracted = false;
+    private int _currentLineIndex = 0;
+    private SpeechBubbleView _speechBubble;
+    private NPCQuestHandler _questHandler;
 
-    public InteractionType InteractionType => InteractionType.Talk;
+    // 말풍선 활성 중에만 사용하는 로컬 InputAction (Enter, Space, 클릭)
+    private InputAction _bubbleAdvanceAction;
 
-    public string GetInteractText()
+    public InteractionType InteractionType => InteractionType.TalkNPC;
+
+    private void Awake()
+    {
+        _speechBubble = GetComponentInChildren<SpeechBubbleView>(true);
+        _questHandler = GetComponent<NPCQuestHandler>();
+
+        _bubbleAdvanceAction = new InputAction("SpeechBubbleAdvance", InputActionType.Button);
+        _bubbleAdvanceAction.AddBinding("<Keyboard>/enter");
+        _bubbleAdvanceAction.AddBinding("<Keyboard>/space");
+        _bubbleAdvanceAction.AddBinding("<Mouse>/leftButton");
+        _bubbleAdvanceAction.performed += OnBubbleAdvance;
+    }
+
+    private void OnDestroy()
+    {
+        _bubbleAdvanceAction.performed -= OnBubbleAdvance;
+        _bubbleAdvanceAction.Dispose();
+    }
+
+    private void OnBubbleAdvance(InputAction.CallbackContext ctx)
+    {
+        AdvanceSpeechBubble();
+    }
+
+    private void AdvanceSpeechBubble()
+    {
+        if (dialogueLines == null || dialogueLines.Length == 0) return;
+
+        if (_currentLineIndex < dialogueLines.Length)
+        {
+            if (_speechBubble != null)
+                _speechBubble.Show(dialogueLines[_currentLineIndex]);
+            _currentLineIndex++;
+        }
+        else
+        {
+            if (_speechBubble != null)
+                _speechBubble.Hide();
+            _bubbleAdvanceAction.Disable();
+            _currentLineIndex = 0;
+
+            if (onceOnly)
+                hasInteracted = true;
+        }
+    }
+
+    public string GetActionLabel()
     {
         if (onceOnly && hasInteracted) return "";
-        return $"{npcName}와 대화하기 (E)";
+        return promptData != null ? promptData.ActionLabel : "";
     }
+
+    public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
 
     public void Interact()
     {
-        if (onceOnly && hasInteracted)
+        if (onceOnly && hasInteracted) return;
+
+        // Yarn 모드
+        if (!string.IsNullOrEmpty(dialogueID))
         {
-            if (!string.IsNullOrEmpty(afterInteractionText))
-                Debug.Log($"[NPC] {npcName}: {afterInteractionText}");
+            hasInteracted = true;
+            if (requestStartDialogueEvent != null)
+                requestStartDialogueEvent.Raise(dialogueID);
             else
-                Debug.Log($"[NPC] {npcName}: 이미 대화했습니다.");
+                Debug.LogError($"[NPC] {gameObject.name}: requestStartDialogueEvent가 null입니다!");
+
+            if (_questHandler != null) _questHandler.Execute();
             return;
         }
 
-        hasInteracted = true;
-
-        if (!string.IsNullOrEmpty(dialogueID) && requestStartDialogueEvent != null)
+        // 말풍선 모드 — 첫 E키 입력으로 시작, 이후 Enter/Space/클릭으로 진행
+        if (dialogueLines != null && dialogueLines.Length > 0)
         {
-            requestStartDialogueEvent.Raise(dialogueID);
-        }
-        else if (string.IsNullOrEmpty(dialogueID))
-        {
-            Debug.LogWarning($"[NPC] {npcName}: 대화 ID가 설정되지 않았습니다.");
-        }
-        else if (requestStartDialogueEvent == null)
-        {
-            Debug.LogError($"[NPC] {npcName}: requestStartDialogueEvent가 null입니다!");
+            _bubbleAdvanceAction.Enable();
+            AdvanceSpeechBubble();
+            return;
         }
 
-        GetComponent<NPCQuestHandler>()?.Execute();
+        Debug.LogWarning($"[NPC] {gameObject.name}: dialogueID도 dialogueLines도 설정되지 않았습니다.");
     }
 
 #if UNITY_EDITOR

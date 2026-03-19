@@ -73,7 +73,19 @@ public class DialogueManager : MonoBehaviour
         }
 
         string nodeName = dialogueID.Replace('-', '_');
-        dialogueRunner.StartDialogue(nodeName);
+        RunDialogueAsync(nodeName);
+    }
+
+    private async void RunDialogueAsync(string nodeName)
+    {
+        try
+        {
+            await dialogueRunner.StartDialogue(nodeName);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[DialogueManager] 대화 예외: {e.Message}\n{e.StackTrace}");
+        }
     }
 
     public bool IsPlaying() => dialogueRunner != null && dialogueRunner.IsDialogueRunning;

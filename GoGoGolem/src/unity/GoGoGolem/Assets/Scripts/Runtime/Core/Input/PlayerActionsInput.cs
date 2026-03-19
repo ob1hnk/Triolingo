@@ -40,5 +40,5 @@ public class PlayerActionsInput : MonoBehaviour, GameInputActions.IPlayerActions
         GatherPressed = true;
     }
 
-    public void OnInteract(InputAction.CallbackContext context) { }
+    public void OnInteractNPC(InputAction.CallbackContext context) { }
 }

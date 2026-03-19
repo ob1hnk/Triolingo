@@ -12,7 +12,7 @@ public class QuestItemView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI questHeaderText;
 
     [Header("Objective List")]
-    [SerializeField] private Transform objectiveListParent;
+    [SerializeField] private Transform objectiveContent;
     [SerializeField] private GameObject objectiveItemPrefab;
 
     private string questId;
@@ -32,7 +32,7 @@ public class QuestItemView : MonoBehaviour
 
     private void AddObjective(QuestObjective objective, bool visible)
     {
-        var obj = Instantiate(objectiveItemPrefab, objectiveListParent);
+        var obj = Instantiate(objectiveItemPrefab, objectiveContent);
         var objectiveView = obj.GetComponent<ObjectiveItemView>();
 
         string displayText = string.IsNullOrEmpty(objective.Description) ? objective.ObjectiveID : objective.Description;

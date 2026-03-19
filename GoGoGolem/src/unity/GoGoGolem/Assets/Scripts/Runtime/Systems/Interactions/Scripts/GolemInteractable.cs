@@ -21,12 +21,10 @@ public class GolemInteractable : MonoBehaviour, IInteractable
         return Managers.Quest.IsQuestCompleted(requiredQuestId);
     }
 
-    public InteractionType InteractionType => InteractionType.Talk;
+    public InteractionType InteractionType => InteractionType.TalkGolem;
 
-    public string GetInteractText()
-    {
-        return IsQuestGatePassed() ? "대화하기" : string.Empty;
-    }
+    public string GetActionLabel() => IsQuestGatePassed() ? "대화하기" : string.Empty;
+    public Sprite GetKeyHintSprite() => null;
 
     public void Interact()
     {
