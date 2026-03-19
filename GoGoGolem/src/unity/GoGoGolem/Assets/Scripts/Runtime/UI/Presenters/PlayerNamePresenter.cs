@@ -28,6 +28,10 @@ public class PlayerNamePresenter : DialoguePresenterBase
             characterNameText.text = GameManager.Instance.PlayerName;
     }
 
-    public override YarnTask RunOptionsAsync(DialogueOption[] dialogueOptions, LineCancellationToken cancellationToken)
+    public override YarnTask<DialogueOption?> RunOptionsAsync(DialogueOption[] dialogueOptions, LineCancellationToken cancellationToken)
         => YarnTask<DialogueOption?>.FromResult(null);
+
+    public override YarnTask OnDialogueStartedAsync() => YarnTask.CompletedTask;
+
+    public override YarnTask OnDialogueCompleteAsync() => YarnTask.CompletedTask;
 }

@@ -19,9 +19,7 @@ public class IntroSceneController : MonoBehaviour
             return;
         }
 
-        Debug.Log("[IntroSceneController] Start. DialogueRunner 연결됨. DLG_INTRO 실행 시도.");
         dialogueRunner.onDialogueComplete.AddListener(OnDialogueComplete);
-        dialogueRunner.onDialogueStart.AddListener(() => Debug.Log("[IntroSceneController] onDialogueStart 발생. 대화 실제 시작됨."));
         dialogueRunner.StartDialogue("DLG_INTRO");
     }
 
@@ -33,7 +31,6 @@ public class IntroSceneController : MonoBehaviour
 
     private void OnDialogueComplete()
     {
-        Debug.Log("[IntroSceneController] 대화 완료. 씬 전환: " + nextSceneName);
         SceneManager.LoadScene(nextSceneName);
     }
 }
