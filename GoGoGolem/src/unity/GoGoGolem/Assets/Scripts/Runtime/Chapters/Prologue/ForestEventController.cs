@@ -93,6 +93,7 @@ namespace Demo.Chapters.Prologue
         {
             ValidateComponents();
             _dialogueCommands?.Register(this);
+            _dialogueCommands?.RegisterCommands();
 
             if (_debugSkipIntro)
                 EnterDialogueState();

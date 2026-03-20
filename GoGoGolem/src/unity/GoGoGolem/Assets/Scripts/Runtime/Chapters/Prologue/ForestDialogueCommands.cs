@@ -14,15 +14,27 @@ namespace Demo.Chapters.Prologue
     /// </summary>
     public class ForestDialogueCommands : MonoBehaviour
     {
-        // ForestEventController가 자신을 등록해줌
         private ForestEventController _controller;
+        [SerializeField] private DialogueRunner _dialogueRunner;
 
         public void Register(ForestEventController controller)
         {
             _controller = controller;
         }
 
-        [YarnCommand("forest_choose_push")]
+        // DialogueRunner에 커맨드를 런타임으로 등록
+        public void RegisterCommands()
+        {
+            if (_dialogueRunner == null)
+            {
+                Debug.LogError("[ForestDialogueCommands] DialogueRunner가 연결되지 않았습니다.");
+                return;
+            }
+
+            _dialogueRunner.AddCommandHandler("forest_choose_lift", OnChooseLift);
+            _dialogueRunner.AddCommandHandler("forest_choose_push", OnChoosePush);
+        }
+
         public void OnChoosePush()
         {
             if (_controller == null)
@@ -33,7 +45,6 @@ namespace Demo.Chapters.Prologue
             _controller.OnChoicePush();
         }
 
-        [YarnCommand("forest_choose_lift")]
         public void OnChooseLift()
         {
             if (_controller == null)
