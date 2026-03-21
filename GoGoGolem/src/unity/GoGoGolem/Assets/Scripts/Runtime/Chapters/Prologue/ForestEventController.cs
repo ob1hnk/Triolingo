@@ -24,8 +24,8 @@ namespace Demo.Chapters.Prologue
     ///   Idle
     ///    └─ 트리거 진입 → WalkIn (플레이어/골렘 지정 위치로 이동)
     ///         └─ 이동 완료 → Dialogue (Yarn 실행)
-    ///               ├─ 밀기 선택(<<forest_choose_push>>) → PushTimeline
-    ///               └─ 들기 선택(<<forest_choose_lift>>) → LiftTimeline
+    ///               ├─ 밀기 선택(<<forest_choose_push>>) → PushTimeline + Push Dialogue
+    ///               └─ 들기 선택(<<forest_choose_lift>>) → LiftTimeline + Lift Dialogue
     ///                     └─ Timeline 종료 → Complete
     ///
     /// Inspector 세팅:
@@ -69,6 +69,11 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private ForestDialogueCommands _dialogueCommands;
         [SerializeField] private GameObject _dialogueCanvas;
 
+        [Tooltip("Lift Timeline 중간 대사 Yarn 노드명")]
+        [SerializeField] private string _liftMidDialogueNode = "DLG_002_LIFT_MID";
+        [Tooltip("Push Timeline 중간 대사 Yarn 노드명")]
+        [SerializeField] private string _pushMidDialogueNode = "DLG_002_PUSH_MID";
+
         [Header("Event Channels")]
         [Tooltip("DialogueManager의 onDialogueCompletedEvent SO와 동일한 것 연결")]
         [SerializeField] private GameEvent _onDialogueCompletedEvent;
@@ -85,15 +90,34 @@ namespace Demo.Chapters.Prologue
         // 내부 상태
         private ForestEventState _state = ForestEventState.Idle;
 
+        // 씬 시작 시 골렘 초기 위치/회전 저장용
+        private Vector3 _golemInitialPosition;
+        private Quaternion _golemInitialRotation;
+
         // =============================================
         // Unity 생명주기
         // =============================================
+
+        private void Awake()
+        {
+            // Awake에서 초기 위치 저장 (Start보다 먼저 → Timeline 평가 전)
+            if (_golem != null)
+            {
+                _golemInitialPosition = _golem.position;
+                _golemInitialRotation = _golem.rotation;
+            }
+        }
 
         private void Start()
         {
             ValidateComponents();
             _dialogueCommands?.Register(this);
             _dialogueCommands?.RegisterCommands();
+
+            // Timeline 완전 정지 + 골렘 위치 강제 복원
+            ResetTimeline(_liftDirector);
+            ResetTimeline(_pushDirector);
+            ForceResetGolemTransform();
 
             if (_debugSkipIntro)
                 EnterDialogueState();
@@ -121,6 +145,7 @@ namespace Demo.Chapters.Prologue
 
         private void EnterWalkInState()
         {
+            Debug.Log("[ForestEventController] WalkIn 시작");
             ChangeState(ForestEventState.WalkIn);
             SetPlayerMovement(false);
             StartCoroutine(WalkInRoutine());
@@ -130,6 +155,9 @@ namespace Demo.Chapters.Prologue
         {
             // 걷기 애니메이션 ON
             SetWalkAnimation(true);
+
+            // 1프레임 대기: Animator 파라미터 → Transition 조건 반영 대기
+            yield return null;
 
             // 시작 위치/회전 저장
             Vector3 playerStartPos = _player != null ? _player.position : Vector3.zero;
@@ -142,7 +170,7 @@ namespace Demo.Chapters.Prologue
             {
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / _walkDuration);
-                float smooth = Mathf.SmoothStep(0f, 1f, t); // 부드럽게 가속/감속
+                float smooth = Mathf.SmoothStep(0f, 1f, t);
 
                 if (_player != null && _playerStartPoint != null)
                 {
@@ -230,6 +258,28 @@ namespace Demo.Chapters.Prologue
         }
 
         /// <summary>
+        /// Lift Timeline Signal → 중간 대사 트리거
+        /// Signal Receiver에서 이 메서드 연결
+        /// </summary>
+        public void OnLiftDialogueTrigger()
+        {
+            if (_state != ForestEventState.LiftTimeline) return;
+            _dialogueCanvas?.SetActive(true);
+            Managers.Dialogue.StartDialogue(_liftMidDialogueNode);
+        }
+
+        /// <summary>
+        /// Push Timeline Signal → 중간 대사 트리거
+        /// Signal Receiver에서 이 메서드 연결
+        /// </summary>
+        public void OnPushDialogueTrigger()
+        {
+            if (_state != ForestEventState.PushTimeline) return;
+            _dialogueCanvas?.SetActive(true);
+            Managers.Dialogue.StartDialogue(_pushMidDialogueNode);
+        }
+
+        /// <summary>
         /// Push / Lift Timeline 끝 Signal Receiver → 이 메서드 연결 (선택 사항).
         /// </summary>
         public void OnChoiceTimelineEnd()
@@ -263,8 +313,12 @@ namespace Demo.Chapters.Prologue
         {
             if (_state == ForestEventState.Complete) return;
             ChangeState(ForestEventState.Complete);
-            SetPlayerMovement(true);
             _dialogueCanvas?.SetActive(false);
+
+            _playerAnimation?.ResetBlendInput();
+            (_playerControllerScript as PlayerController)?.ResetVelocity();
+            SetPlayerMovement(true);
+            StartCoroutine(PostCompleteReset());
 
             // TODO: Quest 완료 이벤트 발행 (한나님 QuestManager 연동 후)
             // Managers.Quest.CompleteObjective("...");
@@ -276,12 +330,51 @@ namespace Demo.Chapters.Prologue
         // 유틸리티
         // =============================================
 
+        private IEnumerator PostCompleteReset()
+        {
+            yield return null;  // 1프레임 대기
+            _playerAnimation?.ResetBlendInput();
+            (_playerControllerScript as PlayerController)?.ResetVelocity();
+        }
+
+        /// <summary>
+        /// Timeline을 완전히 정지시키고 바인딩 영향 제거
+        /// Stop()만으로는 Wrap Mode = Hold일 때 마지막 프레임 값이 남을 수 있으므로
+        /// time을 0으로 리셋하고 Evaluate() 후 Stop()하여 초기 상태로 되돌린다.
+        /// </summary>
+        private void ResetTimeline(PlayableDirector director)
+        {
+            if (director == null) return;
+
+            director.time = 0;
+            director.Evaluate();
+            director.Stop();
+        }
+
+        /// <summary>
+        /// Awake에서 저장한 초기 위치/회전으로 골렘을 강제 복원
+        /// Timeline 바인딩이 Transform을 오염시킨 경우의 안전장치
+        /// </summary>
+        private void ForceResetGolemTransform()
+        {
+            if (_golem == null) return;
+
+            _golem.position = _golemInitialPosition;
+            _golem.rotation = _golemInitialRotation;
+            Debug.Log($"[ForestEventController] 골렘 초기 위치 복원: {_golemInitialPosition}");
+        }
+
         private void SetWalkAnimation(bool isWalking)
         {
             // 플레이어: inputMag float (0 = 정지, 1 = 걷기)
             _playerAnimator?.SetFloat(_playerWalkParam, isWalking ? 1f : 0f);
+
             // 골렘: isWalking bool
-            _golemAnimator?.SetBool(_golemWalkParam, isWalking);
+            if (_golemAnimator != null)
+            {
+                _golemAnimator.SetBool(_golemWalkParam, isWalking);
+                Debug.Log($"[ForestEventController] 골렘 {_golemWalkParam} = {isWalking}");
+            }
         }
 
         private void ChangeState(ForestEventState newState)

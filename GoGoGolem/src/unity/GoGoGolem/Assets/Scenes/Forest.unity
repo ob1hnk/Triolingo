@@ -426,6 +426,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4183068817574153646, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.20138589
+      objectReference: {fileID: 0}
+    - target: {fileID: 4183068817574153646, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.0000011834401
+      objectReference: {fileID: 0}
+    - target: {fileID: 4183068817574153646, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.00000024331302
+      objectReference: {fileID: 0}
+    - target: {fileID: 4183068817574153646, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.97951204
+      objectReference: {fileID: 0}
+    - target: {fileID: 4183068817574153646, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7431533587824991313, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
       propertyPath: m_Name
       value: World Golem
@@ -931,7 +951,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1493958779012120596, guid: b9de24523a11d714db3851b5f0f9d527, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 873960951}
   m_SourcePrefab: {fileID: 100100000, guid: b9de24523a11d714db3851b5f0f9d527, type: 3}
 --- !u!4 &402155709 stripped
 Transform:
@@ -2992,7 +3015,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.32
+      value: 3.24
       objectReference: {fileID: 0}
     - target: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3362,7 +3385,7 @@ CharacterController:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Height: 0.5
+  m_Height: 0.75
   m_Radius: 0.19
   m_SlopeLimit: 45
   m_StepOffset: 0.01
@@ -3462,6 +3485,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 764014926}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &873960947 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1493958779012120596, guid: b9de24523a11d714db3851b5f0f9d527, type: 3}
+  m_PrefabInstance: {fileID: 402155708}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &873960951
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 873960947}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &906196687
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4078,11 +4128,23 @@ PlayableDirector:
   m_Enabled: 1
   serializedVersion: 3
   m_PlayableAsset: {fileID: 11400000, guid: d676ac4adf0a7424cb0a265d24c97915, type: 2}
-  m_InitialState: 1
+  m_InitialState: 0
   m_WrapMode: 2
   m_DirectorUpdateMode: 1
   m_InitialTime: 0
-  m_SceneBindings: []
+  m_SceneBindings:
+  - key: {fileID: 366385937138663180, guid: d676ac4adf0a7424cb0a265d24c97915, type: 2}
+    value: {fileID: 143030884}
+  - key: {fileID: -149694544171565654, guid: d676ac4adf0a7424cb0a265d24c97915, type: 2}
+    value: {fileID: 873960951}
+  - key: {fileID: -8993273149928929847, guid: d676ac4adf0a7424cb0a265d24c97915, type: 2}
+    value: {fileID: 143030884}
+  - key: {fileID: -5733750111582960828, guid: d676ac4adf0a7424cb0a265d24c97915, type: 2}
+    value: {fileID: 1918013887}
+  - key: {fileID: -5106318713956308284, guid: d676ac4adf0a7424cb0a265d24c97915, type: 2}
+    value: {fileID: 771608758}
+  - key: {fileID: -5078252941721210449, guid: d676ac4adf0a7424cb0a265d24c97915, type: 2}
+    value: {fileID: 771608758}
   m_ExposedReferences:
     m_References: []
 --- !u!4 &1361496774
@@ -4576,13 +4638,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1659476455}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: 0.17624302, z: -0, w: 0.9843467}
   m_LocalPosition: {x: 32.2, y: 3.02, z: 36.22}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1531223243}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 20.302, z: 0}
 --- !u!1001 &1684876227
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4766,7 +4828,7 @@ PlayableDirector:
   m_Enabled: 1
   serializedVersion: 3
   m_PlayableAsset: {fileID: 11400000, guid: 1b8d9326d1838d0459aaeb5c70aab62d, type: 2}
-  m_InitialState: 1
+  m_InitialState: 0
   m_WrapMode: 2
   m_DirectorUpdateMode: 1
   m_InitialTime: 0
@@ -4919,7 +4981,7 @@ PlayableDirector:
   m_Enabled: 1
   serializedVersion: 3
   m_PlayableAsset: {fileID: 11400000, guid: b7bbc4e156349c4469171977758b8a3e, type: 2}
-  m_InitialState: 1
+  m_InitialState: 0
   m_WrapMode: 2
   m_DirectorUpdateMode: 1
   m_InitialTime: 0
@@ -5051,6 +5113,7 @@ GameObject:
   - component: {fileID: 1918013885}
   - component: {fileID: 1918013884}
   - component: {fileID: 1918013886}
+  - component: {fileID: 1918013887}
   m_Layer: 0
   m_Name: Forest Event
   m_TagString: Untagged
@@ -5084,6 +5147,8 @@ MonoBehaviour:
   _dialogueStartNode: DLG_002
   _dialogueCommands: {fileID: 1918013886}
   _dialogueCanvas: {fileID: 1244047960}
+  _liftMidDialogueNode: DLG_002_LIFT_MID
+  _pushMidDialogueNode: DLG_002_PUSH_MID
   _onDialogueCompletedEvent: {fileID: 11400000, guid: 13d32723c5d854b5ca2eccbae2555d66, type: 2}
   _playerAnimation: {fileID: 771608763}
   _playerLocomotionInput: {fileID: 771608765}
@@ -5117,6 +5182,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dialogueRunner: {fileID: 1597961155}
+--- !u!114 &1918013887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1918013883}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e52de21a22b6dd44c9cc19f810c65059, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Events:
+    m_Signals:
+    - {fileID: 11400000, guid: 03bea4561e413e24eb16370aff9d6394, type: 2}
+    m_Events:
+    - m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1918013884}
+          m_TargetAssemblyTypeName: Demo.Chapters.Prologue.ForestEventController,
+            Assembly-CSharp
+          m_MethodName: OnLiftDialogueTrigger
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
 --- !u!1001 &1929087940
 PrefabInstance:
   m_ObjectHideFlags: 0
