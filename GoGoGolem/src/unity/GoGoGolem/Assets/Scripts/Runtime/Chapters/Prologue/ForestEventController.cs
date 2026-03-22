@@ -313,12 +313,12 @@ namespace Demo.Chapters.Prologue
         {
             if (_state == ForestEventState.Complete) return;
             ChangeState(ForestEventState.Complete);
-            _dialogueCanvas?.SetActive(false);
 
-            _playerAnimation?.ResetBlendInput();
+            // CharacterController 리셋 후 이동 복원
             (_playerControllerScript as PlayerController)?.ResetVelocity();
             SetPlayerMovement(true);
-            StartCoroutine(PostCompleteReset());
+    
+            _dialogueCanvas?.SetActive(false);
 
             // TODO: Quest 완료 이벤트 발행 (한나님 QuestManager 연동 후)
             // Managers.Quest.CompleteObjective("...");

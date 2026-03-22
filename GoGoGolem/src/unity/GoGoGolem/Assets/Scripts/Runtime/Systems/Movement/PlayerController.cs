@@ -198,7 +198,8 @@ public class PlayerController : MonoBehaviour
     public void ResetVelocity()
     {
         _verticalVelocity = 0f;
-        _characterController.Move(Vector3.zero);
+        _characterController.enabled = false;
+        _characterController.enabled = true;
     }
     #endregion
 }
