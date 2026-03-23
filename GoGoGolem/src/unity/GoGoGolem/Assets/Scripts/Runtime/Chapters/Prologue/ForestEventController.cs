@@ -90,6 +90,18 @@ namespace Demo.Chapters.Prologue
         // 내부 상태
         private ForestEventState _state = ForestEventState.Idle;
 
+        /// <summary>
+        /// Timeline이 먼저 끝났지만 Yarn 대화가 아직 진행 중일 때 true.
+        /// OnDialogueComplete에서 이 플래그를 확인해 Complete로 진입한다.
+        /// </summary>
+        private bool _pendingComplete = false;
+ 
+        /// <summary>
+        /// 현재 Timeline 중 Yarn 대화가 실행 중인지 추적.
+        /// Signal로 대화 시작 시 true, OnDialogueComplete 시 false.
+        /// </summary>
+        private bool _midDialogueActive = false;
+
         // 씬 시작 시 골렘 초기 위치/회전 저장용
         private Vector3 _golemInitialPosition;
         private Quaternion _golemInitialRotation;
@@ -264,8 +276,7 @@ namespace Demo.Chapters.Prologue
         public void OnLiftDialogueTrigger()
         {
             if (_state != ForestEventState.LiftTimeline) return;
-            _dialogueCanvas?.SetActive(true);
-            Managers.Dialogue.StartDialogue(_liftMidDialogueNode);
+            StartMidDialogue(_liftMidDialogueNode);
         }
 
         /// <summary>
@@ -275,8 +286,22 @@ namespace Demo.Chapters.Prologue
         public void OnPushDialogueTrigger()
         {
             if (_state != ForestEventState.PushTimeline) return;
+            StartMidDialogue(_pushMidDialogueNode);
+        }
+
+        /// <summary>
+        /// Timeline 중간 Yarn 대화 시작.
+        /// _midDialogueActive = true로 마킹하여, Timeline이 먼저 끝나도
+        /// Complete 전환을 대화 완료 후로 미룬다.
+        /// </summary>
+        private void StartMidDialogue(string nodeName)
+        {
+            _midDialogueActive = true;
+            _pendingComplete = false;
             _dialogueCanvas?.SetActive(true);
-            Managers.Dialogue.StartDialogue(_pushMidDialogueNode);
+            _onDialogueCompletedEvent?.Register(OnDialogueComplete);
+            Managers.Dialogue.StartDialogue(nodeName);
+            Debug.Log($"[ForestEventController] 중간 대화 시작: {nodeName}");
         }
 
         /// <summary>
@@ -290,23 +315,63 @@ namespace Demo.Chapters.Prologue
 
             UnsubscribeDirector(current, OnChoiceTimelineStopped);
             current?.Stop();
-            EnterCompleteState();
+            TryComplete();
         }
 
         private void OnChoiceTimelineStopped(PlayableDirector director)
         {
             director.stopped -= OnChoiceTimelineStopped;
-            EnterCompleteState();
+            TryComplete();
         }
 
+         /// <summary>
+        /// Yarn 대화 완료 콜백.
+        /// - 초기 선택지 대화(Dialogue 상태): 선택 커맨드 없이 끝난 경우 fallback Complete.
+        /// - Timeline 중간 대화(_midDialogueActive): 대화 완료 처리 후
+        ///   Timeline이 이미 끝났으면(_pendingComplete) 즉시 Complete 진입.
+        /// </summary>
         private void OnDialogueComplete()
         {
             _onDialogueCompletedEvent?.Unregister(OnDialogueComplete);
+ 
+            if (_midDialogueActive)
+            {
+                _midDialogueActive = false;
+                Debug.Log("[ForestEventController] 중간 대화 완료");
+ 
+                if (_pendingComplete)
+                {
+                    Debug.Log("[ForestEventController] Timeline이 이미 종료됨 → Complete 진입");
+                    _pendingComplete = false;
+                    EnterCompleteState();
+                }
+                // pendingComplete가 false면 Timeline이 아직 재생 중이므로 대기
+                return;
+            }
+ 
+            // 초기 선택지 대화가 선택 커맨드 없이 끝난 경우 fallback
             if (_state == ForestEventState.Dialogue)
             {
                 Debug.LogWarning("[ForestEventController] 선택 커맨드 없이 대화 종료 → Complete fallback");
                 EnterCompleteState();
             }
+        }
+
+        /// <summary>
+        /// Timeline 종료 시 Complete 진입 시도.
+        /// 중간 대화가 아직 진행 중이면 _pendingComplete = true로 마킹하고 대기.
+        /// </summary>
+        private void TryComplete()
+        {
+            if (_midDialogueActive)
+            {
+                // 대화가 아직 끝나지 않았음 → 대화 완료 후 Complete로 가도록 예약
+                _pendingComplete = true;
+                Debug.Log("[ForestEventController] Timeline 종료, 대화 진행 중 → Complete 대기");
+                return;
+            }
+ 
+            EnterCompleteState();
         }
 
         private void EnterCompleteState()
