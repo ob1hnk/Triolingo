@@ -1,29 +1,34 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Demo.Chapters.Prologue
 {
     /// <summary>
-    /// Forest 이벤트 트리거 존
-    /// 
-    /// 세팅:
+    /// Forest 씬 범용 트리거 존
+    ///
+    /// 플레이어 진입시 _onPlayerEnter UnityEvent 발동
+    ///
+    /// 트리거 존 오브젝트 세팅:
     ///   - BoxCollider → Is Trigger 체크
-    ///   - Forest Event Controller 연결
+    ///   - On Player Enter: 호출할 메서드 연결
     ///   - 플레이어 태그 "Player" 확인
     /// </summary>
     [RequireComponent(typeof(Collider))]
     public class ForestTriggerZone : MonoBehaviour
     {
-        [SerializeField] private ForestEventController _forestEventController;
+        [Tooltip("플레이어 진입 시 발동할 이벤트. Inspector에서 원하는 메서드 연결.")]
+        [SerializeField] private UnityEvent _onPlayerEnter;
+
         [Tooltip("트리거할 대상 태그")]
         [SerializeField] private string _playerTag = "Player";
+
+        [Tooltip("한 번만 트리거할지 여부 (기본 true)")]
+        [SerializeField] private bool _triggerOnce = true;
 
         private bool _triggered = false;
 
         private void Start()
         {
-            if (_forestEventController == null)
-                Debug.LogError("[ForestTriggerZone] ForestEventController가 연결되지 않았습니다!");
-
             Collider col = GetComponent<Collider>();
             if (!col.isTrigger)
             {
@@ -34,13 +39,18 @@ namespace Demo.Chapters.Prologue
 
         private void OnTriggerEnter(Collider other)
         {
-            if (_triggered) return;
+            if (_triggerOnce && _triggered) return;
             if (!other.CompareTag(_playerTag)) return;
 
             _triggered = true;
-            _forestEventController?.OnPlayerEnterTrigger();
-            Debug.Log("[ForestTriggerZone] 플레이어 진입 감지 → ForestEventController 호출");
+            _onPlayerEnter?.Invoke();
+            Debug.Log($"[ForestTriggerZone] [{gameObject.name}] 플레이어 진입 감지 → 이벤트 발동");
         }
+
+        /// <summary>
+        /// 외부에서 트리거를 초기화할 때 사용 (재사용 필요 시)
+        /// </summary>
+        public void ResetTrigger() => _triggered = false;
 
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
