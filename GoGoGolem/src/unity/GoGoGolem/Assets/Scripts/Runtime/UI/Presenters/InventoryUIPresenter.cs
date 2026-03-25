@@ -12,6 +12,10 @@ public class InventoryUIPresenter : MonoBehaviour
 
     private bool isInputInitialized = false;
     private bool isInventoryLogicInitialized = false;
+    private bool _isVisible = false;
+
+    public bool IsVisible => _isVisible;
+    public event System.Action<bool> OnVisibilityChanged;
 
     private void Awake()
     {
@@ -87,7 +91,6 @@ public class InventoryUIPresenter : MonoBehaviour
 
         uiInput.Navigate.performed += OnNavigate;
         uiInput.Point.performed += OnPoint;
-        uiInput.Scroll.performed += OnScroll;
         uiInput.Submit.performed += OnSubmit;
         uiInput.Cancel.performed += OnCancel;
 
@@ -100,7 +103,6 @@ public class InventoryUIPresenter : MonoBehaviour
 
         uiInput.Navigate.performed -= OnNavigate;
         uiInput.Point.performed -= OnPoint;
-        uiInput.Scroll.performed -= OnScroll;
         uiInput.Submit.performed -= OnSubmit;
         uiInput.Cancel.performed -= OnCancel;
 
@@ -137,21 +139,25 @@ public class InventoryUIPresenter : MonoBehaviour
             InitializeInventoryLogic();
         }
 
+        _isVisible = true;
         canvasGroup.alpha = 1f;
         canvasGroup.interactable = true;
         canvasGroup.blocksRaycasts = true;
 
         ResetSelection();
         Refresh();
+        OnVisibilityChanged?.Invoke(true);
     }
 
     public void Hide()
     {
         if (canvasGroup == null) return;
 
+        _isVisible = false;
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;
+        OnVisibilityChanged?.Invoke(false);
     }
 
     private void OnNavigate(InputAction.CallbackContext context)
@@ -169,13 +175,8 @@ public class InventoryUIPresenter : MonoBehaviour
             return;
         }
 
-        int previousIndex = selectedIndex;
         selectedIndex = view.MoveSelection(selectedIndex, direction);
-
-        if (previousIndex != selectedIndex)
-        {
-            ShowSelectedItemInfo();
-        }
+        ShowSelectedItemInfo();
     }
 
     private void OnPoint(InputAction.CallbackContext context)
@@ -193,14 +194,6 @@ public class InventoryUIPresenter : MonoBehaviour
         selectedIndex = clickedIndex;
         view.SelectItem(selectedIndex);
         ShowSelectedItemInfo();
-    }
-
-    private void OnScroll(InputAction.CallbackContext context)
-    {
-        if (view == null) return;
-
-        Vector2 scrollValue = context.ReadValue<Vector2>();
-        view.Scroll(scrollValue.y);
     }
 
     private void OnSubmit(InputAction.CallbackContext context)
@@ -230,8 +223,23 @@ public class InventoryUIPresenter : MonoBehaviour
     {
         if (!isInventoryLogicInitialized || inventoryLogic == null || view == null) return;
 
-        var items = inventoryLogic.GetAllItems();
+        var allItems = inventoryLogic.GetAllItems();
+        var itemDB = Managers.Inventory?.ItemDB;
+
+        var items = new System.Collections.Generic.Dictionary<string, int>();
+        var skills = new System.Collections.Generic.Dictionary<string, int>();
+
+        foreach (var kv in allItems)
+        {
+            var data = itemDB?.GetItem(kv.Key);
+            if (data != null && data.type == ItemType.Skill)
+                skills[kv.Key] = kv.Value;
+            else
+                items[kv.Key] = kv.Value;
+        }
+
         view.Render(items);
+        view.RenderSkills(skills);
     }
 
     private void ResetSelection()

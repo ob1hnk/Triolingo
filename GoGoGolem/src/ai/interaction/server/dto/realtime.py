@@ -5,6 +5,7 @@ Server VAD 방식의 실시간 음성 처리를 위한 메시지 타입입니다
 """
 
 from enum import Enum
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -26,6 +27,46 @@ class RealtimeMessageType(str, Enum):
     STREAM_ERROR = "STREAM_ERROR"
 
 
+# ============ Quest Context ============
+
+
+class QuestPhaseContext(BaseModel):
+    """퀘스트 페이즈 진행 상황"""
+
+    phase_id: str
+    phase_type: str         # "Dialogue" | "Interaction" | "Event" | ...
+    content_id: Optional[str] = None
+    is_completed: bool
+
+
+class QuestObjectiveContext(BaseModel):
+    """퀘스트 목표 진행 상황"""
+
+    objective_id: str
+    description: str
+    is_completed: bool
+    progress: float         # 0.0 ~ 1.0
+    phases: List[QuestPhaseContext] = []
+
+
+class ActiveQuestContext(BaseModel):
+    """진행 중인 퀘스트 상태"""
+
+    quest_id: str
+    quest_name: str
+    quest_type: str         # "MainQuest" | "SubQuest"
+    status: str             # "InProgress"
+    progress: float         # 0.0 ~ 1.0
+    objectives: List[QuestObjectiveContext] = []
+
+
+class QuestContext(BaseModel):
+    """플레이어 전체 퀘스트 진행 상황"""
+
+    active_quests: List[ActiveQuestContext] = []
+    completed_quest_ids: List[str] = []
+
+
 # ============ Client to Server Messages ============
 
 
@@ -35,6 +76,7 @@ class StreamStartRequest(BaseModel):
     type: str = RealtimeMessageType.STREAM_START
     session_id: str
     language: str = "ko"
+    quest_context: Optional[QuestContext] = None
 
 
 class StreamAudioRequest(BaseModel):

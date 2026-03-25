@@ -8,8 +8,12 @@ public class Item : MonoBehaviour, IInteractable
     [Header("Event Channels")]
     [SerializeField] private StringGameEvent requestAcquireItemEvent;
 
+    [Header("Prompt")]
+    [SerializeField] private InteractionPromptData promptData;
+
     public InteractionType InteractionType => InteractionType.Gather;
-    public string GetInteractText() => "줍기 (E)";
+    public string GetActionLabel() => promptData != null ? promptData.ActionLabel : "줍기";
+    public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
     public string ItemID => itemID;
 
     private void Start()

@@ -92,6 +92,14 @@ public class RoomStateManager : MonoBehaviour
 
     private void Start()
     {
+        string savedId = GameManager.Instance?.CurrentLetterId;
+        if (!string.IsNullOrEmpty(savedId))
+        {
+            _savedTaskId = savedId;
+            letterReadPresenter?.SetTaskId(savedId);
+            DebugLog($"GameManager에서 taskId 복구: {savedId}");
+        }
+
         ApplyDayState();
     }
 
@@ -102,6 +110,8 @@ public class RoomStateManager : MonoBehaviour
     {
         DebugLog($"편지 전송 완료 (taskId={taskId}). 학 날아가기 시작.");
         _savedTaskId = taskId;
+
+        GameManager.Instance?.SetLetterId(taskId);
 
         if (letterReadPresenter != null)
             letterReadPresenter.SetTaskId(taskId);
