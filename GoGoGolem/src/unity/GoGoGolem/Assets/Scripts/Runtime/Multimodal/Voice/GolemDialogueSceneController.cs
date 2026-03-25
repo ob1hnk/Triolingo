@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.Cinemachine;
 using Multimodal.Voice;
@@ -103,8 +104,9 @@ public class GolemDialogueSceneController : MonoBehaviour
         if (!_isVoiceSessionActive)
         {
             _isVoiceSessionActive = true;
-            uiView.ShowVoiceActiveState();      // StatusUI 표시, Space → "중지"
-            await voiceManager.StartVoice();    // 서버 연결 + 마이크 시작
+            uiView.ShowVoiceActiveState();                              // StatusUI 표시, Space → "중지"
+            var questContext = BuildQuestContext();
+            await voiceManager.StartVoice(questContext: questContext);  // 서버 연결 + 마이크 시작
         }
         else
         {
@@ -112,6 +114,57 @@ public class GolemDialogueSceneController : MonoBehaviour
             voiceManager.StopVoice();           // 마이크 + 서버 연결 종료
             uiView.ShowVoiceInactiveState();    // StatusUI 숨김, Space → "말하기"
         }
+    }
+
+    /// <summary>현재 퀘스트 진행 상황을 수집하여 API 전송용 페이로드로 변환</summary>
+    private QuestContextPayload BuildQuestContext()
+    {
+        var payload = new QuestContextPayload();
+
+        var activeQuests = Managers.Quest?.GetAllActiveQuests() ?? new List<Quest>();
+        foreach (var quest in activeQuests)
+        {
+            var qp = new ActiveQuestPayload
+            {
+                quest_id   = quest.QuestID,
+                quest_name = quest.QuestName,
+                quest_type = quest.QuestType.ToString(),
+                status     = quest.Status.ToString(),
+                progress   = quest.GetProgress(),
+            };
+
+            foreach (var obj in quest.GetAllObjectives())
+            {
+                var op = new QuestObjectivePayload
+                {
+                    objective_id = obj.ObjectiveID,
+                    description  = obj.Description,
+                    is_completed = obj.IsCompleted,
+                    progress     = obj.GetProgress(),
+                };
+
+                foreach (var phase in obj.GetAllPhases())
+                {
+                    op.phases.Add(new QuestPhasePayload
+                    {
+                        phase_id     = phase.PhaseID,
+                        phase_type   = phase.PhaseType.ToString(),
+                        content_id   = phase.ContentID,
+                        is_completed = phase.IsCompleted,
+                    });
+                }
+
+                qp.objectives.Add(op);
+            }
+
+            payload.active_quests.Add(qp);
+        }
+
+        var completedQuests = Managers.Quest?.GetAllCompletedQuests() ?? new List<Quest>();
+        foreach (var quest in completedQuests)
+            payload.completed_quest_ids.Add(quest.QuestID);
+
+        return payload;
     }
 
     /// <summary>Esc 키 또는 외부에서 대화 완전 종료 시 호출</summary>
