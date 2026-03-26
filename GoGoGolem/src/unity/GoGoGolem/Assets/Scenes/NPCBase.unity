@@ -585,8 +585,24 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 3938734049835494655, guid: 1805eae33aafe447aa365e8d8992f54e, type: 3}
+      propertyPath: onceOnly
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3938734049835494655, guid: 1805eae33aafe447aa365e8d8992f54e, type: 3}
+      propertyPath: dialogueID
+      value: DLG-007
+      objectReference: {fileID: 0}
+    - target: {fileID: 3938734049835494655, guid: 1805eae33aafe447aa365e8d8992f54e, type: 3}
+      propertyPath: completedQuestID
+      value: MQ-02
+      objectReference: {fileID: 0}
+    - target: {fileID: 3938734049835494655, guid: 1805eae33aafe447aa365e8d8992f54e, type: 3}
       propertyPath: dialogueLines.Array.size
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3938734049835494655, guid: 1805eae33aafe447aa365e8d8992f54e, type: 3}
+      propertyPath: postQuestLines.Array.size
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3938734049835494655, guid: 1805eae33aafe447aa365e8d8992f54e, type: 3}
       propertyPath: 'dialogueLines.Array.data[0]'
@@ -605,6 +621,14 @@ PrefabInstance:
       propertyPath: 'dialogueLines.Array.data[3]'
       value: "\uD56D\uC0C1 \uC74C\uC2DD\uC774 \uD544\uC694\uD558\uBA74 \uB098\uB97C
         \uCC3E\uC544\uC640, \uB9DB\uC788\uB294 \uAC70 \uD574\uC904\uAC8C"
+      objectReference: {fileID: 0}
+    - target: {fileID: 3938734049835494655, guid: 1805eae33aafe447aa365e8d8992f54e, type: 3}
+      propertyPath: 'postQuestLines.Array.data[0]'
+      value: "\uACE0\uB9D9\uB124, \uAC08 \uAE38 \uAC00\uAC8C\uB098."
+      objectReference: {fileID: 0}
+    - target: {fileID: 3938734049835494655, guid: 1805eae33aafe447aa365e8d8992f54e, type: 3}
+      propertyPath: 'postQuestLines.Array.data[1]'
+      value: "\uACE0\uB9D9\uB124, \uAC08 \uAE38 \uAC00\uAC8C\uB098."
       objectReference: {fileID: 0}
     - target: {fileID: 5198244724892176093, guid: 1805eae33aafe447aa365e8d8992f54e, type: 3}
       propertyPath: m_Name
@@ -738,11 +762,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb5bd096d22f247b1a257dca9aa4dde0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  questID: 
-  questAction: 0
+  questID: MQ-02
+  questAction: 1
   objectiveID: 
   phaseID: 
-  requestStartQuestEvent: {fileID: 0}
+  requestStartQuestEvent: {fileID: 11400000, guid: 87fe1939e402847efa7665ea1344e7b9, type: 2}
   requestCompletePhaseEvent: {fileID: 0}
 --- !u!1001 &1679749426
 PrefabInstance:
