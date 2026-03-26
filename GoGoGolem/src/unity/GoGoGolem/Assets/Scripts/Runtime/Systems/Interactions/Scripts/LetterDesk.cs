@@ -17,6 +17,9 @@ public class LetterDesk : MonoBehaviour, IInteractable
     [SerializeField] private LetterWritePresenter letterWritePresenter;
     [SerializeField] private LetterReadPresenter  letterReadPresenter;
 
+    [Header("Prompt")]
+    [SerializeField] private InteractionPromptData promptData;
+
     private DeskMode _mode = DeskMode.Write;
 
     public void SetMode(DeskMode mode) => _mode = mode;
@@ -24,7 +27,7 @@ public class LetterDesk : MonoBehaviour, IInteractable
     public InteractionType InteractionType => InteractionType.WriteLetter;
 
     public string GetActionLabel() => _mode == DeskMode.Write ? "편지 쓰기" : "편지 읽기";
-    public Sprite GetKeyHintSprite() => null;
+    public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
 
     public void Interact()
     {
