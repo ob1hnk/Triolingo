@@ -71,11 +71,25 @@ namespace Demo.Chapters.Prologue
         [Tooltip("주인공 손 기준 나뭇잎 회전 오프셋 (Euler)")]
         [SerializeField] private Vector3 _playerHandRotationOffset = Vector3.zero;
 
+        [Header("Walk In")]
+        [Tooltip("플레이어가 이동할 목표")]
+        [SerializeField] private Transform _playerStartPoint;
+        [Tooltip("위치 이동에 걸리는 시간 (초)")]
+        [SerializeField] private float _walkDuration = 1f;
+        [Tooltip("회전 맞추기에 걸리는 시간 (초)")]
+        [SerializeField] private float _rotateDuration = 0.5f;
+
         [Header("Player")]
+        [Tooltip("Player Transform")]
+        [SerializeField] private Transform _player;
         [Tooltip("Player 이동 권한 제어")]
         [SerializeField] private PlayerAnimation _playerAnimation;
         [SerializeField] private PlayerLocomotionInput _playerLocomotionInput;
         [SerializeField] private MonoBehaviour _playerControllerScript;
+        [Tooltip("플레이어 Animator")]
+        [SerializeField] private Animator _playerAnimator;
+        [Tooltip("플레이어 걷기 파라미터 이름 (Float, inputMagnitude)")]
+        [SerializeField] private string _playerWalkParam = "inputMagnitude";
 
         [Header("말풍선 (TODO: 머지 후 연결)")]
         [Tooltip("말풍선 대사 표시 컴포넌트. 팀원 말풍선 시스템 머지 후 연결.")]
@@ -143,6 +157,7 @@ namespace Demo.Chapters.Prologue
             Debug.Log("[LeafEventController] 나뭇잎 타임라인 시작");
             ChangeState(LeafEventState.LeafTimeline);
             SetPlayerMovement(false);
+            ResetPlayerState();
 
             if (_leafDirector == null)
             {
@@ -151,6 +166,42 @@ namespace Demo.Chapters.Prologue
                 return;
             }
 
+            if (_player != null && _playerStartPoint != null)
+                StartCoroutine(AlignPlayerThenPlayTimeline());
+            else
+            {
+                _leafDirector.stopped += OnLeafTimelineStopped;
+                _leafDirector.Play();
+            }
+        }
+
+        private IEnumerator AlignPlayerThenPlayTimeline()
+        {
+            // 위치 이동 (Lerp)
+            Vector3 startPos = _player.position;
+            float elapsed = 0f;
+            while (elapsed < _walkDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / _walkDuration));
+                _player.position = Vector3.Lerp(startPos, _playerStartPoint.position, t);
+                yield return null;
+            }
+            _player.position = _playerStartPoint.position;
+
+            // 회전 맞추기 (Slerp)
+            Quaternion startRot = _player.rotation;
+            elapsed = 0f;
+            while (elapsed < _rotateDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / _rotateDuration));
+                _player.rotation = Quaternion.Slerp(startRot, _playerStartPoint.rotation, t);
+                yield return null;
+            }
+            _player.rotation = _playerStartPoint.rotation;
+
+            // 타임라인 재생
             _leafDirector.stopped += OnLeafTimelineStopped;
             _leafDirector.Play();
         }
@@ -238,6 +289,17 @@ namespace Demo.Chapters.Prologue
             _leafObject.transform.localRotation = Quaternion.Euler(rotationOffset);
         }
 
+        /// <summary>
+        /// 플레이어 속도 및 걷기 애니메이션 즉시 리셋
+        /// 타임라인 진입 직전 호출하여 이동 중 잔류 상태 제거
+        /// </summary>
+        private void ResetPlayerState()
+        {
+            _playerAnimator?.SetFloat(_playerWalkParam, 0f);
+            _playerAnimation?.ResetBlendInput();
+            (_playerControllerScript as PlayerController)?.ResetVelocity();
+        }
+
         private void SetPlayerMovement(bool canMove)
         {
             if (_playerAnimation != null)
@@ -268,6 +330,12 @@ namespace Demo.Chapters.Prologue
                 Debug.LogWarning("[LeafEventController] GolemHandBone 없음");
             if (_playerHandBone == null)
                 Debug.LogWarning("[LeafEventController] PlayerHandBone 없음");
+            if (_player == null)
+                Debug.LogWarning("[LeafEventController] Player Transform 없음 → 위치 정렬 스킵");
+            if (_playerStartPoint == null)
+                Debug.LogWarning("[LeafEventController] PlayerStartPoint 없음 → 위치 정렬 스킵");
+            if (_playerAnimator == null)
+                Debug.LogWarning("[LeafEventController] PlayerAnimator 없음 → 걷기 애니메이션 리셋 스킵");
             if (_playerAnimation == null)
                 Debug.LogWarning("[LeafEventController] PlayerAnimation 없음");
             if (_playerLocomotionInput == null)
