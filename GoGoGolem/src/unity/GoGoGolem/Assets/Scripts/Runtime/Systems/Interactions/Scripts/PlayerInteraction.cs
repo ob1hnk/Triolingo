@@ -54,7 +54,8 @@ public class PlayerInteraction : MonoBehaviour
 
     private void OnInteract(InputAction.CallbackContext ctx)
     {
-        if (currentInteractable?.InteractionType == InteractionType.Talk)
+        if (currentInteractable?.InteractionType == InteractionType.TalkNPC ||
+            currentInteractable?.InteractionType == InteractionType.TalkGolem)
             PerformTalk();
     }
 
