@@ -28,6 +28,7 @@ public class LetterDesk : MonoBehaviour, IInteractable
 
     public string GetActionLabel() => _mode == DeskMode.Write ? "편지 쓰기" : "편지 읽기";
     public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
+    public Vector3 GetPromptOffset() => promptData != null ? promptData.WorldOffset : new Vector3(0f, 1.5f, 0f);
 
     public void Interact()
     {

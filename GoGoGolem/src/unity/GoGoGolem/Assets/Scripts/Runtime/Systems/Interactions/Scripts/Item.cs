@@ -14,6 +14,7 @@ public class Item : MonoBehaviour, IInteractable
     public InteractionType InteractionType => InteractionType.Gather;
     public string GetActionLabel() => promptData != null ? promptData.ActionLabel : "줍기";
     public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
+    public Vector3 GetPromptOffset() => promptData != null ? promptData.WorldOffset : new Vector3(0f, 1.5f, 0f);
     public string ItemID => itemID;
 
     private void Start()

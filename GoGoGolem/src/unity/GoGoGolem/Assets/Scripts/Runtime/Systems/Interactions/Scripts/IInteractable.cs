@@ -14,5 +14,6 @@ public interface IInteractable
     InteractionType InteractionType { get; }
     string GetActionLabel();
     Sprite GetKeyHintSprite();
+    Vector3 GetPromptOffset();
     void Interact();
 }
