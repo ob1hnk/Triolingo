@@ -38,5 +38,13 @@ public class PlayerAnimation : MonoBehaviour
         _animator.SetFloat(inputYHash, _currentBlendInput.y);
         _animator.SetFloat(inputMagnitudeHash, _currentBlendInput.magnitude);
     }
+
+    public void ResetBlendInput()
+    {
+        _currentBlendInput = Vector3.zero;
+        _animator.SetFloat(inputXHash, 0f);
+        _animator.SetFloat(inputYHash, 0f);
+        _animator.SetFloat(inputMagnitudeHash, 0f);
+    }
 }
 
