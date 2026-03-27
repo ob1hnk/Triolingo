@@ -27,6 +27,10 @@ public class PlayerLocomotionInput
 
         input.PlayerMovement.RemoveCallbacks(this);
         input.PlayerMovement.Disable();
+
+        MovementInput = Vector2.zero;
+        LookInput = Vector2.zero;
+        SprintToggledOn = false;
     }
 
     // ===== PlayerMovement Actions =====
