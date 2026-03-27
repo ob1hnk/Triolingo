@@ -37,17 +37,19 @@ class FirebaseClient:
 
     def _initialize(self) -> None:
         """Firebase Admin SDK 초기화"""
-        if FirebaseClient._initialized:
+        try:
+            firebase_admin.get_app()
             logger.info("Firebase already initialized, reusing existing app")
             self._db = firestore.client()
+            FirebaseClient._initialized = True
             return
+        except ValueError:
+            pass  # 앱이 아직 없으므로 초기화 진행
 
         try:
             if self.credentials_path:
                 cred = credentials.Certificate(self.credentials_path)
-                options = {}
-
-                firebase_admin.initialize_app(cred, options)
+                firebase_admin.initialize_app(cred)
                 logger.info(
                     f"Firebase initialized with credentials from: {self.credentials_path}"
                 )
