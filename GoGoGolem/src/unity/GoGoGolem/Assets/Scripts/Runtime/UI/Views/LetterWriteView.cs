@@ -7,16 +7,6 @@ namespace UI.Views
     /// <summary>
     /// 편지 작성 UI View (표시만 담당, 로직 없음)
     ///
-    /// Hierarchy 구조:
-    ///   Canvas
-    ///   └── LetterPanel (이 컴포넌트를 붙일 곳)
-    ///       ├── Overlay (Image - 반투명 어두운 배경)
-    ///       ├── LetterPaper (Image - 편지지)
-    ///       │   ├── ReceiverText (TMP - 에디터에서 직접 설정)
-    ///       │   ├── LetterInputField (TMP_InputField - 작성 영역)
-    ///       │   ├── SenderText (TMP - 에디터에서 직접 설정)
-    ///       │   └── CharCountText (TMP - 글자 수 표시)
-    ///       └── KeyHintText (TMP - 에디터에서 직접 설정)
     /// </summary>
     public class LetterWriteView : MonoBehaviour
     {
@@ -73,7 +63,7 @@ namespace UI.Views
                 letterInputField.interactable = !isSending;
 
             if (keyHintText != null)
-                keyHintText.text = isSending ? "편지를 보내는 중..." : "Enter: 보내기 | Esc: 나가기";
+                keyHintText.text = isSending ? "편지를 보내는 중..." : "편지를 보내지 못했습니다.";
         }
 
         public void ShowError(string message)
