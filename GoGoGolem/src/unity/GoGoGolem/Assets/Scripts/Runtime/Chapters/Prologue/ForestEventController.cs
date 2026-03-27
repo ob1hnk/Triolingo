@@ -28,6 +28,10 @@ namespace Demo.Chapters.Prologue
     ///               └─ 들기 선택(<<forest_choose_lift>>) → LiftTimeline + Lift Dialogue
     ///                     └─ Timeline 종료 → Complete
     ///
+    /// 비 연출:
+    ///   Zone 2 진입 → OnPlayerEnterRainStart(): 비 서서히 시작 + 말풍선
+    ///   Zone 4 진입 → OnPlayerEnterRainStop():  비 서서히 멈춤
+    ///
     /// Inspector 세팅:
     ///   - Player Start Point: 플레이어가 이동할 목표 위치 Transform
     ///   - Golem Start Point:  골렘이 이동할 목표 위치 Transform
@@ -84,6 +88,29 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private PlayerLocomotionInput _playerLocomotionInput;
         [SerializeField] private MonoBehaviour _playerControllerScript;
 
+        // ─────────────────────────────────────────────
+        // 비 연출
+        // ─────────────────────────────────────────────
+        [Header("Rain")]
+        [Tooltip("비 파티클 시스템 (Rain01_HighPerformance 프리펩 인스턴스)")]
+        [SerializeField] private ParticleSystem _rainParticle;
+
+        [Tooltip("비 최대 Emission Rate (Start는 0, 이 값까지 서서히 올라감)")]
+        [SerializeField] private float _rainMaxEmissionRate = 50f;
+
+        [Tooltip("비가 하나둘 내리기 시작 → 최대치까지 걸리는 시간 (초)")]
+        [SerializeField] private float _rainFadeInDuration = 4f;
+
+        [Tooltip("비가 잦아들다 멈추기까지 걸리는 시간 (초)")]
+        [SerializeField] private float _rainFadeOutDuration = 5f;
+
+        [Tooltip("비 시작 시 표시할 말풍선 UI (없으면 무시)")]
+        [SerializeField] private GameObject _rainSpeechBubble;
+
+        [Tooltip("말풍선 표시 시간 (초)")]
+        [SerializeField] private float _speechBubbleDuration = 3f;
+        // ─────────────────────────────────────────────
+
         [Header("Debug")]
         [SerializeField] private bool _debugSkipIntro = false;
 
@@ -95,7 +122,7 @@ namespace Demo.Chapters.Prologue
         /// OnDialogueComplete에서 이 플래그를 확인해 Complete로 진입한다.
         /// </summary>
         private bool _pendingComplete = false;
- 
+
         /// <summary>
         /// 현재 Timeline 중 Yarn 대화가 실행 중인지 추적.
         /// Signal로 대화 시작 시 true, OnDialogueComplete 시 false.
@@ -105,6 +132,9 @@ namespace Demo.Chapters.Prologue
         // 씬 시작 시 골렘 초기 위치/회전 저장용
         private Vector3 _golemInitialPosition;
         private Quaternion _golemInitialRotation;
+
+        // 비 코루틴 핸들 (중복 실행 방지)
+        private Coroutine _rainCoroutine;
 
         // =============================================
         // Unity 생명주기
@@ -131,6 +161,13 @@ namespace Demo.Chapters.Prologue
             ResetTimeline(_pushDirector);
             ForceResetGolemTransform();
 
+            // 비 파티클 초기 상태: GameObject 자체를 비활성화
+            if (_rainParticle != null)
+                _rainParticle.gameObject.SetActive(false);
+
+            // 말풍선 초기 비활성화
+            _rainSpeechBubble?.SetActive(false);
+
             if (_debugSkipIntro)
                 EnterDialogueState();
         }
@@ -145,10 +182,118 @@ namespace Demo.Chapters.Prologue
         // 트리거 진입 (TriggerZone에서 호출)
         // =============================================
 
+        /// <summary>Zone 1: 메인 이벤트 (통나무) 시작</summary>
         public void OnPlayerEnterTrigger()
         {
             if (_state != ForestEventState.Idle) return;
             EnterWalkInState();
+        }
+
+        /// <summary>
+        /// Zone 2: 비 시작 연출
+        /// 파티클 Emission Rate를 0에서 서서히 올리고 말풍선 표시
+        /// </summary>
+        public void OnPlayerEnterRainStart()
+        {
+            if (_rainParticle == null)
+            {
+                Debug.LogWarning("[ForestEventController] Rain Particle이 연결되지 않았습니다!");
+                return;
+            }
+
+            if (_rainCoroutine != null)
+                StopCoroutine(_rainCoroutine);
+
+            _rainCoroutine = StartCoroutine(RainFadeInRoutine());
+        }
+
+        /// <summary>
+        /// Zone 4: 비 멈춤 연출
+        /// Emission Rate를 서서히 0으로 줄이고 남은 파티클이 사라지면 Stop
+        /// </summary>
+        public void OnPlayerEnterRainStop()
+        {
+            if (_rainParticle == null) return;
+
+            if (_rainCoroutine != null)
+                StopCoroutine(_rainCoroutine);
+
+            _rainCoroutine = StartCoroutine(RainFadeOutRoutine());
+        }
+
+        // =============================================
+        // 비 연출 코루틴
+        // =============================================
+
+        private IEnumerator RainFadeInRoutine()
+        {
+            Debug.Log("[ForestEventController] 비 시작 연출");
+
+            // GameObject 활성화 후 Emission Rate=0 상태로 Play
+            _rainParticle.gameObject.SetActive(true);
+            var emission = _rainParticle.emission;
+            emission.rateOverTime = 0f;
+            _rainParticle.Play();
+
+            // 말풍선 표시
+            if (_rainSpeechBubble != null)
+            {
+                _rainSpeechBubble.SetActive(true);
+                StartCoroutine(HideSpeechBubbleAfter(_speechBubbleDuration));
+            }
+
+            // Emission Rate 0 → _rainMaxEmissionRate 로 서서히 증가
+            float elapsed = 0f;
+            while (elapsed < _rainFadeInDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / _rainFadeInDuration);
+                // EaseIn: 처음엔 하나둘, 나중엔 쏟아지는 느낌
+                float eased = t * t;
+                emission.rateOverTime = Mathf.Lerp(0f, _rainMaxEmissionRate, eased);
+                yield return null;
+            }
+
+            emission.rateOverTime = _rainMaxEmissionRate;
+            _rainCoroutine = null;
+            Debug.Log("[ForestEventController] 비 최대치 도달");
+        }
+
+        private IEnumerator RainFadeOutRoutine()
+        {
+            Debug.Log("[ForestEventController] 비 잦아드는 연출 시작");
+
+            var emission = _rainParticle.emission;
+            float startRate = emission.rateOverTime.constant;
+
+            // Emission Rate를 현재값에서 0으로 서서히 감소
+            float elapsed = 0f;
+            while (elapsed < _rainFadeOutDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / _rainFadeOutDuration);
+                // EaseOut: 처음엔 빠르게 줄고, 마지막엔 서서히 멈추는 느낌
+                float eased = 1f - (1f - t) * (1f - t);
+                emission.rateOverTime = Mathf.Lerp(startRate, 0f, eased);
+                yield return null;
+            }
+
+            emission.rateOverTime = 0f;
+
+            // 남은 파티클(공중에 있는 것들)이 수명대로 사라질 때까지 대기
+            float lifetime = _rainParticle.main.startLifetime.constant;
+            yield return new WaitForSeconds(lifetime);
+
+            _rainParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            _rainParticle.gameObject.SetActive(false);
+            _rainCoroutine = null;
+            Debug.Log("[ForestEventController] 비 완전히 멈춤");
+        }
+
+        private IEnumerator HideSpeechBubbleAfter(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            _rainSpeechBubble?.SetActive(false);
         }
 
         // =============================================
@@ -324,7 +469,7 @@ namespace Demo.Chapters.Prologue
             TryComplete();
         }
 
-         /// <summary>
+        /// <summary>
         /// Yarn 대화 완료 콜백.
         /// - 초기 선택지 대화(Dialogue 상태): 선택 커맨드 없이 끝난 경우 fallback Complete.
         /// - Timeline 중간 대화(_midDialogueActive): 대화 완료 처리 후
@@ -333,12 +478,12 @@ namespace Demo.Chapters.Prologue
         private void OnDialogueComplete()
         {
             _onDialogueCompletedEvent?.Unregister(OnDialogueComplete);
- 
+
             if (_midDialogueActive)
             {
                 _midDialogueActive = false;
                 Debug.Log("[ForestEventController] 중간 대화 완료");
- 
+
                 if (_pendingComplete)
                 {
                     Debug.Log("[ForestEventController] Timeline이 이미 종료됨 → Complete 진입");
@@ -348,7 +493,7 @@ namespace Demo.Chapters.Prologue
                 // pendingComplete가 false면 Timeline이 아직 재생 중이므로 대기
                 return;
             }
- 
+
             // 초기 선택지 대화가 선택 커맨드 없이 끝난 경우 fallback
             if (_state == ForestEventState.Dialogue)
             {
@@ -365,12 +510,11 @@ namespace Demo.Chapters.Prologue
         {
             if (_midDialogueActive)
             {
-                // 대화가 아직 끝나지 않았음 → 대화 완료 후 Complete로 가도록 예약
                 _pendingComplete = true;
                 Debug.Log("[ForestEventController] Timeline 종료, 대화 진행 중 → Complete 대기");
                 return;
             }
- 
+
             EnterCompleteState();
         }
 
@@ -382,7 +526,7 @@ namespace Demo.Chapters.Prologue
             // CharacterController 리셋 후 이동 복원
             (_playerControllerScript as PlayerController)?.ResetVelocity();
             SetPlayerMovement(true);
-    
+
             _dialogueCanvas?.SetActive(false);
 
             // TODO: Quest 완료 이벤트 발행 (한나님 QuestManager 연동 후)
@@ -498,6 +642,8 @@ namespace Demo.Chapters.Prologue
                 Debug.LogWarning("[ForestEventController] PushDirector 없음 (선택 사항)");
             if (_liftDirector == null)
                 Debug.LogWarning("[ForestEventController] LiftDirector 없음 (선택 사항)");
+            if (_rainParticle == null)
+                Debug.LogWarning("[ForestEventController] RainParticle 없음 → 비 연출 스킵");
 
             return valid;
         }

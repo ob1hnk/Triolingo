@@ -1412,6 +1412,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7effa2790b25b5478b26631f6b2521c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _playerTag: Player
   _onPlayerEnter:
     m_PersistentCalls:
       m_Calls:
@@ -1427,8 +1428,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  _playerTag: Player
-  _triggerOnce: 1
 --- !u!1001 &540124668
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1864,7 +1863,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 60.3
+      value: 40.72
       objectReference: {fileID: 0}
     - target: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1872,7 +1871,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 40.5
+      value: 37.32
       objectReference: {fileID: 0}
     - target: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2329,6 +2328,7 @@ Transform:
   - {fileID: 536899951}
   - {fileID: 1038458434}
   - {fileID: 1506216947}
+  - {fileID: 1692600633}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1038458433
@@ -2376,12 +2376,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7effa2790b25b5478b26631f6b2521c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _playerTag: Player
   _onPlayerEnter:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2075420272}
-        m_TargetAssemblyTypeName: Demo.Chapters.Prologue.LeafEventController, Assembly-CSharp
-        m_MethodName: OnRainTrigger
+      - m_Target: {fileID: 1918013884}
+        m_TargetAssemblyTypeName: Demo.Chapters.Prologue.ForestEventController, Assembly-CSharp
+        m_MethodName: OnPlayerEnterRainStart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2391,8 +2392,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  _playerTag: Player
-  _triggerOnce: 1
 --- !u!65 &1038458436
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2608,6 +2607,100 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 1576488453971394810, guid: a778b631c6253a04899cb31bad047c81, type: 3}
   m_PrefabInstance: {fileID: 1122261383}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1124941559
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1798425026393510, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_Name
+      value: Rain01_HighPerformance
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679719458615708, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 60.46
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679719458615708, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 11.86
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679719458615708, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 38.41
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679719458615708, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679719458615708, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679719458615708, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679719458615708, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679719458615708, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679719458615708, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679719458615708, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 198185851574287784, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: ShapeModule.m_Scale.x
+      value: 44.591568
+      objectReference: {fileID: 0}
+    - target: {fileID: 198185851574287784, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: ShapeModule.m_Scale.y
+      value: 19.27314
+      objectReference: {fileID: 0}
+    - target: {fileID: 198185851574287784, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: InitialModule.maxNumParticles
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 198185851574287784, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: InitialModule.startSize.scalar
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 198185851574287784, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: InitialModule.startSize.minScalar
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 198185851574287784, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: InitialModule.startLifetime.scalar
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 198185851574287784, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: VelocityModule.speedModifier.scalar
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 199876304782037074, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+--- !u!198 &1124941560 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 198185851574287784, guid: c66c41fd497ed094fa6f865f5c6c678c, type: 3}
+  m_PrefabInstance: {fileID: 1124941559}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1126279164
 GameObject:
@@ -3214,6 +3307,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7effa2790b25b5478b26631f6b2521c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _playerTag: Player
   _onPlayerEnter:
     m_PersistentCalls:
       m_Calls:
@@ -3229,8 +3323,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  _playerTag: Player
-  _triggerOnce: 1
 --- !u!65 &1506216949
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3805,6 +3897,88 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 459958, guid: 9469bb1d3aa88ca40aa4079e96a27f8e, type: 3}
   m_PrefabInstance: {fileID: 1684876227}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1692600632
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1692600633}
+  - component: {fileID: 1692600635}
+  - component: {fileID: 1692600634}
+  m_Layer: 0
+  m_Name: Trigger Zone 4
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1692600633
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692600632}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 80.36, y: 4.9, z: 37.99}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 926790446}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1692600634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692600632}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7effa2790b25b5478b26631f6b2521c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _playerTag: Player
+  _onPlayerEnter:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1918013884}
+        m_TargetAssemblyTypeName: Demo.Chapters.Prologue.ForestEventController, Assembly-CSharp
+        m_MethodName: OnPlayerEnterRainStop
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!65 &1692600635
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692600632}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4, y: 4, z: 14}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!4 &1697612975 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
@@ -4380,6 +4554,12 @@ MonoBehaviour:
   _playerAnimation: {fileID: 771608763}
   _playerLocomotionInput: {fileID: 771608765}
   _playerControllerScript: {fileID: 771608766}
+  _rainParticle: {fileID: 1124941560}
+  _rainMaxEmissionRate: 100
+  _rainFadeInDuration: 4
+  _rainFadeOutDuration: 5
+  _rainSpeechBubble: {fileID: 0}
+  _speechBubbleDuration: 3
   _debugSkipIntro: 0
 --- !u!4 &1918013885
 Transform:
@@ -5009,6 +5189,7 @@ SceneRoots:
   - {fileID: 143030883}
   - {fileID: 2075304558}
   - {fileID: 1374085646}
+  - {fileID: 1124941559}
   - {fileID: 93042178}
   - {fileID: 418076094}
   - {fileID: 1650467351}
