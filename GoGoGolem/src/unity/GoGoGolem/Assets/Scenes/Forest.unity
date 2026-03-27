@@ -2280,7 +2280,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
+  orthographic: 1
   orthographic size: 7.5
   m_Depth: -1
   m_CullingMask:
@@ -4790,8 +4790,8 @@ MonoBehaviour:
   _golemHandPositionOffset: {x: 0, y: 0.0042, z: -0.0037}
   _golemHandRotationOffset: {x: 110, y: 0, z: 180}
   _playerHandBone: {fileID: 1520373003}
-  _playerHandPositionOffset: {x: 0, y: 0.0042, z: -0.0037}
-  _playerHandRotationOffset: {x: 110, y: 0, z: 180}
+  _playerHandPositionOffset: {x: 0, y: 0.0012, z: -0.001}
+  _playerHandRotationOffset: {x: 220, y: 180, z: 0}
   _playerStartPoint: {fileID: 1126279165}
   _walkDuration: 1
   _rotateDuration: 1
@@ -4819,6 +4819,7 @@ MonoBehaviour:
     m_Signals:
     - {fileID: 11400000, guid: 44ec4b0e7bd2aaa4abb31e8f00588f4b, type: 2}
     - {fileID: 11400000, guid: 15bf171c2d6fd86438e0124e15f9ba90, type: 2}
+    - {fileID: 11400000, guid: 925d7b2b5b9c49e4cb2f743885d6a0ef, type: 2}
     m_Events:
     - m_PersistentCalls:
         m_Calls:
@@ -4839,6 +4840,20 @@ MonoBehaviour:
         - m_Target: {fileID: 2075420272}
           m_TargetAssemblyTypeName: Demo.Chapters.Prologue.LeafEventController, Assembly-CSharp
           m_MethodName: OnPlayerReceiveLeaf
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    - m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 2075420272}
+          m_TargetAssemblyTypeName: Demo.Chapters.Prologue.LeafEventController, Assembly-CSharp
+          m_MethodName: OnItemReceived
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}

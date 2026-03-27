@@ -242,12 +242,19 @@ namespace Demo.Chapters.Prologue
         }
 
         /// <summary>
-        /// Signal: 아이템 획득 메세지 표시 타이밍.
+        /// Signal: 아이템 획득 메세지 표시 + 주인공 나뭇잎 비활성화 타이밍.
         /// Signal Receiver에서 이 메서드 연결.
         /// </summary>
         public void OnItemReceived()
         {
             if (_state != LeafEventState.LeafTimeline) return;
+
+            // 나뭇잎 주머니에 넣기 (부모 해제 후 비활성화)
+            if (_leafObject != null)
+            {
+                _leafObject.transform.SetParent(null);
+                _leafObject.SetActive(false);
+            }
 
             Debug.Log("[LeafEventController] 아이템 획득!");
 
