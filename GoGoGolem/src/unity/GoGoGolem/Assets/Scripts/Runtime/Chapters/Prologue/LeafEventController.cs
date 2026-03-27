@@ -108,7 +108,8 @@ namespace Demo.Chapters.Prologue
         {
             ValidateComponents();
 
-            _rainParticle?.SetActive(false);
+            if (_rainParticle != null)
+                _rainParticle.SetActive(false);
             _leafObject?.SetActive(false);
 
             if (_debugSkipToLeaf)

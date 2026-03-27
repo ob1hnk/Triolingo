@@ -166,7 +166,8 @@ namespace Demo.Chapters.Prologue
                 _rainParticle.gameObject.SetActive(false);
 
             // 말풍선 초기 비활성화
-            _rainSpeechBubble?.SetActive(false);
+            if (_rainSpeechBubble != null)
+                _rainSpeechBubble.SetActive(false);
 
             if (_debugSkipIntro)
                 EnterDialogueState();
