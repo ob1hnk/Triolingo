@@ -9,33 +9,31 @@ namespace Demo.Chapters.Prologue
     /// </summary>
     public enum LeafEventState
     {
-        Idle,        // 대기
-        Rain,        // 트리거 존 2: 비 연출 + 대사
+        Idle,         // 대기
         LeafTimeline, // 트리거 존 3: 나뭇잎 타임라인 재생 중
-        Complete     // 완료
+        Complete      // 완료
     }
 
     /// <summary>
     /// Forest 씬 Leaf 이벤트 흐름 제어 (Glue 코드)
     ///
     /// 흐름:
-    ///   [트리거 존 2] OnRainTrigger()
-    ///     → 비 파티클 활성화
-    ///     → 말풍선 대사: "앗 내 짐!" (TODO: 말풍선 시스템 머지 후 연결)
-    ///
     ///   [트리거 존 3] OnLeafTimelineTrigger()
     ///     → 주인공 제어 비활성화
     ///     → LeafTimeline 재생
     ///       (Timeline 내부: 카메라 전환, 골렘 이동, 나뭇잎 activation,
     ///        손 부착, 골렘 복귀, 주인공 손 뻗기)
-    ///     → Signal: OnItemReceived() → 아이템 획득 메세지 (TODO: 한나님 Quest/Inventory 연동)
+    ///     → Signal: OnNpcSpeech()         → NPC(골렘) 말풍선: "우산이에요!"
+    ///     → Signal: OnPlayerReceiveLeaf() → 나뭇잎 전달 + 주인공 말풍선: "고마워"
+    ///     → Signal: OnItemReceived()      → 아이템 획득 (TODO: 한나님 Quest/Inventory 연동)
     ///     → Timeline 종료 → 주인공 제어 복원 → Complete
     ///
     /// Inspector 세팅:
-    ///   - Rain Particle:        비 파티클 시스템 오브젝트
     ///   - Leaf Timeline Director: 트리거 존 3용 PlayableDirector
-    ///   - Player*:              ForestEventController와 동일한 레퍼런스 연결
-    /// 
+    ///   - Player Speech Bubble:   주인공 FollowSpeechBubbleView
+    ///   - Npc Speech Bubble:      골렘 FollowSpeechBubbleView
+    ///   - Player*:                ForestEventController와 동일한 레퍼런스 연결
+    ///
     /// 나뭇잎 부착 오프셋:
     ///   _golemHandPositionOffset / _golemHandRotationOffset
     ///   _playerHandPositionOffset / _playerHandRotationOffset
@@ -43,10 +41,6 @@ namespace Demo.Chapters.Prologue
     /// </summary>
     public class LeafEventController : MonoBehaviour
     {
-        [Header("트리거 존 2 - 비")]
-        [Tooltip("비 파티클 시스템 GameObject (SetActive로 on/off)")]
-        [SerializeField] private GameObject _rainParticle;
-
         [Header("트리거 존 3 - 나뭇잎 타임라인")]
         [Tooltip("나뭇잎 이벤트 Timeline PlayableDirector")]
         [SerializeField] private PlayableDirector _leafDirector;
@@ -91,9 +85,11 @@ namespace Demo.Chapters.Prologue
         [Tooltip("플레이어 걷기 파라미터 이름 (Float, inputMagnitude)")]
         [SerializeField] private string _playerWalkParam = "inputMagnitude";
 
-        [Header("말풍선 (TODO: 머지 후 연결)")]
-        [Tooltip("말풍선 대사 표시 컴포넌트. 팀원 말풍선 시스템 머지 후 연결.")]
-        [SerializeField] private MonoBehaviour _speechBubbleController; // TODO: 실제 타입으로 교체
+        [Header("말풍선")]
+        [Tooltip("주인공 머리 위 말풍선 (FollowSpeechBubbleView)")]
+        [SerializeField] private FollowSpeechBubbleView _playerSpeechBubble;
+        [Tooltip("NPC(골렘) 머리 위 말풍선 (FollowSpeechBubbleView)")]
+        [SerializeField] private FollowSpeechBubbleView _npcSpeechBubble;
 
         [Header("Debug")]
         [SerializeField] private bool _debugSkipToLeaf = false;
@@ -107,9 +103,6 @@ namespace Demo.Chapters.Prologue
         private void Start()
         {
             ValidateComponents();
-
-            if (_rainParticle != null)
-                _rainParticle.SetActive(false);
             _leafObject?.SetActive(false);
 
             if (_debugSkipToLeaf)
@@ -120,28 +113,6 @@ namespace Demo.Chapters.Prologue
         {
             if (_leafDirector != null)
                 _leafDirector.stopped -= OnLeafTimelineStopped;
-        }
-
-        // =============================================
-        // 트리거 존 2 - 비 이벤트
-        // =============================================
-
-        /// <summary>
-        /// 트리거 존 2 → ForestTriggerZone의 OnPlayerEnter에 연결
-        /// </summary>
-        public void OnRainTrigger()
-        {
-            if (_state != LeafEventState.Idle) return;
-
-            Debug.Log("[LeafEventController] 비 이벤트 시작");
-            ChangeState(LeafEventState.Rain);
-
-            // 비 파티클 활성화
-            _rainParticle?.SetActive(true);
-
-            // TODO: 팀원 말풍선 시스템 머지 후 아래 주석 해제 및 실제 API로 교체
-            // _speechBubbleController?.ShowSpeechBubble("앗 내 짐!");
-            Debug.Log("[LeafEventController] TODO: 말풍선 '앗 내 짐!' 표시 (머지 후 연결)");
         }
 
         // =============================================
@@ -157,6 +128,7 @@ namespace Demo.Chapters.Prologue
 
             Debug.Log("[LeafEventController] 나뭇잎 타임라인 시작");
             ChangeState(LeafEventState.LeafTimeline);
+            _playerSpeechBubble?.Hide();
             SetPlayerMovement(false);
             ResetPlayerState();
 
@@ -226,6 +198,17 @@ namespace Demo.Chapters.Prologue
         }
  
         /// <summary>
+        /// Signal: 골렘이 나뭇잎을 주인공에게 내밀기 직전 타이밍
+        /// NPC 말풍선: "우산이에요!"
+        /// Signal Receiver에서 이 메서드 연결
+        /// </summary>
+        public void OnNpcSpeech()
+        {
+            _npcSpeechBubble?.Show("우산이에요!");
+            Debug.Log("[LeafEventController] NPC 말풍선: 우산이에요!");
+        }
+
+        /// <summary>
         /// Signal: 골렘이 주인공에게 나뭇잎을 건네는 타이밍
         /// 나뭇잎을 주인공 손 bone으로 이동
         /// Signal Receiver에서 이 메서드 연결
@@ -240,6 +223,9 @@ namespace Demo.Chapters.Prologue
  
             AttachLeaf(_playerHandBone, _playerHandPositionOffset, _playerHandRotationOffset);
             Debug.Log("[LeafEventController] 나뭇잎 → 주인공 손으로 이동");
+
+            _npcSpeechBubble?.Hide();
+            _playerSpeechBubble?.Show("앗... 고마워");
         }
 
         /// <summary>
@@ -257,6 +243,7 @@ namespace Demo.Chapters.Prologue
                 _leafObject.SetActive(false);
             }
 
+            _playerSpeechBubble?.Hide();
             Debug.Log("[LeafEventController] 아이템 획득!");
 
             // TODO: 한나 Quest/Inventory 시스템 머지 후 아래 주석 해제
@@ -268,6 +255,8 @@ namespace Demo.Chapters.Prologue
         private void OnLeafTimelineStopped(PlayableDirector director)
         {
             director.stopped -= OnLeafTimelineStopped;
+            _playerSpeechBubble?.Hide();
+            _npcSpeechBubble?.Hide();
             EnterCompleteState();
         }
 
@@ -328,8 +317,6 @@ namespace Demo.Chapters.Prologue
 
         private void ValidateComponents()
         {
-            if (_rainParticle == null)
-                Debug.LogWarning("[LeafEventController] RainParticle 없음 → 비 연출 스킵");
             if (_leafDirector == null)
                 Debug.LogWarning("[LeafEventController] LeafDirector 없음");
             if (_leafObject == null)
@@ -350,6 +337,10 @@ namespace Demo.Chapters.Prologue
                 Debug.LogWarning("[LeafEventController] PlayerLocomotionInput 없음");
             if (_playerControllerScript == null)
                 Debug.LogWarning("[LeafEventController] PlayerControllerScript 없음");
+            if (_playerSpeechBubble == null)
+                Debug.LogWarning("[LeafEventController] PlayerSpeechBubble 없음 → 주인공 말풍선 스킵");
+            if (_npcSpeechBubble == null)
+                Debug.LogWarning("[LeafEventController] NpcSpeechBubble 없음 → NPC 말풍선 스킵");
         }
     }
 }

@@ -104,11 +104,13 @@ namespace Demo.Chapters.Prologue
         [Tooltip("비가 잦아들다 멈추기까지 걸리는 시간 (초)")]
         [SerializeField] private float _rainFadeOutDuration = 5f;
 
-        [Tooltip("비 시작 시 표시할 말풍선 UI (없으면 무시)")]
-        [SerializeField] private GameObject _rainSpeechBubble;
+        [Tooltip("비 시작 시 표시할 주인공 말풍선 (FollowSpeechBubbleView)")]
+        [SerializeField] private FollowSpeechBubbleView _rainSpeechBubble;
 
         [Tooltip("말풍선 표시 시간 (초)")]
         [SerializeField] private float _speechBubbleDuration = 3f;
+        [Tooltip("비 시작 후 말풍선 표시까지 딜레이 (초)")]
+        [SerializeField] private float _speechBubbleDelay = 1.5f;
         // ─────────────────────────────────────────────
 
         [Header("Debug")]
@@ -166,8 +168,7 @@ namespace Demo.Chapters.Prologue
                 _rainParticle.gameObject.SetActive(false);
 
             // 말풍선 초기 비활성화
-            if (_rainSpeechBubble != null)
-                _rainSpeechBubble.SetActive(false);
+            _rainSpeechBubble?.Hide();
 
             if (_debugSkipIntro)
                 EnterDialogueState();
@@ -236,12 +237,9 @@ namespace Demo.Chapters.Prologue
             emission.rateOverTime = 0f;
             _rainParticle.Play();
 
-            // 말풍선 표시
+            // 말풍선 딜레이 후 표시
             if (_rainSpeechBubble != null)
-            {
-                _rainSpeechBubble.SetActive(true);
-                StartCoroutine(HideSpeechBubbleAfter(_speechBubbleDuration));
-            }
+                StartCoroutine(ShowSpeechBubbleAfter(_speechBubbleDelay));
 
             // Emission Rate 0 → _rainMaxEmissionRate 로 서서히 증가
             float elapsed = 0f;
@@ -291,10 +289,17 @@ namespace Demo.Chapters.Prologue
             Debug.Log("[ForestEventController] 비 완전히 멈춤");
         }
 
+        private IEnumerator ShowSpeechBubbleAfter(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            _rainSpeechBubble.Show("앗 비 온다! 내 짐!");
+            StartCoroutine(HideSpeechBubbleAfter(_speechBubbleDuration));
+        }
+
         private IEnumerator HideSpeechBubbleAfter(float delay)
         {
             yield return new WaitForSeconds(delay);
-            _rainSpeechBubble?.SetActive(false);
+            _rainSpeechBubble?.Hide();
         }
 
         // =============================================
