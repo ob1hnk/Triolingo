@@ -58,6 +58,8 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private Transform _player;
         [Tooltip("골렘 Transform")]
         [SerializeField] private Transform _golem;
+        [Tooltip("골렘 NavMesh 이동 제어 컴포넌트")]
+        [SerializeField] private GolemFollow _golemFollow;
         [Tooltip("플레이어 Animator")]
         [SerializeField] private Animator _playerAnimator;
         [Tooltip("골렘 Animator")]
@@ -188,6 +190,7 @@ namespace Demo.Chapters.Prologue
         public void OnPlayerEnterTrigger()
         {
             if (_state != ForestEventState.Idle) return;
+            _golemFollow?.StopFollowing();
             EnterWalkInState();
         }
 
@@ -316,17 +319,20 @@ namespace Demo.Chapters.Prologue
 
         private IEnumerator WalkInRoutine()
         {
-            // 걷기 애니메이션 ON
-            SetWalkAnimation(true);
+            // 걷기 애니메이션 ON (플레이어)
+            _playerAnimator?.SetFloat(_playerWalkParam, 1f);
+
+            // 골렘: MoveToPoint로 golemStartPoint까지 이동
+            bool golemArrived = _golemFollow == null || _golemStartPoint == null;
+            if (_golemFollow != null && _golemStartPoint != null)
+                _golemFollow.MoveToPoint(_golemStartPoint, () => golemArrived = true);
 
             // 1프레임 대기: Animator 파라미터 → Transition 조건 반영 대기
             yield return null;
 
-            // 시작 위치/회전 저장
+            // 플레이어 이동 (기존 Lerp 방식 유지)
             Vector3 playerStartPos = _player != null ? _player.position : Vector3.zero;
             Quaternion playerStartRot = _player != null ? _player.rotation : Quaternion.identity;
-            Vector3 golemStartPos = _golem != null ? _golem.position : Vector3.zero;
-            Quaternion golemStartRot = _golem != null ? _golem.rotation : Quaternion.identity;
 
             float elapsed = 0f;
             while (elapsed < _walkDuration)
@@ -341,29 +347,22 @@ namespace Demo.Chapters.Prologue
                     _player.rotation = Quaternion.Slerp(playerStartRot, _playerStartPoint.rotation, smooth);
                 }
 
-                if (_golem != null && _golemStartPoint != null)
-                {
-                    _golem.position = Vector3.Lerp(golemStartPos, _golemStartPoint.position, smooth);
-                    _golem.rotation = Quaternion.Slerp(golemStartRot, _golemStartPoint.rotation, smooth);
-                }
-
                 yield return null;
             }
 
-            // 목표 위치 정확히 스냅
+            // 플레이어 목표 위치 스냅
             if (_player != null && _playerStartPoint != null)
             {
                 _player.position = _playerStartPoint.position;
                 _player.rotation = _playerStartPoint.rotation;
             }
-            if (_golem != null && _golemStartPoint != null)
-            {
-                _golem.position = _golemStartPoint.position;
-                _golem.rotation = _golemStartPoint.rotation;
-            }
+
+            // 골렘 도착 대기
+            while (!golemArrived)
+                yield return null;
 
             // 걷기 애니메이션 OFF
-            SetWalkAnimation(false);
+            _playerAnimator?.SetFloat(_playerWalkParam, 0f);
             _playerAnimation?.ResetBlendInput();
 
             // 바로 Dialogue 시작
@@ -416,6 +415,7 @@ namespace Demo.Chapters.Prologue
                 return;
             }
 
+            _golemFollow?.DisableAgent();
             director.stopped += OnChoiceTimelineStopped;
             director.Play();
         }
@@ -533,6 +533,10 @@ namespace Demo.Chapters.Prologue
             (_playerControllerScript as PlayerController)?.ResetVelocity();
             SetPlayerMovement(true);
 
+            // 골렘 NavMesh Agent 재활성화 + 추적 재개
+            _golemFollow?.EnableAgent();
+            _golemFollow?.StartFollowingSmooth();
+
             _dialogueCanvas?.SetActive(false);
 
             // TODO: Quest 완료 이벤트 발행 (한나님 QuestManager 연동 후)
@@ -640,6 +644,8 @@ namespace Demo.Chapters.Prologue
                 Debug.LogWarning("[ForestEventController] Player Transform 없음");
             if (_golem == null)
                 Debug.LogWarning("[ForestEventController] Golem Transform 없음");
+            if (_golemFollow == null)
+                Debug.LogWarning("[ForestEventController] GolemFollow 없음 → 골렘 NavMesh 이동 스킵");
             if (_playerStartPoint == null)
                 Debug.LogWarning("[ForestEventController] PlayerStartPoint 없음 → 플레이어 이동 스킵");
             if (_golemStartPoint == null)

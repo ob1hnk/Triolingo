@@ -35,12 +35,17 @@ public class GolemFollow : MonoBehaviour
     [SerializeField] private string _walkParam = "isWalking";
     [SerializeField] private Animator _animator;
 
+    [Header("Smooth Rotation")]
+    [Tooltip("타임라인 종료 후 플레이어 방향으로 회전하는 속도 (도/초)")]
+    [SerializeField] private float _smoothRotateSpeed = 120f;
+
     // ─────────────────────────────────────────────
     // 내부 상태
     // ─────────────────────────────────────────────
     private NavMeshAgent _agent;
     private bool _isFollowing = false;
     private Coroutine _moveToPointCoroutine;
+    private Coroutine _smoothRotateCoroutine;
 
     // =============================================
     // Unity 생명주기
@@ -81,6 +86,24 @@ public class GolemFollow : MonoBehaviour
         StopMoveToPoint();
         _isFollowing = true;
         _agent.isStopped = false;
+    }
+
+    /// <summary>
+    /// 플레이어 방향으로 부드럽게 회전 후 추적 시작
+    /// 타임라인 종료 후 호출 권장
+    /// </summary>
+    public void StartFollowingSmooth()
+    {
+        if (_player == null)
+        {
+            Debug.LogWarning("[GolemFollow] Player가 없어서 추적을 시작할 수 없습니다.");
+            return;
+        }
+
+        StopMoveToPoint();
+        if (_smoothRotateCoroutine != null)
+            StopCoroutine(_smoothRotateCoroutine);
+        _smoothRotateCoroutine = StartCoroutine(SmoothRotateThenFollow());
     }
 
     /// <summary>플레이어 추적 중단</summary>
@@ -195,11 +218,8 @@ public class GolemFollow : MonoBehaviour
         _agent.ResetPath();
         SetWalkAnimation(false);
 
-        // 목표 방향으로 회전 맞추기
-        Vector3 dir = target.position - transform.position;
-        dir.y = 0f;
-        if (dir.sqrMagnitude > 0.001f)
-            transform.rotation = Quaternion.LookRotation(dir);
+        // target의 rotation으로 맞추기
+        transform.rotation = target.rotation;
 
         _moveToPointCoroutine = null;
         onArrived?.Invoke();
@@ -212,6 +232,35 @@ public class GolemFollow : MonoBehaviour
             StopCoroutine(_moveToPointCoroutine);
             _moveToPointCoroutine = null;
         }
+    }
+
+    private IEnumerator SmoothRotateThenFollow()
+    {
+        // Agent는 회전 중 이동 안 함
+        _agent.isStopped = true;
+        _isFollowing = false;
+
+        Vector3 dir = _player.position - transform.position;
+        dir.y = 0f;
+
+        if (dir.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(dir);
+            while (Quaternion.Angle(transform.rotation, targetRot) > 1f)
+            {
+                transform.rotation = Quaternion.RotateTowards(
+                    transform.rotation, targetRot, _smoothRotateSpeed * Time.deltaTime);
+                // 플레이어가 움직이면 목표 방향 갱신
+                dir = _player.position - transform.position;
+                dir.y = 0f;
+                if (dir.sqrMagnitude > 0.001f)
+                    targetRot = Quaternion.LookRotation(dir);
+                yield return null;
+            }
+        }
+
+        _smoothRotateCoroutine = null;
+        StartFollowing();
     }
 
     private void SetWalkAnimation(bool isWalking)

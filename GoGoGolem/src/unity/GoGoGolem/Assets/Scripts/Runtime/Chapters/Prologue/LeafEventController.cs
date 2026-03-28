@@ -25,7 +25,7 @@ namespace Demo.Chapters.Prologue
     ///        손 부착, 골렘 복귀, 주인공 손 뻗기)
     ///     → Signal: OnNpcSpeech()         → NPC(골렘) 말풍선: "우산이에요!"
     ///     → Signal: OnPlayerReceiveLeaf() → 나뭇잎 전달 + 주인공 말풍선: "고마워"
-    ///     → Signal: OnItemReceived()      → 아이템 획득 (TODO: 한나님 Quest/Inventory 연동)
+    ///     → Signal: OnItemReceived()      → 아이템 획득 (TODO: Quest/Inventory 연동)
     ///     → Timeline 종료 → 주인공 제어 복원 → Complete
     ///
     /// Inspector 세팅:
@@ -68,6 +68,10 @@ namespace Demo.Chapters.Prologue
         [Header("Walk In")]
         [Tooltip("플레이어가 이동할 목표")]
         [SerializeField] private Transform _playerStartPoint;
+        [Tooltip("골렘이 이동할 목표 위치 (트리거 존 3용)")]
+        [SerializeField] private Transform _golemStartPoint;
+        [Tooltip("골렘 NavMesh 이동 제어 컴포넌트")]
+        [SerializeField] private GolemFollow _golemFollow;
         [Tooltip("위치 이동에 걸리는 시간 (초)")]
         [SerializeField] private float _walkDuration = 1f;
         [Tooltip("회전 맞추기에 걸리는 시간 (초)")]
@@ -132,6 +136,11 @@ namespace Demo.Chapters.Prologue
             SetPlayerMovement(false);
             ResetPlayerState();
 
+            // 골렘 추적 중단 + 지정 위치로 이동
+            _golemFollow?.StopFollowing();
+            if (_golemFollow != null && _golemStartPoint != null)
+                _golemFollow.MoveToPoint(_golemStartPoint);
+
             if (_leafDirector == null)
             {
                 Debug.LogWarning("[LeafEventController] LeafDirector 없음 → 바로 Complete");
@@ -143,6 +152,7 @@ namespace Demo.Chapters.Prologue
                 StartCoroutine(AlignPlayerThenPlayTimeline());
             else
             {
+                _golemFollow?.DisableAgent();
                 _leafDirector.stopped += OnLeafTimelineStopped;
                 _leafDirector.Play();
             }
@@ -175,6 +185,7 @@ namespace Demo.Chapters.Prologue
             _player.rotation = _playerStartPoint.rotation;
 
             // 타임라인 재생
+            _golemFollow?.DisableAgent();
             _leafDirector.stopped += OnLeafTimelineStopped;
             _leafDirector.Play();
         }
@@ -269,6 +280,11 @@ namespace Demo.Chapters.Prologue
             if (_state == LeafEventState.Complete) return;
             ChangeState(LeafEventState.Complete);
             SetPlayerMovement(true);
+
+            // 골렘 NavMesh Agent 재활성화 + 추적 재개
+            _golemFollow?.EnableAgent();
+            _golemFollow?.StartFollowingSmooth();
+
             Debug.Log("[LeafEventController] Leaf 이벤트 완료");
         }
 
