@@ -33,6 +33,8 @@ namespace Demo.Chapters.Prologue
     ///   - Player Speech Bubble:   주인공 FollowSpeechBubbleView
     ///   - Npc Speech Bubble:      골렘 FollowSpeechBubbleView
     ///   - Player*:                ForestEventController와 동일한 레퍼런스 연결
+    ///   - Walk Duration:          이동에 걸리는 시간 (초)
+    ///   - Rotate Duration:        도착 후 최종 회전 정렬에 걸리는 시간 (초)
     ///
     /// 나뭇잎 부착 오프셋:
     ///   _golemHandPositionOffset / _golemHandRotationOffset
@@ -74,7 +76,7 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private GolemFollow _golemFollow;
         [Tooltip("위치 이동에 걸리는 시간 (초)")]
         [SerializeField] private float _walkDuration = 1f;
-        [Tooltip("회전 맞추기에 걸리는 시간 (초)")]
+        [Tooltip("도착 후 최종 회전 정렬에 걸리는 시간 (초)")]
         [SerializeField] private float _rotateDuration = 0.5f;
 
         [Header("Player")]
@@ -160,29 +162,67 @@ namespace Demo.Chapters.Prologue
 
         private IEnumerator AlignPlayerThenPlayTimeline()
         {
-            // 위치 이동 (Lerp)
+            // ── Phase 1: 이동 방향을 바라보며 목적지까지 이동 ──
+            // inputY = 1f: 2D Blend Tree가 전진 방향으로 샘플링되도록 강제
+            // (PlayerAnimation이 disabled 상태라 inputX/Y가 0으로 고정되기 때문)
+            _playerAnimator?.SetFloat(_playerWalkParam, 1f);
+            _playerAnimator?.SetFloat("inputY", 1f);
+
+            // 1프레임 대기: Animator 파라미터 → Transition 조건 반영 대기
+            yield return null;
+
             Vector3 startPos = _player.position;
+            Vector3 endPos   = _playerStartPoint.position;
+
+            // 이동 방향 회전 계산 (XZ 평면 기준)
+            Vector3 moveDir = endPos - startPos;
+            moveDir.y = 0f;
+            Quaternion moveRotation = moveDir.sqrMagnitude > 0.0001f
+                ? Quaternion.LookRotation(moveDir)
+                : _player.rotation;
+
+            // 시작 시 이동 방향으로 즉시 회전 정렬
+            _player.rotation = moveRotation;
+
+            // WASD와 동일한 locomotionBlendSpeed로 서서히 올려 자연스러운 가속감 연출
+            float currentMag = 0f;
+            float currentY   = 0f;
+
             float elapsed = 0f;
             while (elapsed < _walkDuration)
             {
                 elapsed += Time.deltaTime;
                 float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / _walkDuration));
-                _player.position = Vector3.Lerp(startPos, _playerStartPoint.position, t);
+                _player.position = Vector3.Lerp(startPos, endPos, t);
+                // 이동 중에는 이동 방향 유지
+                _player.rotation = moveRotation;
+
+                // inputMagnitude / inputY 서서히 증가 (PlayerAnimation.locomotionBlendSpeed와 동일)
+                currentMag = Mathf.Lerp(currentMag, 1f, 3f * Time.deltaTime);
+                currentY   = Mathf.Lerp(currentY,   1f, 3f * Time.deltaTime);
+                _playerAnimator?.SetFloat(_playerWalkParam, currentMag);
+                _playerAnimator?.SetFloat("inputY", currentY);
+
                 yield return null;
             }
-            _player.position = _playerStartPoint.position;
+            _player.position = endPos;
 
-            // 회전 맞추기 (Slerp)
-            Quaternion startRot = _player.rotation;
+            // 걷기 애니메이션 OFF
+            _playerAnimator?.SetFloat(_playerWalkParam, 0f);
+            _playerAnimator?.SetFloat("inputY", 0f);
+            _playerAnimation?.ResetBlendInput();
+
+            // ── Phase 2: 도착 후 최종 rotation으로 보간 ──
+            Quaternion finalRot = _playerStartPoint.rotation;
             elapsed = 0f;
             while (elapsed < _rotateDuration)
             {
                 elapsed += Time.deltaTime;
                 float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / _rotateDuration));
-                _player.rotation = Quaternion.Slerp(startRot, _playerStartPoint.rotation, t);
+                _player.rotation = Quaternion.Slerp(moveRotation, finalRot, t);
                 yield return null;
             }
-            _player.rotation = _playerStartPoint.rotation;
+            _player.rotation = finalRot;
 
             // 타임라인 재생
             _golemFollow?.DisableAgent();
@@ -346,7 +386,7 @@ namespace Demo.Chapters.Prologue
             if (_playerStartPoint == null)
                 Debug.LogWarning("[LeafEventController] PlayerStartPoint 없음 → 위치 정렬 스킵");
             if (_playerAnimator == null)
-                Debug.LogWarning("[LeafEventController] PlayerAnimator 없음 → 걷기 애니메이션 리셋 스킵");
+                Debug.LogWarning("[LeafEventController] PlayerAnimator 없음 → 걷기 애니메이션 스킵");
             if (_playerAnimation == null)
                 Debug.LogWarning("[LeafEventController] PlayerAnimation 없음");
             if (_playerLocomotionInput == null)

@@ -2290,7 +2290,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 23.13
+      value: 59.1
       objectReference: {fileID: 0}
     - target: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2298,7 +2298,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 38.48
+      value: 42.6
       objectReference: {fileID: 0}
     - target: {fileID: 7719455723745475102, guid: 2f8567a89b327234c9a98fd5cf607c6c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5744,6 +5744,7 @@ MonoBehaviour:
   _playerStartPoint: {fileID: 1659476456}
   _golemStartPoint: {fileID: 1962939353}
   _walkDuration: 1.5
+  _rotateDuration: 0.4
   _player: {fileID: 1697612975}
   _golem: {fileID: 143030885}
   _golemFollow: {fileID: 143030888}
@@ -6282,7 +6283,7 @@ MonoBehaviour:
   _playerStartPoint: {fileID: 1126279165}
   _golemStartPoint: {fileID: 564432442}
   _golemFollow: {fileID: 143030888}
-  _walkDuration: 1
+  _walkDuration: 0.7
   _rotateDuration: 1
   _player: {fileID: 1697612975}
   _playerAnimation: {fileID: 771608763}
