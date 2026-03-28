@@ -689,9 +689,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _player: {fileID: 0}
   _followDistance: 3
-  _arrivalDistance: 2
+  _arrivalDistance: 0.5
   _walkParam: isWalking
   _animator: {fileID: 3921132792910312067}
+  _smoothRotateSpeed: 120
 --- !u!1 &8104003461970656635
 GameObject:
   m_ObjectHideFlags: 0

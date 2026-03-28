@@ -390,10 +390,6 @@ PrefabInstance:
       propertyPath: _player
       value: 
       objectReference: {fileID: 1697612975}
-    - target: {fileID: 2005445015085476028, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
-      propertyPath: _arrivalDistance
-      value: 0.5
-      objectReference: {fileID: 0}
     - target: {fileID: 2594878746716287414, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
       propertyPath: m_LocalPosition.x
       value: 26.53
