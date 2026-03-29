@@ -36,6 +36,7 @@ namespace Demo.Chapters.Prologue
     ///   - Player Start Point: 플레이어가 이동할 목표 위치 Transform
     ///   - Golem Start Point:  골렘이 이동할 목표 위치 Transform
     ///   - Walk Duration:      이동에 걸리는 시간 (초)
+    ///   - Rotate Duration:    도착 후 최종 회전 정렬에 걸리는 시간 (초)
     /// </summary>
     public class ForestEventController : MonoBehaviour
     {
@@ -52,12 +53,16 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private Transform _golemStartPoint;
         [Tooltip("이동에 걸리는 시간 (초)")]
         [SerializeField] private float _walkDuration = 1.5f;
+        [Tooltip("도착 후 최종 회전 정렬에 걸리는 시간 (초)")]
+        [SerializeField] private float _rotateDuration = 0.4f;
 
         [Header("Characters")]
         [Tooltip("플레이어 Transform")]
         [SerializeField] private Transform _player;
         [Tooltip("골렘 Transform")]
         [SerializeField] private Transform _golem;
+        [Tooltip("골렘 NavMesh 이동 제어 컴포넌트")]
+        [SerializeField] private GolemFollow _golemFollow;
         [Tooltip("플레이어 Animator")]
         [SerializeField] private Animator _playerAnimator;
         [Tooltip("골렘 Animator")]
@@ -188,6 +193,7 @@ namespace Demo.Chapters.Prologue
         public void OnPlayerEnterTrigger()
         {
             if (_state != ForestEventState.Idle) return;
+            _golemFollow?.StopFollowing();
             EnterWalkInState();
         }
 
@@ -316,54 +322,75 @@ namespace Demo.Chapters.Prologue
 
         private IEnumerator WalkInRoutine()
         {
-            // 걷기 애니메이션 ON
-            SetWalkAnimation(true);
+            // 골렘: MoveToPoint로 golemStartPoint까지 이동
+            bool golemArrived = _golemFollow == null || _golemStartPoint == null;
+            if (_golemFollow != null && _golemStartPoint != null)
+                _golemFollow.MoveToPoint(_golemStartPoint, () => golemArrived = true);
 
             // 1프레임 대기: Animator 파라미터 → Transition 조건 반영 대기
             yield return null;
 
-            // 시작 위치/회전 저장
-            Vector3 playerStartPos = _player != null ? _player.position : Vector3.zero;
-            Quaternion playerStartRot = _player != null ? _player.rotation : Quaternion.identity;
-            Vector3 golemStartPos = _golem != null ? _golem.position : Vector3.zero;
-            Quaternion golemStartRot = _golem != null ? _golem.rotation : Quaternion.identity;
-
-            float elapsed = 0f;
-            while (elapsed < _walkDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / _walkDuration);
-                float smooth = Mathf.SmoothStep(0f, 1f, t);
-
-                if (_player != null && _playerStartPoint != null)
-                {
-                    _player.position = Vector3.Lerp(playerStartPos, _playerStartPoint.position, smooth);
-                    _player.rotation = Quaternion.Slerp(playerStartRot, _playerStartPoint.rotation, smooth);
-                }
-
-                if (_golem != null && _golemStartPoint != null)
-                {
-                    _golem.position = Vector3.Lerp(golemStartPos, _golemStartPoint.position, smooth);
-                    _golem.rotation = Quaternion.Slerp(golemStartRot, _golemStartPoint.rotation, smooth);
-                }
-
-                yield return null;
-            }
-
-            // 목표 위치 정확히 스냅
+            // ── Phase 1: 이동 방향을 바라보며 목적지까지 이동 ──
             if (_player != null && _playerStartPoint != null)
             {
-                _player.position = _playerStartPoint.position;
-                _player.rotation = _playerStartPoint.rotation;
-            }
-            if (_golem != null && _golemStartPoint != null)
-            {
-                _golem.position = _golemStartPoint.position;
-                _golem.rotation = _golemStartPoint.rotation;
+                Vector3 startPos = _player.position;
+                Vector3 endPos   = _playerStartPoint.position;
+
+                // 이동 방향 회전 계산 (XZ 평면 기준)
+                Vector3 moveDir = endPos - startPos;
+                moveDir.y = 0f;
+                Quaternion moveRotation = moveDir.sqrMagnitude > 0.0001f
+                    ? Quaternion.LookRotation(moveDir)
+                    : _player.rotation;
+
+                // 시작 시 이동 방향으로 즉시(또는 빠르게) 회전 정렬
+                _player.rotation = moveRotation;
+
+                // WASD와 동일한 locomotionBlendSpeed로 서서히 올려 자연스러운 가속감 연출
+                float currentMag = 0f;
+                float currentY   = 0f;
+
+                float elapsed = 0f;
+                while (elapsed < _walkDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    float smooth = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / _walkDuration));
+                    _player.position = Vector3.Lerp(startPos, endPos, smooth);
+                    // 이동 중에는 이동 방향 유지
+                    _player.rotation = moveRotation;
+
+                    // inputMagnitude / inputY 서서히 증가 (PlayerAnimation.locomotionBlendSpeed와 동일)
+                    currentMag = Mathf.Lerp(currentMag, 1f, 3f * Time.deltaTime);
+                    currentY   = Mathf.Lerp(currentY,   1f, 3f * Time.deltaTime);
+                    _playerAnimator?.SetFloat(_playerWalkParam, currentMag);
+                    _playerAnimator?.SetFloat("inputY", currentY);
+
+                    yield return null;
+                }
+
+                _player.position = endPos;
+
+                // ── Phase 2: 도착 후 최종 rotation으로 보간 ──
+                Quaternion finalRot = _playerStartPoint.rotation;
+                elapsed = 0f;
+                while (elapsed < _rotateDuration)
+                {
+                    elapsed += Time.deltaTime;
+                    float smooth = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / _rotateDuration));
+                    _player.rotation = Quaternion.Slerp(moveRotation, finalRot, smooth);
+                    yield return null;
+                }
+
+                _player.rotation = finalRot;
             }
 
+            // 골렘 도착 대기
+            while (!golemArrived)
+                yield return null;
+
             // 걷기 애니메이션 OFF
-            SetWalkAnimation(false);
+            _playerAnimator?.SetFloat(_playerWalkParam, 0f);
+            _playerAnimator?.SetFloat("inputY", 0f);
             _playerAnimation?.ResetBlendInput();
 
             // 바로 Dialogue 시작
@@ -416,6 +443,7 @@ namespace Demo.Chapters.Prologue
                 return;
             }
 
+            _golemFollow?.DisableAgent();
             director.stopped += OnChoiceTimelineStopped;
             director.Play();
         }
@@ -533,6 +561,10 @@ namespace Demo.Chapters.Prologue
             (_playerControllerScript as PlayerController)?.ResetVelocity();
             SetPlayerMovement(true);
 
+            // 골렘 NavMesh Agent 재활성화 + 추적 재개
+            _golemFollow?.EnableAgent();
+            _golemFollow?.StartFollowingSmooth();
+
             _dialogueCanvas?.SetActive(false);
 
             // TODO: Quest 완료 이벤트 발행 (한나님 QuestManager 연동 후)
@@ -640,6 +672,8 @@ namespace Demo.Chapters.Prologue
                 Debug.LogWarning("[ForestEventController] Player Transform 없음");
             if (_golem == null)
                 Debug.LogWarning("[ForestEventController] Golem Transform 없음");
+            if (_golemFollow == null)
+                Debug.LogWarning("[ForestEventController] GolemFollow 없음 → 골렘 NavMesh 이동 스킵");
             if (_playerStartPoint == null)
                 Debug.LogWarning("[ForestEventController] PlayerStartPoint 없음 → 플레이어 이동 스킵");
             if (_golemStartPoint == null)
