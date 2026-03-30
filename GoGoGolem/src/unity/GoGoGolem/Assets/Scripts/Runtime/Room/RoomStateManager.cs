@@ -55,7 +55,6 @@ public class RoomStateManager : MonoBehaviour
     [SerializeField] private bool enableDebugLogs = true;
 
     // ── Private ─────────────────────────────────────────────────
-    private string _savedTaskId;
     private Coroutine _fadeLightCoroutine;
 
     // ── Unity Lifecycle ─────────────────────────────────────────
@@ -63,7 +62,10 @@ public class RoomStateManager : MonoBehaviour
     private void OnEnable()
     {
         if (letterWritePresenter != null)
-            letterWritePresenter.OnLetterSent += HandleLetterSent;
+        {
+            letterWritePresenter.OnLetterSubmitted += HandleLetterSubmitted;
+            letterWritePresenter.OnTaskIdReceived  += HandleTaskIdReceived;
+        }
 
         if (bedInteraction != null)
             bedInteraction.OnSlept += HandleSlept;
@@ -78,7 +80,10 @@ public class RoomStateManager : MonoBehaviour
     private void OnDisable()
     {
         if (letterWritePresenter != null)
-            letterWritePresenter.OnLetterSent -= HandleLetterSent;
+        {
+            letterWritePresenter.OnLetterSubmitted -= HandleLetterSubmitted;
+            letterWritePresenter.OnTaskIdReceived  -= HandleTaskIdReceived;
+        }
 
         if (bedInteraction != null)
             bedInteraction.OnSlept -= HandleSlept;
@@ -95,8 +100,8 @@ public class RoomStateManager : MonoBehaviour
         string savedId = GameManager.Instance?.CurrentLetterId;
         if (!string.IsNullOrEmpty(savedId))
         {
-            _savedTaskId = savedId;
-            letterReadPresenter?.SetTaskId(savedId);
+            if (letterReadPresenter != null)
+                letterReadPresenter.SetTaskId(savedId);
             DebugLog($"GameManager에서 taskId 복구: {savedId}");
         }
 
@@ -105,21 +110,27 @@ public class RoomStateManager : MonoBehaviour
 
     // ── Event Handlers ──────────────────────────────────────────
 
-    /// <summary>LetterWritePresenter가 편지를 성공적으로 전송하면 호출됨</summary>
-    private void HandleLetterSent(string taskId)
+    /// <summary>Enter 즉시 호출 — 크레인·씬 전환 트리거</summary>
+    private void HandleLetterSubmitted()
     {
-        DebugLog($"편지 전송 완료 (taskId={taskId}). 학 날아가기 시작.");
-        _savedTaskId = taskId;
-
-        GameManager.Instance?.SetLetterId(taskId);
-
-        if (letterReadPresenter != null)
-            letterReadPresenter.SetTaskId(taskId);
+        DebugLog("편지 제출됨. 학 날아가기 시작.");
 
         if (craneController != null)
             craneController.FlyOut();
         else
-            HandleFlyOutComplete(); // 학 없으면 즉시 전환
+            HandleFlyOutComplete();
+    }
+
+    /// <summary>HTTP 응답 후 호출 — taskId 저장</summary>
+    private void HandleTaskIdReceived(string taskId)
+    {
+        DebugLog($"taskId 수신 (taskId={taskId}).");
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.SetLetterId(taskId);
+
+        if (letterReadPresenter != null)
+            letterReadPresenter.SetTaskId(taskId);
     }
 
     /// <summary>학이 창문 밖으로 사라진 후 호출됨</summary>

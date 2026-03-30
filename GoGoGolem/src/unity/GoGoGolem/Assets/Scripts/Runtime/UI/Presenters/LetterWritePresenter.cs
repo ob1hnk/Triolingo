@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using Multimodal.Letter;
 using UI.Views;
@@ -25,8 +26,11 @@ namespace UI.Presenters
         [SerializeField] private bool enableDebugLogs = true;
         #endregion
 
-        #region Events (외부 시스템이 구독 - QuestManager 등)
-        public event Action<string> OnLetterSent;
+        #region Events (외부 시스템이 구독 - RoomStateManager 등)
+        /// <summary>Enter 즉시 발행 — 캔버스 닫기·크레인 트리거용</summary>
+        public event Action OnLetterSubmitted;
+        /// <summary>HTTP 응답 후 발행 — taskId 저장용</summary>
+        public event Action<string> OnTaskIdReceived;
         public event Action<bool> OnPanelToggled;
         #endregion
 
@@ -43,6 +47,8 @@ namespace UI.Presenters
                 letterSender.OnProcessing += HandleProcessing;
                 letterSender.OnError += HandleError;
             }
+            if (view != null)
+                view.OnSubmit += HandleSubmitFromInputField;
         }
 
         private void OnDisable()
@@ -52,23 +58,22 @@ namespace UI.Presenters
                 letterSender.OnProcessing -= HandleProcessing;
                 letterSender.OnError -= HandleError;
             }
+            if (view != null)
+                view.OnSubmit -= HandleSubmitFromInputField;
         }
 
         private void Update()
         {
             if (!view.IsOpen) return;
 
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-            {
-                bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-                if (!shiftHeld)
-                    HandleSendRequested(view.LetterContent);
-                // Shift+Enter면 TMP_InputField가 줄바꿈 처리
-            }
-            else if (Input.GetKeyDown(KeyCode.Escape))
-            {
+            if (Input.GetKeyDown(KeyCode.Escape))
                 HandleCloseRequested();
-            }
+        }
+
+        private void HandleSubmitFromInputField(string text)
+        {
+            DebugLog($"InputField 제출 감지 - 내용: '{text}' ({text.Length}자)");
+            HandleSendRequested(text);
         }
         #endregion
 
@@ -99,39 +104,39 @@ namespace UI.Presenters
         #region Input Handlers
         private async void HandleSendRequested(string letterContent)
         {
-            if (_isSending) return;
+            if (_isSending) { DebugLog("이미 전송 중 - 중복 요청 무시"); return; }
 
             if (string.IsNullOrWhiteSpace(letterContent))
             {
-                view.ShowError("편지 내용을 작성해주세요.");
+                DebugLog("전송 실패: 내용이 비어있음");
                 return;
             }
 
             if (letterSender == null)
             {
                 Debug.LogError("[LetterWritePresenter] LetterSender가 연결되지 않았습니다.");
-                view.ShowError("전송 시스템이 준비되지 않았습니다.");
                 return;
             }
 
+            _isSending = true;
+
+            // 1. Enter 즉시: 캔버스 닫고 크레인·씬 전환 트리거
+            DebugLog("OnLetterSubmitted 발행 - 즉시 닫기");
+            Close();
+            OnLetterSubmitted?.Invoke();
+
+            // 2. 백그라운드에서 HTTP 요청 (씬 전환과 무관하게 진행)
+            DebugLog($"HTTP 백그라운드 전송 시작 ({letterContent.Length}자)");
             try
             {
-                _isSending = true;
-                view.SetSending(true);
-                DebugLog($"편지 전송 시작 ({letterContent.Length}자)");
-
                 string taskId = await letterSender.SendLetterAsync(letterContent);
-
-                DebugLog($"편지 전송 완료 - Task ID: {taskId}");
-                OnLetterSent?.Invoke(taskId);
-
-                Close();
+                DebugLog($"HTTP 응답 완료 - Task ID: {taskId}");
+                OnTaskIdReceived?.Invoke(taskId);
+                DebugLog("OnTaskIdReceived 발행 완료");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[LetterWritePresenter] 전송 실패: {ex.Message}");
-                view.ShowError("편지 전송에 실패했습니다. 다시 시도해주세요.");
-                view.SetSending(false);
+                Debug.LogError($"[LetterWritePresenter] HTTP 전송 실패: {ex.GetType().Name} - {ex.Message}");
             }
             finally
             {
@@ -141,12 +146,6 @@ namespace UI.Presenters
 
         private void HandleCloseRequested()
         {
-            if (_isSending)
-            {
-                DebugLog("전송 중에는 닫을 수 없음");
-                return;
-            }
-
             Close();
         }
         #endregion

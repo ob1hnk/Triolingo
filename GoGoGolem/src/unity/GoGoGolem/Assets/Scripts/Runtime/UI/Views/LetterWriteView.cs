@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using TMPro;
 
@@ -23,6 +24,10 @@ namespace UI.Views
 
         [Header("Settings")]
         [SerializeField] private int maxCharacterCount = 300;
+        #endregion
+
+        #region Events
+        public event Action<string> OnSubmit;
         #endregion
 
         #region Properties
@@ -61,9 +66,6 @@ namespace UI.Views
         {
             if (letterInputField != null)
                 letterInputField.interactable = !isSending;
-
-            if (keyHintText != null)
-                keyHintText.text = isSending ? "편지를 보내는 중..." : "편지를 보내지 못했습니다.";
         }
 
         public void ShowError(string message)
@@ -79,6 +81,11 @@ namespace UI.Views
             {
                 letterInputField.characterLimit = maxCharacterCount;
                 letterInputField.onValueChanged.AddListener(OnInputChanged);
+                letterInputField.onSubmit.AddListener(text =>
+                {
+                    Debug.Log($"[LetterWriteView] onSubmit 발동 - 내용: '{text}' ({text.Length}자)");
+                    OnSubmit?.Invoke(text);
+                });
             }
 
             UpdateCharCount();
@@ -108,6 +115,13 @@ namespace UI.Views
 
         private void FocusInput()
         {
+            if (letterInputField != null)
+                StartCoroutine(FocusNextFrame());
+        }
+
+        private IEnumerator FocusNextFrame()
+        {
+            yield return null;
             if (letterInputField != null)
             {
                 letterInputField.Select();
