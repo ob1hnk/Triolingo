@@ -193,4 +193,13 @@ public class PlayerController : MonoBehaviour
         return _characterController.isGrounded && validAngle;
     }
     #endregion
+
+    #region External Control
+    public void ResetVelocity()
+    {
+        _verticalVelocity = 0f;
+        _characterController.enabled = false;
+        _characterController.enabled = true;
+    }
+    #endregion
 }
