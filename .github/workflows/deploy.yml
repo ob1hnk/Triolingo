@@ -141,6 +141,7 @@ jobs:
               --restart unless-stopped \
               -p 8000:8000 \
               --env-file /home/${EC2_USER}/.env \
+              -v /home/${EC2_USER}/firebase-service-account.json:/app/firebase-service-account.json:ro \
               ${IMAGE_TAG}
             
             # 컨테이너 로그 확인

@@ -14,10 +14,10 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         if (inventoryPresenter == null)
-            Debug.LogError("UIManager: InventoryUIPresenter가 할당되지 않았습니다.");
+            Debug.LogWarning("UIManager: InventoryUIPresenter가 할당되지 않았습니다.");
 
         if (settingsPresenter == null)
-            Debug.LogError("UIManager: SettingsPresenter가 할당되지 않았습니다.");
+            Debug.LogWarning("UIManager: SettingsPresenter가 할당되지 않았습니다.");
 
         inventoryPresenter?.Hide();
         settingsPresenter?.Hide();
