@@ -6,24 +6,25 @@ namespace Demo.Chapters.Prologue
     /// <summary>
     /// Forest 씬 범용 트리거 존
     ///
-    /// 플레이어 진입시 _onPlayerEnter UnityEvent 발동
-    ///
-    /// 트리거 존 오브젝트 세팅:
+    /// 세팅:
     ///   - BoxCollider → Is Trigger 체크
-    ///   - On Player Enter: 호출할 메서드 연결
+    ///   - On Player Enter: 호출할 메서드를 Inspector에서 직접 연결
     ///   - 플레이어 태그 "Player" 확인
+    ///
+    /// 예시:
+    ///   Zone 1 → ForestEventController.OnPlayerEnterTrigger
+    ///   Zone 2 → ForestEventController.OnPlayerEnterRainStart
+    ///   Zone 3 → LeafEventController.OnLeafTimelineTrigger
+    ///   Zone 4 → ForestEventController.OnPlayerEnterRainStop
     /// </summary>
     [RequireComponent(typeof(Collider))]
     public class ForestTriggerZone : MonoBehaviour
     {
-        [Tooltip("플레이어 진입 시 발동할 이벤트. Inspector에서 원하는 메서드 연결.")]
-        [SerializeField] private UnityEvent _onPlayerEnter;
-
         [Tooltip("트리거할 대상 태그")]
         [SerializeField] private string _playerTag = "Player";
 
-        [Tooltip("한 번만 트리거할지 여부 (기본 true)")]
-        [SerializeField] private bool _triggerOnce = true;
+        [Tooltip("플레이어 진입 시 호출할 메서드 (Inspector에서 연결)")]
+        [SerializeField] private UnityEvent _onPlayerEnter;
 
         private bool _triggered = false;
 
@@ -39,18 +40,13 @@ namespace Demo.Chapters.Prologue
 
         private void OnTriggerEnter(Collider other)
         {
-            if (_triggerOnce && _triggered) return;
+            if (_triggered) return;
             if (!other.CompareTag(_playerTag)) return;
 
             _triggered = true;
+            Debug.Log($"[ForestTriggerZone] {gameObject.name} 플레이어 진입");
             _onPlayerEnter?.Invoke();
-            Debug.Log($"[ForestTriggerZone] [{gameObject.name}] 플레이어 진입 감지 → 이벤트 발동");
         }
-
-        /// <summary>
-        /// 외부에서 트리거를 초기화할 때 사용 (재사용 필요 시)
-        /// </summary>
-        public void ResetTrigger() => _triggered = false;
 
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
