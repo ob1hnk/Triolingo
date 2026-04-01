@@ -2717,6 +2717,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   promptData: {fileID: 11400000, guid: bf5c6c7f8bb1848e7b6526fcce0f3c56, type: 2}
+  sleepDirector: {fileID: 0}
 --- !u!1 &992010012 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
