@@ -30,6 +30,18 @@ public class GameManager : MonoBehaviour
         Save();
     }
 
+    // ── Player Name ───────────────────────────────────────────
+
+    public string PlayerName => _data.playerName;
+
+    public bool HasPlayerName => !string.IsNullOrEmpty(_data.playerName);
+
+    public void SetPlayerName(string name)
+    {
+        _data.playerName = name;
+        Save();
+    }
+
     // ── Letter ────────────────────────────────────────────────
 
     public string CurrentLetterId => _data.currentLetterId;

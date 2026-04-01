@@ -17,12 +17,12 @@ public class BedInteraction : MonoBehaviour, IInteractable
     public event Action OnSlept;
 
     public InteractionType InteractionType => InteractionType.Sleep;
-    public string GetActionLabel() => "잠들기";
+    public string GetActionLabel() => "자러가기";
     public Sprite GetKeyHintSprite() => null;
 
     public void Interact()
     {
-        Debug.Log("[BedInteraction] 잠들기 시작");
+        Debug.Log("[BedInteraction] 자러가기 시작");
         OnSlept?.Invoke();
     }
 }

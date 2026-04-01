@@ -1,7 +1,14 @@
 {
-    "projectFileVersion": 3,
-    "sourceFilePatterns": [
-        "**/*.yarn"
-    ],
-    "baseLanguage": "ko"
+  "projectFileVersion": 3,
+  "sourceFiles": [
+    "**/*.yarn"
+  ],
+  "excludeFiles": [],
+  "localisation": {},
+  "baseLanguage": "ko",
+  "compilerOptions": {},
+  "definitionsFiles": [],
+  "sourceFilePatterns": [
+    "**/*.yarn"
+  ]
 }
