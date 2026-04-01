@@ -64,7 +64,7 @@ using UnityEngine;
             _dialogue = GetComponentInChildren<DialogueManager>();
             if (_dialogue == null)
             {
-                Debug.LogError("Managers: DialogueManager 컴포넌트가 없습니다.");
+                Debug.LogWarning("Managers: DialogueManager 컴포넌트가 없습니다.");
             }
         }
     }
