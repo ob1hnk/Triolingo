@@ -77,6 +77,14 @@ crashlytics-build.properties
 
 # Assets - 에셋 폴더 내용 무시 (단, .meta와 MyAssets 제외)
 /Assets/3DModels/VFX/**
+!/Assets/3DModels/VFX/Polygonal Particles/
+!/Assets/3DModels/VFX/Polygonal Particles/Assets/
+!/Assets/3DModels/VFX/Polygonal Particles/Assets/Materials/
+!/Assets/3DModels/VFX/Polygonal Particles/Assets/Meshes/
+!/Assets/3DModels/VFX/Polygonal Particles/Assets/Prefabs/
+!/Assets/3DModels/VFX/Polygonal Particles/Assets/Prefabs/Water/
+!/Assets/3DModels/VFX/Polygonal Particles/Assets/Shaders/
+!/Assets/3DModels/VFX/Polygonal Particles/Assets/**/*.meta
 
 /Assets/3DModels/polyperfect/**
 !/Assets/3DModels/polyperfect/**/*.meta
@@ -129,3 +137,7 @@ crashlytics-build.properties
 # Exclude test scripts
 Assets/Scripts/Runtime/Multimodal/Examples/
 Assets/Scripts/Runtime/Multimodal/Examples.meta
+
+# FarlandSkies (무료 스카이박스 에셋 - 각 팀원이 직접 설치)
+/Assets/FarlandSkies/**
+!/Assets/FarlandSkies/**/*.meta

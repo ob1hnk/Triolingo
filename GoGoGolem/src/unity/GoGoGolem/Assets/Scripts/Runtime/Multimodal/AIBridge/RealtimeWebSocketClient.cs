@@ -172,8 +172,8 @@ namespace Multimodal.AIBridge
 
         #region Streaming Control
         /// 스트리밍 시작
-        /// sessionId: 세션 ID, language: 언어 코드 (기본: ko)
-        public async Task StartStreamAsync(string sessionId, string language = "ko")
+        /// sessionId: 세션 ID, language: 언어 코드 (기본: ko), questContext: 퀘스트 진행 상황 (선택)
+        public async Task StartStreamAsync(string sessionId, string language = "ko", Multimodal.Voice.QuestContextPayload questContext = null)
         {
             if (!_isConnected)
             {
@@ -195,10 +195,15 @@ namespace Multimodal.AIBridge
                 ["language"] = language
             };
 
+            if (questContext != null)
+            {
+                message["quest_context"] = JToken.FromObject(questContext);
+            }
+
             await SendJsonAsync(message);
             _isStreaming = true;
 
-            Debug.Log($"[Realtime] Stream started: {sessionId}, language: {language}");
+            Debug.Log($"[Realtime] Stream started: {sessionId}, language: {language}, questContext: {(questContext != null ? "included" : "none")}");
         }
 
         /// 오디오 청크 전송 (Base64 인코딩)

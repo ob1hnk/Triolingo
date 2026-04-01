@@ -273,6 +273,11 @@ public class QuestManager : MonoBehaviour
         return progressTracker?.GetQuestProgress(questID) ?? 0f;
     }
 
+    public List<Quest> GetAllCompletedQuests()
+    {
+        return progressTracker?.GetAllCompletedQuests() ?? new List<Quest>();
+    }
+
     #endregion
 
     #region Save/Load
