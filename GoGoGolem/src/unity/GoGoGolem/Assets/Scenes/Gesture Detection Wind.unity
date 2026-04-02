@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 617d9be015db68348a623b01ea51a8c5, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -900,7 +900,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.0034830496, y: -0.70824814, z: -0.0034779413, w: 0.7059465}
   m_LocalPosition: {x: -7.597414, y: 5.053501, z: 30.744102}
-  m_LocalScale: {x: 7, y: 1, z: 8.5}
+  m_LocalScale: {x: 7, y: 1, z: 20}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2121529983}
@@ -3100,8 +3100,12 @@ PrefabInstance:
       value: ForestSettlementMeshTerrain
       objectReference: {fileID: 0}
     - target: {fileID: 5814527795654049476, guid: 0de81726e6128cd498285239356aec67, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5814527795654049476, guid: 0de81726e6128cd498285239356aec67, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 65.53049
+      value: 76.5
       objectReference: {fileID: 0}
     - target: {fileID: 5814527795654049476, guid: 0de81726e6128cd498285239356aec67, type: 3}
       propertyPath: m_LocalPosition.y
@@ -8114,9 +8118,9 @@ RectTransform:
   - {fileID: 1459076829}
   m_Father: {fileID: 8571076844006217398}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 240, y: -40}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2003177403
@@ -8348,7 +8352,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.0034830496, y: -0.70824814, z: -0.0034779413, w: 0.7059465}
   m_LocalPosition: {x: -8.613649, y: 3.8043437, z: 35.7288}
-  m_LocalScale: {x: 4, y: 1, z: 8.5}
+  m_LocalScale: {x: 4, y: 1, z: 20}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2121529983}
