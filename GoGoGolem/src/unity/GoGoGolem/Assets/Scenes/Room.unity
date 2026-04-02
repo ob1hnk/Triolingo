@@ -137,7 +137,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &49136116
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2717,7 +2717,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   promptData: {fileID: 11400000, guid: bf5c6c7f8bb1848e7b6526fcce0f3c56, type: 2}
-  sleepDirector: {fileID: 0}
+  sleepDirector: {fileID: 992010024}
 --- !u!1 &992010012 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
@@ -2872,18 +2872,37 @@ CharacterController:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Height: 2
+  m_Height: 2.1
   m_Radius: 0.5
   m_SlopeLimit: 45
   m_StepOffset: 0.01
-  m_SkinWidth: 0.08
+  m_SkinWidth: 0.1
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 1, z: 0}
+  m_Center: {x: 0, y: 0.8, z: 0}
 --- !u!95 &992010022 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
   m_PrefabInstance: {fileID: 1545084744}
   m_PrefabAsset: {fileID: 0}
+--- !u!320 &992010024
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 992010012}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: 8d70a31e7d67143e398e5b3f39d78a7d, type: 2}
+  m_InitialState: 0
+  m_WrapMode: 2
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings:
+  - key: {fileID: -2767568631582937555, guid: 8d70a31e7d67143e398e5b3f39d78a7d, type: 2}
+    value: {fileID: 992010022}
+  m_ExposedReferences:
+    m_References: []
 --- !u!1 &996753858
 GameObject:
   m_ObjectHideFlags: 0
@@ -3723,15 +3742,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.67
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -4.27
+      value: -4
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -2.68
+      value: -1.65
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3739,15 +3758,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: 0.0008726948
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: 0.99999964
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: 0.0008619505
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -3759,7 +3778,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       propertyPath: m_ConstrainProportionsScale
@@ -4028,6 +4047,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 992010013}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 992010024}
   m_SourcePrefab: {fileID: 100100000, guid: e800dce0a8faa324aa91f6455768ba1f, type: 3}
 --- !u!1 &1577593018 stripped
 GameObject:
