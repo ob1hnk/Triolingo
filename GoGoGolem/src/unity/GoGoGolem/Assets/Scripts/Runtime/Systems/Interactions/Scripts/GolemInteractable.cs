@@ -22,6 +22,7 @@ public class GolemInteractable : MonoBehaviour, IInteractable
     }
 
     public InteractionType InteractionType => InteractionType.TalkGolem;
+    public bool CanInteract => true;
 
     [Header("Prompt")]
     [SerializeField] private InteractionPromptData promptData;

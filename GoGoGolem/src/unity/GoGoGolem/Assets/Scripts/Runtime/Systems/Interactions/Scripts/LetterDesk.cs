@@ -21,10 +21,13 @@ public class LetterDesk : MonoBehaviour, IInteractable
     [SerializeField] private InteractionPromptData promptData;
 
     private DeskMode _mode = DeskMode.Write;
+    private bool _canInteract = true;
 
     public void SetMode(DeskMode mode) => _mode = mode;
+    public void SetCanInteract(bool value) => _canInteract = value;
 
     public InteractionType InteractionType => InteractionType.WriteLetter;
+    public bool CanInteract => _canInteract;
 
     public string GetActionLabel() => _mode == DeskMode.Write ? "편지 쓰기" : "편지 읽기";
     public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;

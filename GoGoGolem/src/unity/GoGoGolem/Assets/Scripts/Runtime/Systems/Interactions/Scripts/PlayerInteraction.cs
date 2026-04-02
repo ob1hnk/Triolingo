@@ -76,7 +76,7 @@ public class PlayerInteraction : MonoBehaviour
         foreach (var col in colliders)
         {
             IInteractable interactable = col.GetComponent<IInteractable>();
-            if (interactable != null)
+            if (interactable != null && interactable.CanInteract)
             {
                 float dist = Vector3.Distance(transform.position, col.transform.position);
                 if (dist < minDistance)

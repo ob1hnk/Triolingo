@@ -12,6 +12,7 @@ public class Item : MonoBehaviour, IInteractable
     [SerializeField] private InteractionPromptData promptData;
 
     public InteractionType InteractionType => InteractionType.Gather;
+    public bool CanInteract => true;
     public string GetActionLabel() => promptData != null ? promptData.ActionLabel : "줍기";
     public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
     public Vector3 GetPromptOffset() => promptData != null ? promptData.WorldOffset : new Vector3(0f, 1.5f, 0f);

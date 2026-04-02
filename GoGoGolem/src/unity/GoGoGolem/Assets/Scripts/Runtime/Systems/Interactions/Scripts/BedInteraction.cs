@@ -25,8 +25,14 @@ public class BedInteraction : MonoBehaviour, IInteractable
     public event Action OnSlept;
 
     private bool _isPlaying;
+    private bool _canInteract = true;
+    private string _blockedMessage;
 
     public InteractionType InteractionType => InteractionType.Sleep;
+    public bool CanInteract => _canInteract && !_isPlaying;
+
+    public void SetCanInteract(bool value) => _canInteract = value;
+    public void SetBlockedMessage(string msg) => _blockedMessage = msg;
     public string GetActionLabel() => promptData != null ? promptData.ActionLabel : "자러가기";
     public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
     public Vector3 GetPromptOffset() => promptData != null ? promptData.WorldOffset : new Vector3(0f, 1.5f, 0f);
@@ -34,6 +40,12 @@ public class BedInteraction : MonoBehaviour, IInteractable
     public void Interact()
     {
         if (_isPlaying) return;
+
+        if (!string.IsNullOrEmpty(_blockedMessage))
+        {
+            Debug.Log(_blockedMessage);
+            return;
+        }
 
         Debug.Log("[BedInteraction] 자러가기 시작");
 
