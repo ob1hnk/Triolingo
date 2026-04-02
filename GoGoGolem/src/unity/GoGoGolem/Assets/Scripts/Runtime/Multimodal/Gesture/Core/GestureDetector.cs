@@ -51,6 +51,11 @@ namespace Demo.GestureDetection
     }
 
     /// <summary>
+    /// 현재 웹캠 텍스처 반환 (설정창 웹캠 미리보기용)
+    /// </summary>
+    public Texture GetWebcamTexture() => screen != null ? screen.texture : null;
+
+    /// <summary>
     /// MediaPipe 감지 메인 루프 (VisionTaskApiRunner의 추상 메서드 구현)
     /// </summary>
     protected override IEnumerator Run()
