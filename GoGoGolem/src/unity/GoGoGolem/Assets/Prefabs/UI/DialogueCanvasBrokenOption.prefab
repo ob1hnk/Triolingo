@@ -157,7 +157,7 @@ GameObject:
   - component: {fileID: 5427247783516326893}
   - component: {fileID: 6534266420955260287}
   m_Layer: 5
-  m_Name: DialogueCanvas
+  m_Name: DialogueCanvasBrokenOption
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
