@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 씬 로드 시 플레이어를 SpawnPoint 위치로 이동
 /// </summary>
-public class RoomPlayerSpawn : MonoBehaviour
+public class PlayerSpawn : MonoBehaviour
 {
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private GameObject player;
