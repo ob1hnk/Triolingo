@@ -7768,13 +7768,13 @@ MonoBehaviour:
   _progressShowThreshold: 2
   _objectiveID_NoFly: MQ-02-OBJ-02
   _objectiveID_Fly: MQ-02-OBJ-04
-  _requestCompletePhaseEvent: {fileID: 0}
+  _requestCompletePhaseEvent: {fileID: 11400000, guid: e2da95cd4a1d545b1b66af5c47cc8d21, type: 2}
   _questID: MQ-02
   _phaseID_NoFly: MQ-02-P05
   _phaseID_Fly: MQ-02-P09
   _flyItem: {fileID: 1554780054}
   _noFlyItem: {fileID: 1742802888}
-  _debugOverride: 1
+  _debugOverride: 0
   _debugIsFly: 1
 --- !u!1 &1991747751
 GameObject:
