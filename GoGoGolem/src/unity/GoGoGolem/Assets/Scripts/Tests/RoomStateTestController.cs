@@ -10,6 +10,8 @@ public class RoomStateTestController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private RoomStateManager roomStateManager;
+    [SerializeField] private RoomLightingController roomLightingController;
+    [SerializeField] private RoomSkyboxController roomSkyboxController;
 
     [Header("Font")]
     [SerializeField] private TMP_FontAsset buttonFont;
@@ -43,18 +45,24 @@ public class RoomStateTestController : MonoBehaviour
         {
             Debug.Log("[RoomStateTest] → BeforeLetter");
             roomStateManager.SetState(RoomStateManager.RoomState.BeforeLetter);
+            if (roomLightingController != null) roomLightingController.SetEvening();
+            if (roomSkyboxController != null) roomSkyboxController.SetEveningSkybox();
         });
 
         SpawnButton("AfterLetter", ref y, () =>
         {
             Debug.Log("[RoomStateTest] → AfterLetter");
             roomStateManager.SetState(RoomStateManager.RoomState.AfterLetter);
+            if (roomLightingController != null) roomLightingController.SetNight();
+            if (roomSkyboxController != null) roomSkyboxController.SetNightSkybox();
         });
 
         SpawnButton("Morning", ref y, () =>
         {
             Debug.Log("[RoomStateTest] → Morning");
             roomStateManager.SetState(RoomStateManager.RoomState.Morning);
+            if (roomLightingController != null) roomLightingController.SetMorning();
+            if (roomSkyboxController != null) roomSkyboxController.SetMorningSkybox();
         });
     }
 

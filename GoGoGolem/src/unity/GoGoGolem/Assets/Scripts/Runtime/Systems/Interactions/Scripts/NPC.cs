@@ -46,6 +46,7 @@ public class NPC : MonoBehaviour, IInteractable
     private InputAction _bubbleAdvanceAction;
 
     public InteractionType InteractionType => InteractionType.TalkNPC;
+    public bool CanInteract => true;
 
     private void Awake()
     {

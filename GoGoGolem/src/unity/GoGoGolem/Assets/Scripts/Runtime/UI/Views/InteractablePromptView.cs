@@ -82,7 +82,7 @@ public class InteractablePromptView : MonoBehaviour
         foreach (var col in colliders)
         {
             var interactable = col.GetComponent<IInteractable>();
-            if (interactable == null) continue;
+            if (interactable == null || !interactable.CanInteract) continue;
 
             float dist = Vector3.Distance(transform.position, col.transform.position);
             if (dist < minDist)

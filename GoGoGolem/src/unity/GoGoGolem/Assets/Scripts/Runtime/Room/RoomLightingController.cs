@@ -26,7 +26,7 @@ public class RoomLightingController : MonoBehaviour
     [SerializeField] private Color eveningAmbientColor = new Color(0.4f, 0.25f, 0.15f);
 
     [Header("Night (깜깜한 밤)")]
-    [SerializeField] private float nightRoomIntensity = 5f;
+    [SerializeField] private float nightRoomIntensity = 20f;
     [SerializeField] private Color nightRoomColor = new Color(0.7f, 0.7f, 0.85f);
     [SerializeField] private float nightWindowIntensity = 15f;
     [SerializeField] private Color nightWindowColor = new Color(0.6f, 0.7f, 0.9f);

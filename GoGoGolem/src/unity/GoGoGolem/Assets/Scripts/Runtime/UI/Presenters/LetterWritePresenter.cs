@@ -22,12 +22,15 @@ namespace UI.Presenters
         [SerializeField] private LetterWriteView view;
         [SerializeField] private LetterSender letterSender;
 
+        [Header("Events")]
+        [SerializeField] private GameEvent onLetterSubmittedEvent;
+
         [Header("Debug")]
         [SerializeField] private bool enableDebugLogs = true;
         #endregion
 
         #region Events (외부 시스템이 구독 - RoomStateManager 등)
-        /// <summary>Enter 즉시 발행 — 캔버스 닫기·크레인 트리거용</summary>
+        /// <summary>Enter 즉시 발행 — UI 닫기·상태 전환 트리거용</summary>
         public event Action OnLetterSubmitted;
         /// <summary>HTTP 응답 후 발행 — taskId 저장용</summary>
         public event Action<string> OnTaskIdReceived;
@@ -36,7 +39,6 @@ namespace UI.Presenters
 
         #region Private
         private bool _isSending;
-        private float _savedTimeScale;
         #endregion
 
         #region Unity Lifecycle
@@ -120,10 +122,11 @@ namespace UI.Presenters
 
             _isSending = true;
 
-            // 1. Enter 즉시: 캔버스 닫고 크레인·씬 전환 트리거
+            // 1. Enter 즉시: 캔버스 닫고 상태 전환 트리거
             DebugLog("OnLetterSubmitted 발행 - 즉시 닫기");
             Close();
             OnLetterSubmitted?.Invoke();
+            if (onLetterSubmittedEvent != null) onLetterSubmittedEvent.Raise();
 
             // 2. 백그라운드에서 HTTP 요청 (씬 전환과 무관하게 진행)
             DebugLog($"HTTP 백그라운드 전송 시작 ({letterContent.Length}자)");
@@ -165,14 +168,15 @@ namespace UI.Presenters
         #region Game State
         private void PauseGame()
         {
-            _savedTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
+            if (GameStateManager.Instance != null)
+                GameStateManager.Instance.ChangeState(GameState.Paused);
             DebugLog("월드 일시정지");
         }
 
         private void ResumeGame()
         {
-            Time.timeScale = _savedTimeScale > 0f ? _savedTimeScale : 1f;
+            if (GameStateManager.Instance != null)
+                GameStateManager.Instance.ChangeState(GameState.Gameplay);
             DebugLog("월드 재개");
         }
         #endregion
