@@ -12,49 +12,68 @@ using UnityEngine;
 /// </summary>
 public class RoomLightingController : MonoBehaviour
 {
-    [Header("Sun Light")]
-    [SerializeField] private Light sunLight;
+    [Header("Lights")]
+    [SerializeField] private Light roomPointLight;
+    [SerializeField] private Light roomDirectionalLight;
+    [SerializeField] private Light windowLight;
+    [SerializeField] private Light deskLight;
 
     [Header("Evening (저녁노을)")]
-    [SerializeField] private float eveningLightIntensity = 0.8f;
-    [SerializeField] private Color eveningLightColor = new Color(1f, 0.55f, 0.2f);
+    [SerializeField] private float eveningRoomIntensity = 50f;
+    [SerializeField] private Color eveningRoomColor = new Color(1f, 0.9f, 0.8f);
+    [SerializeField] private float eveningWindowIntensity = 40f;
+    [SerializeField] private Color eveningWindowColor = new Color(1f, 0.55f, 0.2f);
     [SerializeField] private Color eveningAmbientColor = new Color(0.4f, 0.25f, 0.15f);
 
     [Header("Night (깜깜한 밤)")]
-    [SerializeField] private float nightLightIntensity = 0f;
+    [SerializeField] private float nightRoomIntensity = 5f;
+    [SerializeField] private Color nightRoomColor = new Color(0.7f, 0.7f, 0.85f);
+    [SerializeField] private float nightWindowIntensity = 15f;
+    [SerializeField] private Color nightWindowColor = new Color(0.6f, 0.7f, 0.9f);
     [SerializeField] private Color nightAmbientColor = new Color(0.05f, 0.05f, 0.1f);
 
     [Header("Morning (아침)")]
-    [SerializeField] private float morningLightIntensity = 1.2f;
-    [SerializeField] private Color morningLightColor = new Color(1f, 0.95f, 0.85f);
+    [SerializeField] private float morningRoomIntensity = 100f;
+    [SerializeField] private Color morningRoomColor = new Color(1f, 0.95f, 0.85f);
     [SerializeField] private Color morningAmbientColor = new Color(0.6f, 0.6f, 0.7f);
-
-    [Header("Night View")]
-    [SerializeField] private GameObject nightView;
 
     [Header("Transition")]
     [SerializeField] private float fadeDuration = 1.5f;
 
     private Coroutine _fadeCoroutine;
 
+    private void Start()
+    {
+        SetEvening();
+    }
+
     // ── 즉시 설정 ────────────────────────────────────────────────
 
     public void SetEvening()
     {
         StopFade();
-        ApplyLighting(eveningLightIntensity, eveningLightColor, eveningAmbientColor, sunActive: true, nightViewActive: false);
+        ApplyLighting(
+            eveningRoomIntensity, eveningRoomColor, 0.5f,
+            eveningWindowIntensity, eveningWindowColor, 1f,
+            eveningAmbientColor);
     }
 
     public void SetNight()
     {
         StopFade();
-        ApplyLighting(nightLightIntensity, Color.white, nightAmbientColor, sunActive: false, nightViewActive: true);
+        ApplyLighting(
+            nightRoomIntensity, nightRoomColor, 0.1f,
+            nightWindowIntensity, nightWindowColor, 1f,
+            nightAmbientColor);
     }
 
     public void SetMorning()
     {
         StopFade();
-        ApplyLighting(morningLightIntensity, morningLightColor, morningAmbientColor, sunActive: true, nightViewActive: false);
+        ApplyLighting(
+            morningRoomIntensity, morningRoomColor, 1f,
+            0f, Color.white, 0f,
+            morningAmbientColor);
     }
 
     // ── 페이드 전환 ──────────────────────────────────────────────
@@ -64,8 +83,9 @@ public class RoomLightingController : MonoBehaviour
     {
         StopFade();
         _fadeCoroutine = StartCoroutine(FadeToPreset(
-            eveningLightIntensity, eveningLightColor, eveningAmbientColor,
-            sunActive: true, nightViewActive: false, onComplete));
+            eveningRoomIntensity, eveningRoomColor, 0.5f,
+            eveningWindowIntensity, eveningWindowColor, 1f,
+            eveningAmbientColor, onComplete));
     }
 
     public void TransitionToNight() => TransitionToNight(null);
@@ -73,33 +93,51 @@ public class RoomLightingController : MonoBehaviour
     {
         StopFade();
         _fadeCoroutine = StartCoroutine(FadeToPreset(
-            nightLightIntensity, Color.white, nightAmbientColor,
-            sunActive: false, nightViewActive: true, onComplete));
+            nightRoomIntensity, nightRoomColor, 0.1f,
+            nightWindowIntensity, nightWindowColor, 1f,
+            nightAmbientColor, onComplete));
     }
 
     public void TransitionToMorning() => TransitionToMorning(null);
     public void TransitionToMorning(Action onComplete)
     {
         StopFade();
-        if (sunLight != null) sunLight.gameObject.SetActive(true);
-        if (nightView != null) nightView.SetActive(false);
         _fadeCoroutine = StartCoroutine(FadeToPreset(
-            morningLightIntensity, morningLightColor, morningAmbientColor,
-            sunActive: true, nightViewActive: false, onComplete));
+            morningRoomIntensity, morningRoomColor, 1f,
+            0f, Color.white, 0f,
+            morningAmbientColor, onComplete));
     }
 
     // ── Private ──────────────────────────────────────────────────
 
-    private void ApplyLighting(float intensity, Color lightColor, Color ambientColor, bool sunActive, bool nightViewActive)
+    private void ApplyLighting(
+        float roomIntensity, Color roomColor,
+        float dirIntensity,
+        float windowIntensity, Color windowColor,
+        float deskIntensity,
+        Color ambientColor)
     {
-        if (sunLight != null)
+        if (roomPointLight != null)
         {
-            sunLight.gameObject.SetActive(sunActive);
-            sunLight.intensity = intensity;
-            sunLight.color = lightColor;
+            roomPointLight.intensity = roomIntensity;
+            roomPointLight.color = roomColor;
+        }
+        if (roomDirectionalLight != null)
+        {
+            roomDirectionalLight.intensity = dirIntensity;
+        }
+        if (windowLight != null)
+        {
+            windowLight.gameObject.SetActive(windowIntensity > 0f);
+            windowLight.intensity = windowIntensity;
+            windowLight.color = windowColor;
+        }
+        if (deskLight != null)
+        {
+            deskLight.gameObject.SetActive(deskIntensity > 0f);
+            deskLight.intensity = deskIntensity;
         }
         RenderSettings.ambientLight = ambientColor;
-        if (nightView != null) nightView.SetActive(nightViewActive);
     }
 
     private void StopFade()
@@ -111,15 +149,25 @@ public class RoomLightingController : MonoBehaviour
         }
     }
 
-    private IEnumerator FadeToPreset(float targetIntensity, Color targetLightColor, Color targetAmbientColor,
-        bool sunActive, bool nightViewActive, Action onComplete)
+    private IEnumerator FadeToPreset(
+        float targetRoomIntensity, Color targetRoomColor, float targetDirIntensity,
+        float targetWindowIntensity, Color targetWindowColor,
+        float targetDeskIntensity,
+        Color targetAmbientColor, Action onComplete)
     {
-        // 페이드 시작 전 sun 켜기 (꺼져있으면 페이드가 안 보이므로)
-        if (sunActive && sunLight != null) sunLight.gameObject.SetActive(true);
-
-        float startIntensity = sunLight != null ? sunLight.intensity : 0f;
-        Color startLightColor = sunLight != null ? sunLight.color : Color.white;
+        float startRoomIntensity = roomPointLight != null ? roomPointLight.intensity : 0f;
+        Color startRoomColor = roomPointLight != null ? roomPointLight.color : Color.white;
+        float startDirIntensity = roomDirectionalLight != null ? roomDirectionalLight.intensity : 0f;
+        float startWindowIntensity = windowLight != null ? windowLight.intensity : 0f;
+        Color startWindowColor = windowLight != null ? windowLight.color : Color.white;
+        float startDeskIntensity = deskLight != null ? deskLight.intensity : 0f;
         Color startAmbient = RenderSettings.ambientLight;
+
+        if (windowLight != null && targetWindowIntensity > 0f)
+            windowLight.gameObject.SetActive(true);
+        if (deskLight != null && targetDeskIntensity > 0f)
+            deskLight.gameObject.SetActive(true);
+
         float elapsed = 0f;
 
         while (elapsed < fadeDuration)
@@ -127,17 +175,31 @@ public class RoomLightingController : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, elapsed / fadeDuration);
 
-            if (sunLight != null)
+            if (roomPointLight != null)
             {
-                sunLight.intensity = Mathf.Lerp(startIntensity, targetIntensity, t);
-                sunLight.color = Color.Lerp(startLightColor, targetLightColor, t);
+                roomPointLight.intensity = Mathf.Lerp(startRoomIntensity, targetRoomIntensity, t);
+                roomPointLight.color = Color.Lerp(startRoomColor, targetRoomColor, t);
+            }
+            if (roomDirectionalLight != null)
+            {
+                roomDirectionalLight.intensity = Mathf.Lerp(startDirIntensity, targetDirIntensity, t);
+            }
+            if (windowLight != null)
+            {
+                windowLight.intensity = Mathf.Lerp(startWindowIntensity, targetWindowIntensity, t);
+                windowLight.color = Color.Lerp(startWindowColor, targetWindowColor, t);
+            }
+            if (deskLight != null)
+            {
+                deskLight.intensity = Mathf.Lerp(startDeskIntensity, targetDeskIntensity, t);
             }
             RenderSettings.ambientLight = Color.Lerp(startAmbient, targetAmbientColor, t);
             yield return null;
         }
 
-        // 최종값 적용
-        ApplyLighting(targetIntensity, targetLightColor, targetAmbientColor, sunActive, nightViewActive);
+        ApplyLighting(targetRoomIntensity, targetRoomColor, targetDirIntensity,
+            targetWindowIntensity, targetWindowColor, targetDeskIntensity,
+            targetAmbientColor);
         onComplete?.Invoke();
     }
 }
