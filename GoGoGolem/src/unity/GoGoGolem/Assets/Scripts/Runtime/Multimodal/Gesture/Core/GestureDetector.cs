@@ -352,7 +352,7 @@ namespace Demo.GestureDetection
     /// </summary>
     private long GetCurrentTimestampMillisec()
     {
-      return (long)(Time.time * 1000);
+      return (long)(Time.realtimeSinceStartup * 1000);
     }
   }
 }
