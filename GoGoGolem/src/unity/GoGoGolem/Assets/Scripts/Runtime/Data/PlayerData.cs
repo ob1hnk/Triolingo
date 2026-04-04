@@ -16,6 +16,9 @@ public class PlayerData
     /// <summary>플레이어 이름. 인트로 씬에서 입력받는다.</summary>
     public string playerName;
 
+    /// <summary>골렘 이름. 인트로 씬에서 입력받는다.</summary>
+    public string golemName;
+
     // --- Future ---
     // public List<string> npcNames;   // 플레이어가 작명한 NPC 이름 목록
     // public int currentDayIndex;     // 게임 내 날짜 (낮밤 Timeline 연동)

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -14,6 +15,7 @@ using UnityEngine.UI;
 public class SettingsPresenter : MonoBehaviour
 {
     private const string PrefKeyCamera = "Settings_CameraName";
+    private const string PrefKeyMic = "Settings_MicName";
 
     [SerializeField] private GameObject settingsPanel;
 
@@ -21,7 +23,7 @@ public class SettingsPresenter : MonoBehaviour
     [SerializeField] private TMP_Dropdown cameraDropdown;
 
     [Header("Settings — Mic Input")]
-    // TODO: 마이크 입력 선택 UI 연결
+    [SerializeField] private TMP_Dropdown micDropdown;
 
     private bool _isVisible = false;
     public bool IsVisible => _isVisible;
@@ -38,6 +40,7 @@ public class SettingsPresenter : MonoBehaviour
         Time.timeScale = 0f; // 게임 일시정지
         if (settingsPanel != null) settingsPanel.SetActive(true);
         InitializeCameraDropdown();
+        StartCoroutine(RequestMicPermissionAndInit());
         OnVisibilityChanged?.Invoke(true);
     }
 
@@ -84,5 +87,62 @@ public class SettingsPresenter : MonoBehaviour
             PlayerPrefs.SetString(PrefKeyCamera, names[index]);
             PlayerPrefs.Save();
         });
+    }
+
+    private IEnumerator RequestMicPermissionAndInit()
+    {
+        if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
+        {
+            yield return Application.RequestUserAuthorization(UserAuthorization.Microphone);
+        }
+        InitializeMicDropdown();
+    }
+
+    private void InitializeMicDropdown()
+    {
+        if (micDropdown == null) return;
+
+        var devices = Microphone.devices;
+        if (devices == null || devices.Length == 0)
+        {
+            micDropdown.interactable = false;
+            return;
+        }
+
+        micDropdown.onValueChanged.RemoveAllListeners();
+        micDropdown.ClearOptions();
+        micDropdown.AddOptions(new List<string>(devices));
+        micDropdown.interactable = true;
+
+        string savedName = PlayerPrefs.GetString(PrefKeyMic, devices[0]);
+        int savedIndex = System.Array.IndexOf(devices, savedName);
+        micDropdown.SetValueWithoutNotify(savedIndex >= 0 ? savedIndex : 0);
+        micDropdown.RefreshShownValue();
+
+        micDropdown.onValueChanged.AddListener(index =>
+        {
+            PlayerPrefs.SetString(PrefKeyMic, devices[index]);
+            PlayerPrefs.Save();
+        });
+    }
+
+    /// <summary>
+    /// 저장된 마이크 디바이스 이름을 반환한다. 저장값이 없으면 null.
+    /// </summary>
+    public static string GetSavedMicName()
+    {
+        return PlayerPrefs.HasKey(PrefKeyMic)
+            ? PlayerPrefs.GetString(PrefKeyMic)
+            : null;
+    }
+
+    /// <summary>
+    /// 저장된 카메라 디바이스 이름을 반환한다. 저장값이 없으면 null.
+    /// </summary>
+    public static string GetSavedCameraName()
+    {
+        return PlayerPrefs.HasKey(PrefKeyCamera)
+            ? PlayerPrefs.GetString(PrefKeyCamera)
+            : null;
     }
 }
