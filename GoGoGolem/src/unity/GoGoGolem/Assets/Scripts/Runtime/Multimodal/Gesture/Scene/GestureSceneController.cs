@@ -25,9 +25,8 @@ namespace Demo.GestureDetection
   /// [튜토리얼 재시청]
   /// Playing 중 왼쪽 위 버튼 → RewatchTutorial() → Tutorial → Playing
   /// 
-  /// [Quest 연동 - TODO: 한나님 작업 완료 후]
-  /// - Managers.Quest 연동 활성화
-  /// - _requestCompletePhaseEvent SO 연결
+  /// [Quest 연동]
+  /// - _requestCompletePhaseEvent SO 연결 필요
   /// </summary>
   public class GestureSceneController : MonoBehaviour
   {
@@ -62,7 +61,7 @@ namespace Demo.GestureDetection
     [SerializeField] private string _objectiveID_Fly   = "MQ-02-OBJ-04";
 
     // Quest 연동 (쓰기용 - SO 이벤트 버스)
-    [Header("Quest - Write (한나님 작업 완료 후 연결)")]
+    [Header("Quest - Write")]
     [Tooltip("QuestManager의 requestCompletePhaseEvent와 동일한 SO")]
     [SerializeField] private CompletePhaseGameEvent _requestCompletePhaseEvent;
     [SerializeField] private string _questID      = "MQ-02";
@@ -94,8 +93,8 @@ namespace Demo.GestureDetection
     
     private void Update()
     {
-      // ESC 키로 강제 종료
-      if (Input.GetKeyDown(KeyCode.Escape) && _state != GestureSceneState.Exit)
+      // DEBUG: ESC 키로 강제 종료
+      if (_debugOverride && Input.GetKeyDown(KeyCode.Escape) && _state != GestureSceneState.Exit)
       {
         ExitScene();
       }
@@ -163,8 +162,8 @@ namespace Demo.GestureDetection
         return;
       }
 
-      if (Managers.Quest.IsQuestActive(_objectiveID_Fly) ||
-        Managers.Quest.IsQuestCompleted(_objectiveID_NoFly))
+      // OBJ-02가 완료됐으면 OBJ-04로, 아니면 OBJ-02로
+      if (Managers.Quest.IsObjectiveCompleted(_questID, _objectiveID_NoFly))
         ApplyObjectiveSetup(_objectiveID_Fly);
       else
         ApplyObjectiveSetup(_objectiveID_NoFly);
@@ -349,8 +348,7 @@ namespace Demo.GestureDetection
       GestureSceneEvents.RaiseGestureSceneExit();
       Debug.Log("[GestureSceneController] Scene exit requested");
       
-      // TODO: 실제 씬 전환. 한나님
-      // SceneManager.LoadScene("MainScene");
+      UnityEngine.SceneManagement.SceneManager.LoadScene("Forest");
     }
     
     // ========== 유틸리티 메서드 ==========
