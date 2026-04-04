@@ -145,3 +145,4 @@ Assets/Scripts/Runtime/Multimodal/Examples.meta
 # Floor Textures (에셋 스토어 - 각 팀원이 직접 설치)
 /Assets/Scenes/Room/FloorTextures/
 /Assets/Scenes/Room/M_YFFlM_11.mat
+/Assets/Scenes/Room/T_YFFlM_*.tga
