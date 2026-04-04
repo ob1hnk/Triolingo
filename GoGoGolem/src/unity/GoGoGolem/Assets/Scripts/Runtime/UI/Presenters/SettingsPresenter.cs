@@ -1,12 +1,15 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// 설정 패널 Presenter.
 /// GameState.Paused 상태에서 UIManager에 의해 Show/Hide된다.
 /// 카메라 선택은 WebCamTexture.devices를 통해 열거하고, PlayerPrefs로 저장한다.
 /// Gesture Detection 씬의 Bootstrap이 저장된 이름을 읽어 적용한다.
+///
+/// 웹캠 미리보기는 WebcamPreviewBinder가 담당한다.
 /// </summary>
 public class SettingsPresenter : MonoBehaviour
 {
@@ -32,6 +35,7 @@ public class SettingsPresenter : MonoBehaviour
     public void Show()
     {
         _isVisible = true;
+        Time.timeScale = 0f; // 게임 일시정지
         if (settingsPanel != null) settingsPanel.SetActive(true);
         InitializeCameraDropdown();
         OnVisibilityChanged?.Invoke(true);
@@ -40,6 +44,7 @@ public class SettingsPresenter : MonoBehaviour
     public void Hide()
     {
         _isVisible = false;
+        Time.timeScale = 1f; // 게임 재개
         if (settingsPanel != null) settingsPanel.SetActive(false);
         OnVisibilityChanged?.Invoke(false);
     }
