@@ -42,6 +42,18 @@ public class GameManager : MonoBehaviour
         Save();
     }
 
+    // ── Golem Name ────────────────────────────────────────────
+
+    public string GolemName => _data.golemName;
+
+    public bool HasGolemName => !string.IsNullOrEmpty(_data.golemName);
+
+    public void SetGolemName(string name)
+    {
+        _data.golemName = name;
+        Save();
+    }
+
     // ── Letter ────────────────────────────────────────────────
 
     public string CurrentLetterId => _data.currentLetterId;
