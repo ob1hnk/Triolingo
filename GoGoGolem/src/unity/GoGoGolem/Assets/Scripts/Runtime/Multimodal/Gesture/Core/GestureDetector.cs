@@ -51,6 +51,20 @@ namespace Demo.GestureDetection
     }
 
     /// <summary>
+    /// 현재 웹캠 텍스처 반환 (설정창 웹캠 미리보기용)
+    /// </summary>
+    /// <summary>
+    /// 현재 웹캠 텍스처 반환 (설정창 웹캠 미리보기용)
+    /// ImageSource의 WebCamTexture를 직접 반환해 RawImage에서 실시간으로 갱신된다.
+    /// </summary>
+    public WebCamTexture GetWebcamTexture()
+    {
+      var imageSource = Mediapipe.Unity.Sample.ImageSourceProvider.ImageSource;
+      if (imageSource == null) return null;
+      return imageSource.GetCurrentTexture() as WebCamTexture;
+    }
+
+    /// <summary>
     /// MediaPipe 감지 메인 루프 (VisionTaskApiRunner의 추상 메서드 구현)
     /// </summary>
     protected override IEnumerator Run()
@@ -338,7 +352,7 @@ namespace Demo.GestureDetection
     /// </summary>
     private long GetCurrentTimestampMillisec()
     {
-      return (long)(Time.time * 1000);
+      return (long)(Time.realtimeSinceStartup * 1000);
     }
   }
 }

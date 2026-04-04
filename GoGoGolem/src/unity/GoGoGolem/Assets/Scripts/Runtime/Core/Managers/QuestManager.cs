@@ -268,6 +268,17 @@ public class QuestManager : MonoBehaviour
         return progressTracker?.IsQuestCompleted(questID) ?? false;
     }
 
+    /// <summary>
+    /// 특정 Objective가 완료됐는지 확인
+    /// Active 또는 Completed 퀘스트 모두에서 조회
+    /// </summary>
+    public bool IsObjectiveCompleted(string questID, string objectiveID)
+    {
+        Quest quest = progressTracker?.GetActiveQuest(questID)
+                ?? progressTracker?.GetCompletedQuest(questID);
+        return quest?.IsObjectiveCompleted(objectiveID) ?? false;
+    }
+
     public float GetQuestProgress(string questID)
     {
         return progressTracker?.GetQuestProgress(questID) ?? 0f;
