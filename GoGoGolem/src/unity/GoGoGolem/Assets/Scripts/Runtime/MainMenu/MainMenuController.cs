@@ -4,16 +4,40 @@ using UnityEngine.SceneManagement;
 public class MainMenuController : MonoBehaviour
 {
     [SerializeField] private string introSceneName = "Intro";
+    [SerializeField] private SettingsPresenter settingsPresenter;
+    [SerializeField] private PrivacyConsentPresenter privacyConsentPresenter;
+
+    private bool _pendingStart;
+
+    private void OnEnable()
+    {
+        if (privacyConsentPresenter != null)
+            privacyConsentPresenter.OnConsented += OnPrivacyConsented;
+    }
+
+    private void OnDisable()
+    {
+        if (privacyConsentPresenter != null)
+            privacyConsentPresenter.OnConsented -= OnPrivacyConsented;
+    }
 
     public void OnStartGame()
     {
+        if (!PrivacyConsentPresenter.HasConsented)
+        {
+            _pendingStart = true;
+            if (privacyConsentPresenter != null)
+                privacyConsentPresenter.Show();
+            return;
+        }
+
         SceneManager.LoadScene(introSceneName);
     }
 
     public void OnSettings()
     {
-        // TODO: 설정 창 구현 예정
-        Debug.Log("설정 버튼 클릭");
+        if (settingsPresenter != null)
+            settingsPresenter.Toggle();
     }
 
     public void OnQuit()
@@ -27,7 +51,16 @@ public class MainMenuController : MonoBehaviour
 
     public void OnPrivacyPolicy()
     {
-        // TODO: 개인정보처리방침 구현 예정
-        Debug.Log("개인정보처리방침 클릭");
+        if (privacyConsentPresenter != null)
+            privacyConsentPresenter.Show();
+    }
+
+    private void OnPrivacyConsented()
+    {
+        if (_pendingStart)
+        {
+            _pendingStart = false;
+            SceneManager.LoadScene(introSceneName);
+        }
     }
 }
