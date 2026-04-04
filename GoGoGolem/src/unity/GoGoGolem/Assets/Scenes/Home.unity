@@ -541,7 +541,7 @@ TerrainCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_TerrainData: {fileID: 15600000, guid: 6a8f763ad2883634da1f7193d88f802b, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 5da5dac5a51914d1a88e772776212e8a, type: 2}
   m_EnableTreeColliders: 0
 --- !u!218 &184484428
 Terrain:
@@ -1137,7 +1137,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -366, y: 404.74887}
+  m_AnchoredPosition: {x: -366, y: 323.5}
   m_SizeDelta: {x: 732, y: 500}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &566513968
@@ -5392,8 +5392,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1781199956}
   m_HandleRect: {fileID: 1781199955}
   m_Direction: 2
-  m_Value: -0.55271363
-  m_Size: 0.28208968
+  m_Value: -0.00000041520514
+  m_Size: 0.706
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
