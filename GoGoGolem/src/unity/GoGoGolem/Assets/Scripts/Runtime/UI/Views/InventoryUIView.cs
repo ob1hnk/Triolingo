@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public class InventoryUIView : MonoBehaviour
 {
     [Header("Slot Settings")]
-    [SerializeField] private Transform slotContainer;
+    [SerializeField] private Transform itemSlotContainer;
     [SerializeField] private Transform skillSlotContainer;
     [SerializeField] private InventorySlot slotPrefab;
 
@@ -20,16 +20,16 @@ public class InventoryUIView : MonoBehaviour
     [Header("Item Info Panel")]
     [SerializeField] private ItemInfoPanel itemInfoPanel;
 
-    private List<InventorySlot> slots = new();
+    private List<InventorySlot> itemSlots = new();
     private List<InventorySlot> skillSlots = new();
     private Dictionary<int, string> indexToItemID = new();
 
-    private int TotalSlotCount => slots.Count + skillSlots.Count;
+    private int TotalSlotCount => itemSlots.Count + skillSlots.Count;
 
     private InventorySlot GetSlotAt(int index)
     {
-        if (index < slots.Count) return slots[index];
-        int skillIndex = index - slots.Count;
+        if (index < itemSlots.Count) return itemSlots[index];
+        int skillIndex = index - itemSlots.Count;
         return skillIndex < skillSlots.Count ? skillSlots[skillIndex] : null;
     }
 
@@ -53,7 +53,7 @@ public class InventoryUIView : MonoBehaviour
 #if UNITY_EDITOR
     private void OnDestroy()
     {
-        if (!Application.isPlaying && slotContainer != null)
+        if (!Application.isPlaying && itemSlotContainer != null)
         {
             CleanupEditorSlots();
         }
@@ -61,10 +61,10 @@ public class InventoryUIView : MonoBehaviour
 
     private void CleanupEditorSlots()
     {
-        int childCount = slotContainer.childCount;
+        int childCount = itemSlotContainer.childCount;
         for (int i = childCount - 1; i >= 0; i--)
         {
-            Transform child = slotContainer.GetChild(i);
+            Transform child = itemSlotContainer.GetChild(i);
             if (child.gameObject.hideFlags == HideFlags.DontSave)
             {
                 DestroyImmediate(child.gameObject);
@@ -81,125 +81,101 @@ public class InventoryUIView : MonoBehaviour
             return;
         }
 
-        if (slotContainer == null)
+        if (itemSlotContainer == null)
         {
-            Debug.LogError("[InventoryUIView] slotContainer가 할당되지 않았습니다!");
+            Debug.LogError("[InventoryUIView] itemSlotContainer가 할당되지 않았습니다!");
             return;
         }
 
         ClearAllSlotObjects();
-
-        for (int i = 0; i < initialSlotCount; i++)
-        {
-            CreateSlot(i);
-        }
-
-        RegisterSkillSlots();
     }
 
-    private void CreateSlot(int index)
+    private InventorySlot CreateSlot(Transform container, List<InventorySlot> slotList, string namePrefix, int globalIndex)
     {
-        InventorySlot newSlot = Instantiate(slotPrefab, slotContainer);
-        newSlot.gameObject.name = $"Slot_{index}";
+        InventorySlot newSlot = Instantiate(slotPrefab, container);
+        newSlot.gameObject.name = $"{namePrefix}_{slotList.Count}";
         newSlot.gameObject.hideFlags = HideFlags.DontSaveInEditor;
 
-        newSlot.SetIndex(index);
+        newSlot.SetIndex(globalIndex);
         newSlot.OnSlotClicked += HandleSlotClick;
         newSlot.ShowAsEmpty();
-        slots.Add(newSlot);
-    }
-
-    private void RegisterSkillSlots()
-    {
-        foreach (var slot in skillSlots)
-            if (slot != null) slot.OnSlotClicked -= HandleSlotClick;
-        skillSlots.Clear();
-
-        if (skillSlotContainer == null) return;
-
-        int startIndex = slots.Count;
-        for (int i = 0; i < skillSlotContainer.childCount; i++)
-        {
-            var slot = skillSlotContainer.GetChild(i).GetComponent<InventorySlot>();
-            if (slot == null) continue;
-            slot.SetIndex(startIndex + i);
-            slot.OnSlotClicked += HandleSlotClick;
-            skillSlots.Add(slot);
-        }
+        slotList.Add(newSlot);
+        return newSlot;
     }
 
     private void ClearAllSlotObjects()
     {
-        foreach (var slot in slots)
-            if (slot != null) slot.OnSlotClicked -= HandleSlotClick;
+        ClearSlotList(itemSlots);
+        ClearSlotList(skillSlots);
+        ClearContainer(itemSlotContainer);
+        ClearContainer(skillSlotContainer);
+    }
 
-        foreach (var slot in skillSlots)
+    private void ClearSlotList(List<InventorySlot> slotList)
+    {
+        foreach (var slot in slotList)
             if (slot != null) slot.OnSlotClicked -= HandleSlotClick;
-        skillSlots.Clear();
+        slotList.Clear();
+    }
 
-        int childCount = slotContainer.childCount;
+    private void ClearContainer(Transform container)
+    {
+        if (container == null) return;
+        int childCount = container.childCount;
         for (int i = childCount - 1; i >= 0; i--)
         {
-            Transform child = slotContainer.GetChild(i);
-
+            Transform child = container.GetChild(i);
             if (Application.isPlaying)
                 Destroy(child.gameObject);
             else
                 DestroyImmediate(child.gameObject);
         }
-        slots.Clear();
     }
 
-    public void Render(Dictionary<string, int> items)
+    private void RenderSection(
+        Dictionary<string, int> data,
+        Transform container,
+        List<InventorySlot> slotList,
+        string namePrefix,
+        GameObject emptyText,
+        int indexOffset)
     {
-        if (slots.Count == 0)
-        {
-            InitializeSlots();
-        }
+        ClearSlotList(slotList);
+        ClearContainer(container);
 
-        indexToItemID.Clear();
-
-        for (int i = 0; i < slots.Count; i++)
-        {
-            slots[i].ShowAsEmpty();
-        }
-
-        bool isEmpty = items == null || items.Count == 0;
-        foreach (var slot in slots)
-            slot.gameObject.SetActive(!isEmpty);
-        if (noItemText != null) noItemText.SetActive(isEmpty);
+        bool isEmpty = data == null || data.Count == 0;
+        if (emptyText != null) emptyText.SetActive(isEmpty);
 
         if (isEmpty) return;
 
-        int requiredSlots = items.Count;
-        if (requiredSlots > slots.Count)
+        int requiredSlots = Mathf.Max(initialSlotCount, data.Count);
+        for (int i = 0; i < requiredSlots; i++)
         {
-            int slotsToAdd = requiredSlots - slots.Count;
-            for (int i = 0; i < slotsToAdd; i++)
-            {
-                CreateSlot(slots.Count);
-            }
+            CreateSlot(container, slotList, namePrefix, indexOffset + i);
         }
 
         var itemDB = Managers.Inventory?.ItemDB;
         int index = 0;
-        foreach (var item in items)
+        foreach (var kv in data)
         {
-            if (index >= slots.Count) break;
+            if (index >= slotList.Count) break;
 
-            var data = itemDB?.GetItem(item.Key);
-            slots[index].SetItem(data?.icon);
-            indexToItemID[index] = item.Key;
+            var itemData = itemDB?.GetItem(kv.Key);
+            slotList[index].SetItem(itemData?.icon);
+            indexToItemID[indexOffset + index] = kv.Key;
             index++;
         }
     }
 
+    public void RenderItems(Dictionary<string, int> items)
+    {
+        indexToItemID.Clear();
+        RenderSection(items, itemSlotContainer, itemSlots, "Slot", noItemText, 0);
+    }
+
     public void RenderSkills(Dictionary<string, int> skills)
     {
-        bool isEmpty = skills == null || skills.Count == 0;
-        foreach (var slot in skillSlots)
-            slot.gameObject.SetActive(!isEmpty);
-        if (noSkillText != null) noSkillText.SetActive(isEmpty);
+        RenderSection(skills, skillSlotContainer, skillSlots, "SkillSlot", noSkillText, itemSlots.Count);
     }
 
     public void SelectItem(int index)
@@ -222,7 +198,7 @@ public class InventoryUIView : MonoBehaviour
 
     public void ClearSelection()
     {
-        foreach (var slot in slots)
+        foreach (var slot in itemSlots)
             slot.SetSelected(false);
         foreach (var slot in skillSlots)
             slot.SetSelected(false);

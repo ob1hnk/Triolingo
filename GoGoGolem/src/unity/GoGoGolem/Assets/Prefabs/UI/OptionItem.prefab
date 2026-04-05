@@ -242,7 +242,7 @@ MonoBehaviour:
   m_Interactable: 1
   m_TargetGraphic: {fileID: 0}
   text: {fileID: 8120362944220266185}
-  selectionImage: {fileID: 0}
+  selectionImage: {fileID: 993697048428234892}
   normal:
     sprite: {fileID: 0}
     colour: {r: 0, g: 0, b: 0, a: 1}

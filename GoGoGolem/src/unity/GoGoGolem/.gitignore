@@ -140,6 +140,7 @@ Assets/Scripts/Runtime/Multimodal/Examples.meta
 
 # FarlandSkies (무료 스카이박스 에셋 - 각 팀원이 직접 설치)
 /Assets/FarlandSkies/**
+!/Assets/FarlandSkies/**/
 !/Assets/FarlandSkies/**/*.meta
 
 # Floor Textures (에셋 스토어 - 각 팀원이 직접 설치)
