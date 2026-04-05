@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Cinemachine;
@@ -7,7 +8,7 @@ using Multimodal.Voice;
 /// 골렘 음성 대화 씬 컨트롤러 (RealtimeVoiceManager 기반)
 ///
 /// 흐름:
-/// 1. EnterDialogueMode()  → 대화 카메라 전환, 플레이어 조작 차단, 초기 UI 표시
+/// 1. EnterDialogueMode()  → 플레이어 조작 차단, 골렘 회전 → 완료 후 카메라 전환, 초기 UI 표시
 /// 2. Space (첫 번째)      → StartVoice() → 서버 Server VAD로 발화 자동 감지
 /// 3. OnSpeechDetected     → StatusUI "듣는 중..." 표시
 /// 4. OnTranscript         → 플레이어 대화창에 인식 텍스트 표시, 골렘 말풍선 초기화
@@ -33,11 +34,21 @@ public class GolemDialogueSceneController : MonoBehaviour
     [SerializeField] private int dialogueCamPriority = 20;
     [SerializeField] private int inactiveCamPriority = 0;
 
+    [Header("골렘")]
+    [Tooltip("골렘 Transform — 플레이어 방향으로 회전시킬 대상")]
+    [SerializeField] private Transform golemTransform;
+    [Tooltip("회전 속도 (높을수록 빠르게 돌아봄)")]
+    [SerializeField] private float golemRotationSpeed = 5f;
+    [Tooltip("이 각도 이내로 들어오면 회전 완료로 판정 (degrees)")]
+    [SerializeField] private float golemRotationThreshold = 5f;
+
     [Header("플레이어")]
     [SerializeField] private PlayerController playerController;
     [SerializeField] private PlayerInteraction playerInteraction;
     [Tooltip("대화 중 숨길 플레이어 모델 (3D 메쉬 루트)")]
     [SerializeField] private GameObject playerModel;
+    [Tooltip("골렘이 바라볼 대상 (플레이어 Transform)")]
+    [SerializeField] private Transform playerTransform;
 
     [Header("Voice")]
     [SerializeField] private RealtimeVoiceManager voiceManager;
@@ -45,12 +56,20 @@ public class GolemDialogueSceneController : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GolemDialogueUIView uiView;
 
+    [Header("Event Channels")]
+    [SerializeField] private GameEvent requestEnterDialogueEvent;
+    [SerializeField] private GameEvent requestHideHUDEvent;
+    [SerializeField] private GameEvent requestShowHUDEvent;
+
     private bool _isInDialogueMode = false;
     private bool _isVoiceSessionActive = false;
 
     private void OnEnable()
     {
+        requestEnterDialogueEvent?.Register(EnterDialogueMode);
+
         if (voiceManager == null) return;
+        voiceManager.OnConnected       += HandleVoiceConnected;
         voiceManager.OnSpeechDetected  += HandleSpeechDetected;
         voiceManager.OnTranscript      += HandleTranscript;
         voiceManager.OnStreamingText   += HandleStreamingText;
@@ -59,14 +78,17 @@ public class GolemDialogueSceneController : MonoBehaviour
 
     private void OnDisable()
     {
+        requestEnterDialogueEvent?.Unregister(EnterDialogueMode);
+
         if (voiceManager == null) return;
+        voiceManager.OnConnected       -= HandleVoiceConnected;
         voiceManager.OnSpeechDetected  -= HandleSpeechDetected;
         voiceManager.OnTranscript      -= HandleTranscript;
         voiceManager.OnStreamingText   -= HandleStreamingText;
         voiceManager.OnAIResponse      -= HandleAIResponse;
     }
 
-    /// <summary>GolemInteractable에서 E키 입력 시 호출</summary>
+    /// <summary>GolemInteractable의 requestEnterDialogueEvent SO를 통해 호출</summary>
     public void EnterDialogueMode()
     {
         if (_isInDialogueMode) return;
@@ -75,16 +97,50 @@ public class GolemDialogueSceneController : MonoBehaviour
         // 게임 상태 알림 (InputModeController가 Q키 등 불필요한 입력을 차단하도록)
         GameStateManager.Instance?.ChangeState(GameState.Dialogue);
 
-        // 1. 대화 카메라로 전환
-        if (dialogueVirtualCamera != null)
-            dialogueVirtualCamera.Priority = dialogueCamPriority;
-
-        // 2. 플레이어 조작 차단 + 모델 숨김
+        // 1. 플레이어 조작만 차단 (모델은 카메라 전환 시점에 숨김)
         if (playerController != null) playerController.enabled = false;
         if (playerInteraction != null) playerInteraction.enabled = false;
+        requestHideHUDEvent?.Raise();
+
+        // 2. 골렘 회전 시작 → 완료 후 카메라 전환 + UI 표시
+        StartCoroutine(RotateGolemThenEnter());
+    }
+
+    /// <summary>
+    /// 골렘이 플레이어를 바라볼 때까지 Slerp 회전 후 대화 모드 진입 완료
+    /// Y축만 회전 (고개를 끄덕이는 것처럼 보이지 않도록)
+    /// </summary>
+    private IEnumerator RotateGolemThenEnter()
+    {
+        if (golemTransform != null && playerTransform != null)
+        {
+            Vector3 direction = playerTransform.position - golemTransform.position;
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+                while (Quaternion.Angle(golemTransform.rotation, targetRotation) > golemRotationThreshold)
+                {
+                    golemTransform.rotation = Quaternion.Slerp(
+                        golemTransform.rotation,
+                        targetRotation,
+                        golemRotationSpeed * Time.deltaTime
+                    );
+                    yield return null;
+                }
+
+                golemTransform.rotation = targetRotation;
+            }
+        }
+
+        // 3. 카메라 전환 + 플레이어 모델 숨김 동시 처리
+        if (dialogueVirtualCamera != null)
+            dialogueVirtualCamera.Priority = dialogueCamPriority;
         if (playerModel != null) playerModel.SetActive(false);
 
-        // 3. 초기 UI 표시 ("Space를 눌러 대화를 시작해보세요")
+        // 4. 초기 UI 표시 ("Space를 눌러 대화를 시작해보세요")
         uiView.ShowInitialState();
     }
 
@@ -104,15 +160,15 @@ public class GolemDialogueSceneController : MonoBehaviour
         if (!_isVoiceSessionActive)
         {
             _isVoiceSessionActive = true;
-            uiView.ShowVoiceActiveState();                              // StatusUI 표시, Space → "중지"
+            uiView.ShowVoiceConnectingState();
             var questContext = BuildQuestContext();
-            await voiceManager.StartVoice(questContext: questContext);  // 서버 연결 + 마이크 시작
+            await voiceManager.StartVoice(questContext: questContext);
         }
         else
         {
             _isVoiceSessionActive = false;
-            voiceManager.StopVoice();           // 마이크 + 서버 연결 종료
-            uiView.ShowVoiceInactiveState();    // StatusUI 숨김, Space → "말하기"
+            voiceManager.StopVoice();
+            uiView.ShowVoiceInactiveState();
         }
     }
 
@@ -172,30 +228,33 @@ public class GolemDialogueSceneController : MonoBehaviour
     {
         if (!_isInDialogueMode) return;
 
-        // 음성 세션 활성 중이면 중지
         if (_isVoiceSessionActive)
         {
             voiceManager.StopVoice();
             _isVoiceSessionActive = false;
         }
 
-        // 카메라 복구
         if (dialogueVirtualCamera != null)
             dialogueVirtualCamera.Priority = inactiveCamPriority;
 
-        // 플레이어 조작 복구 + 모델 표시
         if (playerController != null) playerController.enabled = true;
         if (playerInteraction != null) playerInteraction.enabled = true;
         if (playerModel != null) playerModel.SetActive(true);
+        requestShowHUDEvent?.Raise();
 
         uiView.Hide();
         _isInDialogueMode = false;
 
-        // 게임 상태 복구
         GameStateManager.Instance?.ChangeState(GameState.Gameplay);
     }
 
     // ── 이벤트 핸들러 ─────────────────────────────────────
+
+    /// <summary>WebSocket 연결 완료 → 듣는 중으로 전환</summary>
+    private void HandleVoiceConnected()
+    {
+        uiView.ShowVoiceActiveState();
+    }
 
     /// <summary>서버 VAD가 사용자 발화를 감지했을 때</summary>
     private void HandleSpeechDetected()
@@ -207,7 +266,7 @@ public class GolemDialogueSceneController : MonoBehaviour
     private void HandleTranscript(string transcript)
     {
         uiView.UpdatePlayerText(transcript);
-        uiView.ClearGolemText();            // 새 응답을 위해 골렘 말풍선 초기화
+        uiView.ClearGolemText();
     }
 
     /// <summary>골렘 응답 텍스트 조각 실시간 수신 → 말풍선에 바로 이어붙이기</summary>
@@ -220,6 +279,5 @@ public class GolemDialogueSceneController : MonoBehaviour
     private void HandleAIResponse(string fullText)
     {
         // 응답 완료 후 필요한 처리 있으면 여기에 추가
-        // 예: 다음 발화를 위한 상태 초기화 등
     }
 }
