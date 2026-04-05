@@ -68,6 +68,7 @@ public class GolemDialogueSceneController : MonoBehaviour
         requestEnterDialogueEvent?.Register(EnterDialogueMode);
 
         if (voiceManager == null) return;
+        voiceManager.OnConnected       += HandleVoiceConnected;
         voiceManager.OnSpeechDetected  += HandleSpeechDetected;
         voiceManager.OnTranscript      += HandleTranscript;
         voiceManager.OnStreamingText   += HandleStreamingText;
@@ -79,6 +80,7 @@ public class GolemDialogueSceneController : MonoBehaviour
         requestEnterDialogueEvent?.Unregister(EnterDialogueMode);
 
         if (voiceManager == null) return;
+        voiceManager.OnConnected       -= HandleVoiceConnected;
         voiceManager.OnSpeechDetected  -= HandleSpeechDetected;
         voiceManager.OnTranscript      -= HandleTranscript;
         voiceManager.OnStreamingText   -= HandleStreamingText;
@@ -157,7 +159,7 @@ public class GolemDialogueSceneController : MonoBehaviour
         if (!_isVoiceSessionActive)
         {
             _isVoiceSessionActive = true;
-            uiView.ShowVoiceActiveState();
+            uiView.ShowVoiceConnectingState();
             var questContext = BuildQuestContext();
             await voiceManager.StartVoice(questContext: questContext);
         }
@@ -246,6 +248,12 @@ public class GolemDialogueSceneController : MonoBehaviour
     }
 
     // ── 이벤트 핸들러 ─────────────────────────────────────
+
+    /// <summary>WebSocket 연결 완료 → 듣는 중으로 전환</summary>
+    private void HandleVoiceConnected()
+    {
+        uiView.ShowVoiceActiveState();
+    }
 
     /// <summary>서버 VAD가 사용자 발화를 감지했을 때</summary>
     private void HandleSpeechDetected()
