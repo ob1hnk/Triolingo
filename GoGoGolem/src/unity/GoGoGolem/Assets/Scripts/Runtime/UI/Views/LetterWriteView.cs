@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using TMPro;
 
@@ -7,16 +8,6 @@ namespace UI.Views
     /// <summary>
     /// 편지 작성 UI View (표시만 담당, 로직 없음)
     ///
-    /// Hierarchy 구조:
-    ///   Canvas
-    ///   └── LetterPanel (이 컴포넌트를 붙일 곳)
-    ///       ├── Overlay (Image - 반투명 어두운 배경)
-    ///       ├── LetterPaper (Image - 편지지)
-    ///       │   ├── ReceiverText (TMP - 에디터에서 직접 설정)
-    ///       │   ├── LetterInputField (TMP_InputField - 작성 영역)
-    ///       │   ├── SenderText (TMP - 에디터에서 직접 설정)
-    ///       │   └── CharCountText (TMP - 글자 수 표시)
-    ///       └── KeyHintText (TMP - 에디터에서 직접 설정)
     /// </summary>
     public class LetterWriteView : MonoBehaviour
     {
@@ -33,6 +24,10 @@ namespace UI.Views
 
         [Header("Settings")]
         [SerializeField] private int maxCharacterCount = 300;
+        #endregion
+
+        #region Events
+        public event Action<string> OnSubmit;
         #endregion
 
         #region Properties
@@ -71,9 +66,6 @@ namespace UI.Views
         {
             if (letterInputField != null)
                 letterInputField.interactable = !isSending;
-
-            if (keyHintText != null)
-                keyHintText.text = isSending ? "편지를 보내는 중..." : "Enter: 보내기 | Esc: 나가기";
         }
 
         public void ShowError(string message)
@@ -89,6 +81,11 @@ namespace UI.Views
             {
                 letterInputField.characterLimit = maxCharacterCount;
                 letterInputField.onValueChanged.AddListener(OnInputChanged);
+                letterInputField.onSubmit.AddListener(text =>
+                {
+                    Debug.Log($"[LetterWriteView] onSubmit 발동 - 내용: '{text}' ({text.Length}자)");
+                    OnSubmit?.Invoke(text);
+                });
             }
 
             UpdateCharCount();
@@ -118,6 +115,13 @@ namespace UI.Views
 
         private void FocusInput()
         {
+            if (letterInputField != null)
+                StartCoroutine(FocusNextFrame());
+        }
+
+        private IEnumerator FocusNextFrame()
+        {
+            yield return null;
             if (letterInputField != null)
             {
                 letterInputField.Select();
