@@ -26,8 +26,10 @@ public class WindSkillInteractable : MonoBehaviour, IInteractable
     [SerializeField] private string targetSceneName = "Gesture Detection Wind";
 
     public InteractionType InteractionType => InteractionType.UseWindSkill;
+    public bool CanInteract => true;
     public string GetActionLabel() => promptData != null ? promptData.ActionLabel : "바람 스킬 사용";
     public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
+    public Vector3 GetPromptOffset() => promptData != null ? promptData.WorldOffset : new Vector3(0f, 1.5f, 0f);
 
     public void Interact()
     {
