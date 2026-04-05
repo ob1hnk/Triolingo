@@ -6,17 +6,13 @@ public class PlayerInteraction : MonoBehaviour
     public float interactionRange = 2f;
     public LayerMask interactableLayer;
 
-    private IInteractable currentInteractable;
-    private Animator _animator;
-    private static int isGatheringHash = Animator.StringToHash("isGathering");
+    [Header("Event Channels")]
+    [SerializeField] private GameEvent onGatherEvent;  // Animator의 isGathering 트리거 대신 사용
+    // onSleepEvent 등 추후 Timeline 연동 시 동일 패턴으로 추가
 
+    private IInteractable currentInteractable;
     private GameInputActions.PlayerActionsActions _playerActions;
     private bool _initialized = false;
-
-    void Awake()
-    {
-        _animator = GetComponent<Animator>();
-    }
 
     private void Start()
     {
@@ -54,8 +50,9 @@ public class PlayerInteraction : MonoBehaviour
 
     private void OnInteract(InputAction.CallbackContext ctx)
     {
-        if (currentInteractable?.InteractionType == InteractionType.TalkNPC)
-            PerformTalk();
+        if (currentInteractable == null) return;
+        if (currentInteractable.InteractionType != InteractionType.Gather)
+            currentInteractable.Interact();
     }
 
     void Update()
@@ -65,12 +62,7 @@ public class PlayerInteraction : MonoBehaviour
 
     private void PerformGather()
     {
-        _animator.SetTrigger(isGatheringHash);
-        currentInteractable.Interact();
-    }
-
-    private void PerformTalk()
-    {
+        if (onGatherEvent != null) onGatherEvent.Raise();
         currentInteractable.Interact();
     }
 
@@ -84,7 +76,7 @@ public class PlayerInteraction : MonoBehaviour
         foreach (var col in colliders)
         {
             IInteractable interactable = col.GetComponent<IInteractable>();
-            if (interactable != null)
+            if (interactable != null && interactable.CanInteract)
             {
                 float dist = Vector3.Distance(transform.position, col.transform.position);
                 if (dist < minDistance)
