@@ -24,7 +24,6 @@ public class RoomStateManager : MonoBehaviour
     // ── Inspector ───────────────────────────────────────────────
     [Header("Letter System")]
     [SerializeField] private LetterWritePresenter letterWritePresenter;
-    [SerializeField] private LetterReadPresenter  letterReadPresenter;
     [SerializeField] private LetterDesk           letterDesk;
 
     [Header("Bed Interaction")]
@@ -61,14 +60,6 @@ public class RoomStateManager : MonoBehaviour
 
     private void Start()
     {
-        string savedId = GameManager.Instance?.CurrentLetterId;
-        if (!string.IsNullOrEmpty(savedId))
-        {
-            if (letterReadPresenter != null)
-                letterReadPresenter.SetTaskId(savedId);
-            DebugLog($"GameManager에서 taskId 복구: {savedId}");
-        }
-
         ApplyState(RoomState.BeforeLetter);
     }
 
@@ -94,9 +85,6 @@ public class RoomStateManager : MonoBehaviour
 
         if (GameManager.Instance != null)
             GameManager.Instance.SetLetterId(taskId);
-
-        if (letterReadPresenter != null)
-            letterReadPresenter.SetTaskId(taskId);
     }
 
     private void HandleSlept()

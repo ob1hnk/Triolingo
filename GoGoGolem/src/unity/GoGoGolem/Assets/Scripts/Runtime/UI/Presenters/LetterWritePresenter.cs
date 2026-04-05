@@ -169,7 +169,7 @@ namespace UI.Presenters
         private void PauseGame()
         {
             if (GameStateManager.Instance != null)
-                GameStateManager.Instance.ChangeState(GameState.Paused);
+                GameStateManager.Instance.ChangeState(GameState.LetterUI);
             DebugLog("월드 일시정지");
         }
 
