@@ -16,8 +16,12 @@ public class SettingsPresenter : MonoBehaviour
 {
     private const string PrefKeyCamera = "Settings_CameraName";
     private const string PrefKeyMic = "Settings_MicName";
+    private const string PrefKeyVolume = "Settings_Volume";
 
     [SerializeField] private GameObject settingsPanel;
+
+    [Header("Settings — Volume")]
+    [SerializeField] private Slider volumeSlider;
 
     [Header("Settings — Camera Input")]
     [SerializeField] private TMP_Dropdown cameraDropdown;
@@ -32,6 +36,7 @@ public class SettingsPresenter : MonoBehaviour
     private void Awake()
     {
         if (settingsPanel != null) settingsPanel.SetActive(false);
+        ApplySavedVolume();
     }
 
     public void Show()
@@ -39,6 +44,7 @@ public class SettingsPresenter : MonoBehaviour
         _isVisible = true;
         Time.timeScale = 0f; // 게임 일시정지
         if (settingsPanel != null) settingsPanel.SetActive(true);
+        InitializeVolumeSlider();
         InitializeCameraDropdown();
         StartCoroutine(RequestMicPermissionAndInit());
         OnVisibilityChanged?.Invoke(true);
@@ -56,6 +62,30 @@ public class SettingsPresenter : MonoBehaviour
     {
         if (_isVisible) Hide();
         else Show();
+    }
+
+    private void InitializeVolumeSlider()
+    {
+        if (volumeSlider == null) return;
+
+        float savedVolume = PlayerPrefs.GetFloat(PrefKeyVolume, 1f);
+        volumeSlider.minValue = 0f;
+        volumeSlider.maxValue = 1f;
+
+        volumeSlider.onValueChanged.RemoveAllListeners();
+        volumeSlider.SetValueWithoutNotify(savedVolume);
+
+        volumeSlider.onValueChanged.AddListener(value =>
+        {
+            AudioListener.volume = value;
+            PlayerPrefs.SetFloat(PrefKeyVolume, value);
+            PlayerPrefs.Save();
+        });
+    }
+
+    private void ApplySavedVolume()
+    {
+        AudioListener.volume = PlayerPrefs.GetFloat(PrefKeyVolume, 1f);
     }
 
     private void InitializeCameraDropdown()
@@ -134,6 +164,14 @@ public class SettingsPresenter : MonoBehaviour
         return PlayerPrefs.HasKey(PrefKeyMic)
             ? PlayerPrefs.GetString(PrefKeyMic)
             : null;
+    }
+
+    /// <summary>
+    /// 저장된 음량 값을 반환한다 (0~1). 저장값이 없으면 1.
+    /// </summary>
+    public static float GetSavedVolume()
+    {
+        return PlayerPrefs.GetFloat(PrefKeyVolume, 1f);
     }
 
     /// <summary>
