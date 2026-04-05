@@ -71,6 +71,11 @@ public class RoomStateManager : MonoBehaviour
         ApplyState(state);
     }
 
+    // Signal Receiver / UnityEvent용 파라미터 없는 래퍼
+    public void SetBeforeLetter() => ApplyState(RoomState.BeforeLetter);
+    public void SetAfterLetter()  => ApplyState(RoomState.AfterLetter);
+    public void SetMorning()      => ApplyState(RoomState.Morning);
+
     // ── Event Handlers ──────────────────────────────────────────
 
     private void HandleLetterSubmitted()
@@ -125,11 +130,11 @@ public class RoomStateManager : MonoBehaviour
             letterDesk.SetCanInteract(true);
         }
 
-        // 침대: 프롬프트 표시, E 누르면 메시지만 출력
+        // 침대: 프롬프트 표시, E 누르면 blockedBark가 발화됨
         if (bedInteraction != null)
         {
             bedInteraction.SetCanInteract(true);
-            bedInteraction.SetBlockedMessage("자기 전에 부모님께 편지를 쓰자!");
+            bedInteraction.SetBlocked(true);
         }
     }
 
@@ -142,7 +147,7 @@ public class RoomStateManager : MonoBehaviour
         if (bedInteraction != null)
         {
             bedInteraction.SetCanInteract(true);
-            bedInteraction.SetBlockedMessage(null);
+            bedInteraction.SetBlocked(false);
         }
     }
 
@@ -152,7 +157,7 @@ public class RoomStateManager : MonoBehaviour
         if (bedInteraction != null)
         {
             bedInteraction.SetCanInteract(false);
-            bedInteraction.SetBlockedMessage(null);
+            bedInteraction.SetBlocked(false);
         }
 
         // 책상: 읽기 모드, 활성

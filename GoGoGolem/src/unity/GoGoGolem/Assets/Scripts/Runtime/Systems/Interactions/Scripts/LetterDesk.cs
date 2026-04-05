@@ -17,6 +17,10 @@ public class LetterDesk : MonoBehaviour, IInteractable
     [SerializeField] private LetterWritePresenter letterWritePresenter;
     [SerializeField] private LetterReadPresenter  letterReadPresenter;
 
+    [Header("Pre-Write Bark (선택)")]
+    [Tooltip("편지 쓰기 화면을 열기 전에 발화할 BarkTrigger. 완료 후 편지 UI가 열림.")]
+    [SerializeField] private BarkTrigger preWriteBark;
+
     [Header("Prompt")]
     [SerializeField] private InteractionPromptData promptData;
 
@@ -42,7 +46,11 @@ public class LetterDesk : MonoBehaviour, IInteractable
                 Debug.LogError("[LetterDesk] LetterWritePresenter가 연결되지 않았습니다.");
                 return;
             }
-            letterWritePresenter.Open();
+
+            if (preWriteBark != null)
+                preWriteBark.Fire(() => letterWritePresenter.Open());
+            else
+                letterWritePresenter.Open();
         }
         else
         {
