@@ -54,8 +54,11 @@ public class PlayerInteraction : MonoBehaviour
 
     private void OnInteract(InputAction.CallbackContext ctx)
     {
-        if (currentInteractable?.InteractionType == InteractionType.TalkNPC)
+        var type = currentInteractable?.InteractionType;
+        if (type == InteractionType.TalkNPC)
             PerformTalk();
+        else if (type == InteractionType.UseWindSkill)
+            currentInteractable.Interact();
     }
 
     void Update()
