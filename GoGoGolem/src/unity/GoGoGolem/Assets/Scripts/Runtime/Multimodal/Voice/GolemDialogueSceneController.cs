@@ -55,10 +55,11 @@ public class GolemDialogueSceneController : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private GolemDialogueUIView uiView;
-    [SerializeField] private GameObject hudCanvas;
 
     [Header("Event Channels")]
     [SerializeField] private GameEvent requestEnterDialogueEvent;
+    [SerializeField] private GameEvent requestHideHUDEvent;
+    [SerializeField] private GameEvent requestShowHUDEvent;
 
     private bool _isInDialogueMode = false;
     private bool _isVoiceSessionActive = false;
@@ -99,7 +100,7 @@ public class GolemDialogueSceneController : MonoBehaviour
         // 1. 플레이어 조작만 차단 (모델은 카메라 전환 시점에 숨김)
         if (playerController != null) playerController.enabled = false;
         if (playerInteraction != null) playerInteraction.enabled = false;
-        if (hudCanvas != null) hudCanvas.SetActive(false);
+        requestHideHUDEvent?.Raise();
 
         // 2. 골렘 회전 시작 → 완료 후 카메라 전환 + UI 표시
         StartCoroutine(RotateGolemThenEnter());
@@ -239,7 +240,7 @@ public class GolemDialogueSceneController : MonoBehaviour
         if (playerController != null) playerController.enabled = true;
         if (playerInteraction != null) playerInteraction.enabled = true;
         if (playerModel != null) playerModel.SetActive(true);
-        if (hudCanvas != null) hudCanvas.SetActive(true);
+        requestShowHUDEvent?.Raise();
 
         uiView.Hide();
         _isInDialogueMode = false;

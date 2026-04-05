@@ -4317,6 +4317,95 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 775397825}
   m_CullTransparentMesh: 1
+--- !u!1 &799782237
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 799782238}
+  - component: {fileID: 799782240}
+  - component: {fileID: 799782239}
+  m_Layer: 0
+  m_Name: HUDEventListeners
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &799782238
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 799782237}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &799782239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 799782237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f0e5bf48ee4941f3a860e007081f778, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameEvent: {fileID: 11400000, guid: 0721ea1755460b844a5ee06d7b5be039, type: 2}
+  response:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1208855532}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &799782240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 799782237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f0e5bf48ee4941f3a860e007081f778, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameEvent: {fileID: 11400000, guid: 342c4e1f9b5c74c44baf926a5ee4a790, type: 2}
+  response:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1208855532}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
 --- !u!1 &817154148
 GameObject:
   m_ObjectHideFlags: 0
@@ -7200,6 +7289,8 @@ PlayableDirector:
     value: {fileID: 771608758}
   - key: {fileID: -5078252941721210449, guid: d676ac4adf0a7424cb0a265d24c97915, type: 2}
     value: {fileID: 771608758}
+  - key: {fileID: -5209127984941224350, guid: d676ac4adf0a7424cb0a265d24c97915, type: 2}
+    value: {fileID: 1208855532}
   m_ExposedReferences:
     m_References: []
 --- !u!4 &1361496774
@@ -9074,8 +9165,9 @@ MonoBehaviour:
   playerTransform: {fileID: 1697612975}
   voiceManager: {fileID: 147977249}
   uiView: {fileID: 1598776806}
-  hudCanvas: {fileID: 1208855532}
   requestEnterDialogueEvent: {fileID: 11400000, guid: 7ab5d8b65d1adb9488a8ed88428bcbad, type: 2}
+  requestHideHUDEvent: {fileID: 11400000, guid: 0721ea1755460b844a5ee06d7b5be039, type: 2}
+  requestShowHUDEvent: {fileID: 11400000, guid: 342c4e1f9b5c74c44baf926a5ee4a790, type: 2}
 --- !u!4 &1598776808
 Transform:
   m_ObjectHideFlags: 0
@@ -9850,6 +9942,8 @@ PlayableDirector:
     value: {fileID: 1918013887}
   - key: {fileID: -6690465446669075816, guid: 1b8d9326d1838d0459aaeb5c70aab62d, type: 2}
     value: {fileID: 873960951}
+  - key: {fileID: 1464359551499831299, guid: 1b8d9326d1838d0459aaeb5c70aab62d, type: 2}
+    value: {fileID: 1208855532}
   m_ExposedReferences:
     m_References: []
 --- !u!1 &1741960367
@@ -10135,6 +10229,8 @@ PlayableDirector:
     value: {fileID: 771608758}
   - key: {fileID: 7374141840805063439, guid: b7bbc4e156349c4469171977758b8a3e, type: 2}
     value: {fileID: 576735614}
+  - key: {fileID: -8240678305221279510, guid: b7bbc4e156349c4469171977758b8a3e, type: 2}
+    value: {fileID: 1208855532}
   m_ExposedReferences:
     m_References:
     - 19264e7e2392a2f479a158dbb4ad60fe: {fileID: 1901279436}
@@ -11002,6 +11098,8 @@ MonoBehaviour:
   _liftMidDialogueNode: DLG_002_LIFT_MID
   _pushMidDialogueNode: DLG_002_PUSH_MID
   _onDialogueCompletedEvent: {fileID: 11400000, guid: 13d32723c5d854b5ca2eccbae2555d66, type: 2}
+  _requestHideHUDEvent: {fileID: 11400000, guid: 0721ea1755460b844a5ee06d7b5be039, type: 2}
+  _requestShowHUDEvent: {fileID: 11400000, guid: 342c4e1f9b5c74c44baf926a5ee4a790, type: 2}
   _playerAnimation: {fileID: 771608763}
   _playerLocomotionInput: {fileID: 771608765}
   _playerControllerScript: {fileID: 771608766}
@@ -12180,6 +12278,8 @@ MonoBehaviour:
   _playerSpeechBubble: {fileID: 2188681713059983065}
   _npcSpeechBubble: {fileID: 1657533040}
   _debugSkipToLeaf: 0
+  _requestHideHUDEvent: {fileID: 11400000, guid: 0721ea1755460b844a5ee06d7b5be039, type: 2}
+  _requestShowHUDEvent: {fileID: 11400000, guid: 342c4e1f9b5c74c44baf926a5ee4a790, type: 2}
 --- !u!114 &2075420273
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12791,6 +12891,7 @@ SceneRoots:
   - {fileID: 1568980747}
   - {fileID: 1419557162}
   - {fileID: 1530722042}
+  - {fileID: 3027550814161995276}
   - {fileID: 1993647571}
   - {fileID: 418076094}
   - {fileID: 1650467351}
@@ -12798,9 +12899,9 @@ SceneRoots:
   - {fileID: 1583537928}
   - {fileID: 926790446}
   - {fileID: 1556682566}
+  - {fileID: 799782238}
   - {fileID: 495938685}
   - {fileID: 1657533039}
   - {fileID: 1894380806}
   - {fileID: 2004935991}
   - {fileID: 1586733805}
-  - {fileID: 3027550814161995276}
