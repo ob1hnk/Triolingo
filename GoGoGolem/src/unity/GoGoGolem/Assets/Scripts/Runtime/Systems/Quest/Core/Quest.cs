@@ -134,6 +134,14 @@ public class Quest
     }
 
     /// <summary>
+    /// Phase가 완료되었는지 확인
+    /// </summary>
+    public bool IsPhaseCompleted(string objectiveID, string phaseID)
+    {
+        return GetPhase(objectiveID, phaseID)?.IsCompleted ?? false;
+    }
+
+    /// <summary>
     /// 완료 상태 체크
     /// </summary>
     private void CheckCompletion()
