@@ -65,10 +65,8 @@ public class QuestManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-#if !UNITY_EDITOR
         if (autoSave && isInitialized)
             SaveProgress();
-#endif
     }
 
     #endregion
@@ -104,9 +102,7 @@ public class QuestManager : MonoBehaviour
 
         if (loadOnStart)
         {
-#if !UNITY_EDITOR
             LoadProgress();
-#endif
         }
     }
 
