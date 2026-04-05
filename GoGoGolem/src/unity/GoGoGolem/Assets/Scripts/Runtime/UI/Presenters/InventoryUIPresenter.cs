@@ -20,7 +20,6 @@ public class InventoryUIPresenter : MonoBehaviour
     private void Awake()
     {
         ValidateComponents();
-        InitializeInputHandlers();
         Hide();
 
         if (view != null)
@@ -31,7 +30,44 @@ public class InventoryUIPresenter : MonoBehaviour
 
     private void Start()
     {
+        // InputModeController/Managers는 DontDestroyOnLoad 싱글톤이라 Awake 타이밍에는
+        // 아직 초기화되지 않았을 수 있어 Start에서 수행한다.
+        InitializeInputHandlers();
         InitializeInventoryLogic();
+    }
+
+    private void Update()
+    {
+        if (!_isVisible) return;
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+            TryUseSelectedItem();
+    }
+
+    private void TryUseSelectedItem()
+    {
+        if (view == null || selectedIndex < 0 || !view.HasItemAtIndex(selectedIndex)) return;
+
+        var zone = ItemUsableZone.Current;
+        if (zone == null)
+        {
+            Debug.Log("[InventoryUIPresenter] 이 위치에서는 아이템을 사용할 수 없습니다.");
+            return;
+        }
+
+        string itemID = view.GetItemIdAt(selectedIndex);
+        if (string.IsNullOrEmpty(itemID)) return;
+
+        if (!zone.TryPlace(itemID))
+        {
+            string expected = zone.NextExpectedItemID;
+            Debug.Log(expected != null
+                ? $"[InventoryUIPresenter] {itemID}은(는) 지금 배치할 수 없습니다. 다음 필요: {expected}"
+                : $"[InventoryUIPresenter] 이 존은 이미 모든 배치가 완료되었습니다.");
+            return;
+        }
+
+        inventoryLogic.RemoveItem(itemID, 1);
+        GameStateManager.Instance.ChangeState(GameState.Gameplay);
     }
 
     private void OnDestroy()
@@ -133,6 +169,11 @@ public class InventoryUIPresenter : MonoBehaviour
     public void Show()
     {
         if (canvasGroup == null) return;
+
+        if (!isInputInitialized)
+        {
+            InitializeInputHandlers();
+        }
 
         if (!isInventoryLogicInitialized)
         {
