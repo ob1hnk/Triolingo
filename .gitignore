@@ -1,2 +1,5 @@
 .DS_Store
 *.pem
+
+# Unity imported assets (each team member imports locally)
+GoGoGolem/src/unity/GoGoGolem/Assets/WhatSoundsNice/

@@ -6,6 +6,7 @@ public class PlayerLocomotionInput
     : MonoBehaviour, GameInputActions.IPlayerMovementActions
 {
     [SerializeField] private bool holdToSprint = true;
+    [SerializeField] private bool lockForwardBackward = false;
 
     public Vector2 MovementInput { get; private set; }
     public Vector2 LookInput { get; private set; }
@@ -37,7 +38,10 @@ public class PlayerLocomotionInput
 
     public void OnMovement(InputAction.CallbackContext context)
     {
-        MovementInput = context.ReadValue<Vector2>();
+        Vector2 input = context.ReadValue<Vector2>();
+        if (lockForwardBackward)
+            input.y = 0f;
+        MovementInput = input;
     }
 
     public void OnLook(InputAction.CallbackContext context)

@@ -9,17 +9,9 @@ namespace UI.Presenters
     /// 편지 읽기 Presenter (로직 담당)
     ///
     /// 역할:
-    /// - letter_id로 Firebase에서 답장 조회
+    /// - GameManager.CurrentLetterId로 Firebase에서 답장 조회
     /// - LetterReader를 통해 비동기 조회
-    /// - 게임 일시정지/재개 제어
-    ///
-    /// letter_id 제공 방식:
-    /// - 실제 게임: LoadManager.Instance.GetLetterId() (다른 팀원 구현)
-    /// - 테스트: Inspector의 testLetterId에 하드코딩
-    ///
-    /// LoadManager 연동 예시 (나중에 다른 팀원이 구현):
-    ///   string letterId = LoadManager.Instance.GetLetterId();
-    ///   letterReadPresenter.Open(letterId);
+    /// - GameStateManager를 통한 게임 상태 전환
     /// </summary>
     public class LetterReadPresenter : MonoBehaviour
     {
@@ -27,10 +19,6 @@ namespace UI.Presenters
         [Header("References")]
         [SerializeField] private LetterReadView view;
         [SerializeField] private LetterReader letterReader;
-
-        [Header("Test (LoadManager 대신 하드코딩)")]
-        [Tooltip("Firebase에 있는 실제 task_id를 입력하세요")]
-        [SerializeField] private string testLetterId = "";
 
         [Header("Debug")]
         [SerializeField] private bool enableDebugLogs = true;
@@ -42,7 +30,7 @@ namespace UI.Presenters
 
         #region Private
         private bool _isLoading;
-        private float _savedTimeScale;
+        private GameState _previousState;
         #endregion
 
         #region Unity Lifecycle
@@ -59,32 +47,18 @@ namespace UI.Presenters
 
         #region Public API
         /// <summary>
-        /// RoomStateManager가 편지 전송 후 taskId를 전달할 때 호출.
-        /// Open() 호출 전에 설정해두면 testLetterId 대신 사용됨.
-        /// </summary>
-        public void SetTaskId(string taskId)
-        {
-            testLetterId = taskId;
-            DebugLog($"TaskId 설정됨: {taskId}");
-        }
-
-        /// <summary>
         /// 편지 읽기 UI를 연다.
-        /// letterId가 null이면 testLetterId(하드코딩 또는 SetTaskId로 설정된 값) 사용.
-        ///
-        /// 사용법:
-        ///   LetterDesk에서:       presenter.Open();          // testLetterId 사용
-        ///   LoadManager 연동:     presenter.Open(letterId);   // 매니저에서 받은 id 사용
+        /// GameManager.CurrentLetterId에서 letter_id를 가져온다.
         /// </summary>
-        public void Open(string letterId = null)
+        public void Open()
         {
             if (view.IsOpen) return;
 
-            string id = letterId ?? testLetterId;
+            string id = GameManager.Instance != null ? GameManager.Instance.CurrentLetterId : null;
 
             if (string.IsNullOrWhiteSpace(id))
             {
-                Debug.LogError("[LetterReadPresenter] letter_id가 없습니다. testLetterId를 Inspector에 입력하세요.");
+                Debug.LogError("[LetterReadPresenter] letter_id가 없습니다. GameManager.CurrentLetterId를 확인하세요.");
                 return;
             }
 
@@ -160,15 +134,17 @@ namespace UI.Presenters
         #region Game State
         private void PauseGame()
         {
-            _savedTimeScale = Time.timeScale;
-            Time.timeScale = 0f;
-            DebugLog("월드 일시정지");
+            if (GameStateManager.Instance == null) return;
+            _previousState = GameStateManager.Instance.CurrentState;
+            GameStateManager.Instance.ChangeState(GameState.LetterUI);
+            DebugLog("GameState → LetterUI");
         }
 
         private void ResumeGame()
         {
-            Time.timeScale = _savedTimeScale > 0f ? _savedTimeScale : 1f;
-            DebugLog("월드 재개");
+            if (GameStateManager.Instance == null) return;
+            GameStateManager.Instance.ChangeState(_previousState);
+            DebugLog($"GameState → {_previousState}");
         }
         #endregion
 

@@ -100,6 +100,10 @@ namespace Demo.Chapters.Prologue
         [Header("Debug")]
         [SerializeField] private bool _debugSkipToLeaf = false;
 
+        [Header("Event Channels")]
+        [SerializeField] private GameEvent _requestHideHUDEvent;
+        [SerializeField] private GameEvent _requestShowHUDEvent;
+
         private LeafEventState _state = LeafEventState.Idle;
 
         // =============================================
@@ -135,6 +139,7 @@ namespace Demo.Chapters.Prologue
             Debug.Log("[LeafEventController] 나뭇잎 타임라인 시작");
             ChangeState(LeafEventState.LeafTimeline);
             _playerSpeechBubble?.Hide();
+            _requestHideHUDEvent?.Raise();
             SetPlayerMovement(false);
             ResetPlayerState();
 
@@ -320,6 +325,7 @@ namespace Demo.Chapters.Prologue
             if (_state == LeafEventState.Complete) return;
             ChangeState(LeafEventState.Complete);
             SetPlayerMovement(true);
+            _requestShowHUDEvent?.Raise();
 
             // 골렘 NavMesh Agent 재활성화 + 추적 재개
             _golemFollow?.EnableAgent();

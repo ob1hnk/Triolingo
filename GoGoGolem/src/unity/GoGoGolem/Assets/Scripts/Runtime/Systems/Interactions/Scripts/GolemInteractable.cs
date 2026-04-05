@@ -11,24 +11,33 @@ public class GolemInteractable : MonoBehaviour, IInteractable
     [Tooltip("완료되어야 상호작용 가능한 퀘스트 ID. 비워두면 항상 활성화 (테스트용)")]
     [SerializeField] private string requiredQuestId = "MQ-02";
 
-    [Header("References")]
-    [SerializeField] private GolemDialogueSceneController dialogueController;
+    [Header("Event Channels")]
+    [SerializeField] private GameEvent requestEnterDialogueEvent;
+
+    [Header("Prompt")]
+    [SerializeField] private InteractionPromptData promptData;
 
     private bool IsQuestGatePassed()
     {
-        if (string.IsNullOrEmpty(requiredQuestId)) return true;       // 비워두면 항상 통과
-        if (Managers.Quest == null) return true;                      // QuestManager 없으면 통과 (테스트용)
+        if (string.IsNullOrEmpty(requiredQuestId)) return true;
+        if (Managers.Quest == null) return true;
         return Managers.Quest.IsQuestCompleted(requiredQuestId);
     }
 
     public InteractionType InteractionType => InteractionType.TalkGolem;
+    public bool CanInteract => true;
 
-    public string GetActionLabel() => IsQuestGatePassed() ? "대화하기" : string.Empty;
-    public Sprite GetKeyHintSprite() => null;
+    public string GetActionLabel() => IsQuestGatePassed() ? (promptData != null ? promptData.ActionLabel : "대화하기") : string.Empty;
+    public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
+    public Vector3 GetPromptOffset() => promptData != null ? promptData.WorldOffset : new Vector3(0f, 1.5f, 0f);
 
     public void Interact()
     {
         if (!IsQuestGatePassed()) return;
-        dialogueController.EnterDialogueMode();
+
+        if (requestEnterDialogueEvent != null)
+            requestEnterDialogueEvent.Raise();
+        else
+            Debug.LogError($"[GolemInteractable] requestEnterDialogueEvent가 null입니다!");
     }
 }

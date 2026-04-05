@@ -47,11 +47,17 @@ public class UIManager : MonoBehaviour
                 HandleSettingsOpen();
                 break;
 
+            case GameState.LetterUI:
+                HandleLetterOpen();
+                break;
+
             case GameState.Gameplay:
                 if (change.OldState == GameState.InventoryUI)
                     HandleInventoryClose();
                 else if (change.OldState == GameState.Paused)
                     HandleSettingsClose();
+                else if (change.OldState == GameState.LetterUI)
+                    HandleLetterClose();
                 break;
         }
     }
@@ -79,5 +85,15 @@ public class UIManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         settingsPresenter?.Hide();
+    }
+
+    private void HandleLetterOpen()
+    {
+        Time.timeScale = 0f;
+    }
+
+    private void HandleLetterClose()
+    {
+        Time.timeScale = 1f;
     }
 }

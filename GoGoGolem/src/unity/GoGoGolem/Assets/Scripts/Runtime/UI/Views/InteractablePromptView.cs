@@ -19,7 +19,6 @@ public class InteractablePromptView : MonoBehaviour
     [SerializeField] private Image keyHintImage;
 
     [Header("Position")]
-    [SerializeField] private Vector3 worldOffset = new Vector3(0f, 1.5f, 0f);
     [SerializeField] private Camera mainCamera;
 
     private PlayerInteraction _playerInteraction;
@@ -83,7 +82,7 @@ public class InteractablePromptView : MonoBehaviour
         foreach (var col in colliders)
         {
             var interactable = col.GetComponent<IInteractable>();
-            if (interactable == null) continue;
+            if (interactable == null || !interactable.CanInteract) continue;
 
             float dist = Vector3.Distance(transform.position, col.transform.position);
             if (dist < minDist)
@@ -102,7 +101,7 @@ public class InteractablePromptView : MonoBehaviour
     {
         if (_currentTransform == null || mainCamera == null || _canvas == null) return;
 
-        Vector3 worldPos = _currentTransform.position + worldOffset;
+        Vector3 worldPos = _currentTransform.position + _current.GetPromptOffset();
         Vector3 screenPos = mainCamera.WorldToScreenPoint(worldPos);
 
         if (screenPos.z < 0f)

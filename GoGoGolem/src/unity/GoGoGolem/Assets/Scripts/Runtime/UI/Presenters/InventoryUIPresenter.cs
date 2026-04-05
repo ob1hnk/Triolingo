@@ -238,7 +238,7 @@ public class InventoryUIPresenter : MonoBehaviour
                 items[kv.Key] = kv.Value;
         }
 
-        view.Render(items);
+        view.RenderItems(items);
         view.RenderSkills(skills);
     }
 
