@@ -22,9 +22,14 @@ public class GolemInteractable : MonoBehaviour, IInteractable
     }
 
     public InteractionType InteractionType => InteractionType.TalkGolem;
+    public bool CanInteract => true;
 
-    public string GetActionLabel() => IsQuestGatePassed() ? "대화하기" : string.Empty;
-    public Sprite GetKeyHintSprite() => null;
+    [Header("Prompt")]
+    [SerializeField] private InteractionPromptData promptData;
+
+    public string GetActionLabel() => IsQuestGatePassed() ? (promptData != null ? promptData.ActionLabel : "대화하기") : string.Empty;
+    public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
+    public Vector3 GetPromptOffset() => promptData != null ? promptData.WorldOffset : new Vector3(0f, 1.5f, 0f);
 
     public void Interact()
     {

@@ -91,7 +91,9 @@ namespace Multimodal.Letter
                 };
 
                 // POST /api/letter
+                DebugLog($"PostJsonAsync 호출 - URL: /api/v1/text/generate-letter, userId: '{userId}'");
                 var response = await _httpClient.PostJsonAsync("/api/v1/text/generate-letter", requestData);
+                DebugLog($"PostJsonAsync 응답 수신 - raw: {response}");
 
                 // 응답 처리
                 var status = response["status"]?.ToString();

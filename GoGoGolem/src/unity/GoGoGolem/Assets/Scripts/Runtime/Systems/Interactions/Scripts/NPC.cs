@@ -46,6 +46,7 @@ public class NPC : MonoBehaviour, IInteractable
     private InputAction _bubbleAdvanceAction;
 
     public InteractionType InteractionType => InteractionType.TalkNPC;
+    public bool CanInteract => true;
 
     private void Awake()
     {
@@ -102,6 +103,7 @@ public class NPC : MonoBehaviour, IInteractable
     }
 
     public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
+    public Vector3 GetPromptOffset() => promptData != null ? promptData.WorldOffset : new Vector3(0f, 1.5f, 0f);
 
     private void AdvancePostQuestBubble()
     {

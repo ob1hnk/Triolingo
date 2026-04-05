@@ -928,6 +928,7 @@ MonoBehaviour:
   interactableLayer:
     serializedVersion: 2
     m_Bits: 128
+  onGatherEvent: {fileID: 0}
 --- !u!114 &5001276373447098637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -946,5 +947,4 @@ MonoBehaviour:
   promptRoot: {fileID: 0}
   actionLabelText: {fileID: 0}
   keyHintImage: {fileID: 0}
-  worldOffset: {x: 0, y: 0.5, z: 0}
   mainCamera: {fileID: 0}
