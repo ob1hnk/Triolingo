@@ -844,7 +844,6 @@ GameObject:
   - component: {fileID: 9110198810511819444}
   - component: {fileID: 7690806251494488479}
   - component: {fileID: 5890195441936137962}
-  - component: {fileID: 5615555355820515252}
   m_Layer: 5
   m_Name: QuestLogUIView
   m_TagString: Untagged
@@ -911,36 +910,6 @@ MonoBehaviour:
   questListParent: {fileID: 6758326764497109780}
   questItemPrefab: {fileID: 4437308059560565472, guid: 5eb8f2a56f9b94e1fb5fbf71c1daaaec, type: 3}
   noQuestText: {fileID: 1833164565076875636}
---- !u!114 &5615555355820515252
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2973233846330456101}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1aa08ab6e0800fa44ae55d278d1423e3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Content: {fileID: 0}
-  m_Horizontal: 0
-  m_Vertical: 1
-  m_MovementType: 1
-  m_Elasticity: 0.04
-  m_Inertia: 1
-  m_DecelerationRate: 0.135
-  m_ScrollSensitivity: 1
-  m_Viewport: {fileID: 6679843824894033262}
-  m_HorizontalScrollbar: {fileID: 0}
-  m_VerticalScrollbar: {fileID: 0}
-  m_HorizontalScrollbarVisibility: 0
-  m_VerticalScrollbarVisibility: 1
-  m_HorizontalScrollbarSpacing: 0
-  m_VerticalScrollbarSpacing: 0
-  m_OnValueChanged:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!1 &3365321492519275646
 GameObject:
   m_ObjectHideFlags: 0

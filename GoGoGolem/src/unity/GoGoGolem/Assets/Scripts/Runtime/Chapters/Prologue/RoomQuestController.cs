@@ -94,6 +94,8 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private LetterWritePresenter letterWritePresenter;
         [SerializeField] private BedInteraction bedInteraction;
         [SerializeField] private LetterReadPresenter letterReadPresenter;
+        [Tooltip("Sleep 타임라인 종료 후 재생할 Bark. 완료 시 MQ-04 시작.")]
+        [SerializeField] private BarkTrigger morningBark;
         [Tooltip("Room 씬의 출구 문. Interact 시 MQ-04-P02 완료 발행.")]
         [SerializeField] private ChangeSceneInteraction exitDoor;
 
@@ -304,7 +306,30 @@ namespace Demo.Chapters.Prologue
         }
 
         /// <summary>
-        /// MQ-04를 시작한다. MQ-03 완료 이벤트 리스너 등에서 호출.
+        /// 타임라인 Signal에서 호출. morningBark를 재생하고, 완료 후 MQ-04를 시작한다.
+        /// </summary>
+        public void FireMorningBarkThenStartQuest()
+        {
+            if (morningBark == null)
+            {
+                Debug.LogWarning("[RoomQuestController] morningBark가 미연결. MQ-04 바로 시작.");
+                StartSecondaryQuest();
+                return;
+            }
+
+            if (verboseLogging)
+                Debug.Log("[RoomQuestController] morningBark 발화 → 완료 후 MQ-04 시작 예정");
+
+            morningBark.Fire(() =>
+            {
+                if (verboseLogging)
+                    Debug.Log("[RoomQuestController] morningBark 완료 → MQ-04 시작");
+                StartSecondaryQuest();
+            });
+        }
+
+        /// <summary>
+        /// MQ-04를 시작한다.
         /// </summary>
         public void StartSecondaryQuest()
         {
