@@ -59,10 +59,7 @@ public class InventoryUIPresenter : MonoBehaviour
 
         if (!zone.TryPlace(itemID))
         {
-            string expected = zone.NextExpectedItemID;
-            Debug.Log(expected != null
-                ? $"[InventoryUIPresenter] {itemID}은(는) 지금 배치할 수 없습니다. 다음 필요: {expected}"
-                : $"[InventoryUIPresenter] 이 존은 이미 모든 배치가 완료되었습니다.");
+            UI.Presenters.BarkPresenter.Instance?.Bark("주인공", "이 아이템은 사용할 수 없어.");
             return;
         }
 

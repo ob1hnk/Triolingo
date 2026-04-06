@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// 플레이어가 이 존 안에 있을 때 인벤토리에서 특정 아이템을 순서대로 배치할 수 있다.
@@ -18,12 +19,24 @@ public class ItemUsableZone : MonoBehaviour
     public static ItemUsableZone Current { get; private set; }
 
     [Serializable]
-    public struct PlacementStep
+    public class PlacementStep
     {
         [Tooltip("이 스텝에서 허용되는 아이템 ID")]
         public string itemID;
         [Tooltip("이 스텝에서 스폰할 프리팹")]
         public GameObject prefab;
+
+        [Header("Phase Gate (선택)")]
+        [Tooltip("이 phase가 완료되어야 배치 가능. 비워두면 gate 없음.")]
+        public string requiredPhaseID;
+        [Tooltip("requiredPhaseID가 속한 Quest ID")]
+        public string gateQuestID;
+        [Tooltip("requiredPhaseID가 속한 Objective ID")]
+        public string gateObjectiveID;
+
+        [Header("Callback")]
+        [Tooltip("배치 성공 시 호출. ForestQuestController.CompleteByPhaseID 등을 바인딩.")]
+        public UnityEvent onPlaced;
     }
 
     [Header("Sequential Placement")]
@@ -106,7 +119,23 @@ public class ItemUsableZone : MonoBehaviour
     public bool Accepts(string itemID)
     {
         if (IsComplete) return false;
+        if (!IsGateSatisfied(_currentStep)) return false;
         return sequence[_currentStep].itemID == itemID;
+    }
+
+    /// <summary>스텝의 선행 phase가 완료됐는지 확인. gate가 설정되지 않았으면 항상 true.</summary>
+    private bool IsGateSatisfied(int stepIndex)
+    {
+        var step = sequence[stepIndex];
+        if (string.IsNullOrEmpty(step.requiredPhaseID)) return true;
+        if (Managers.Quest == null) return true;
+
+        var quest = Managers.Quest.GetActiveQuest(step.gateQuestID)
+                 ?? Managers.Quest.GetCompletedQuest(step.gateQuestID);
+        if (quest == null) return false;
+
+        var phase = quest.GetPhase(step.gateObjectiveID, step.requiredPhaseID);
+        return phase != null && phase.IsCompleted;
     }
 
     /// <summary>
@@ -128,6 +157,9 @@ public class ItemUsableZone : MonoBehaviour
 
         Transform sp = spawnPoint != null ? spawnPoint : transform;
         _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation);
+
+        step.onPlaced?.Invoke();
+
         _currentStep++;
 
         if (IsComplete && glowIndicator != null)
