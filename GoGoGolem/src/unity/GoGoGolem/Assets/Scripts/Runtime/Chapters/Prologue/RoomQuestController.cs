@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Demo.Chapters.Prologue
@@ -89,6 +88,13 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private StringGameEvent requestStartQuestEvent;
         [SerializeField] private CompletePhaseGameEvent requestCompletePhaseEvent;
 
+        [Header("Scene Sources (Room 씬 전용)")]
+        [SerializeField] private LetterWritePresenter letterWritePresenter;
+        [SerializeField] private BedInteraction bedInteraction;
+        [SerializeField] private LetterReadPresenter letterReadPresenter;
+        [Tooltip("Room 씬의 출구 문. Interact 시 MQ-04-P02 완료 발행.")]
+        [SerializeField] private ChangeSceneInteraction exitDoor;
+
         [Header("Options")]
         [Tooltip("true면 정착지 씬 없이 바로 Room 씬에서 시작. MQ-03을 자동 시작하고 P01~P03을 자동 완료한다.")]
         [SerializeField] private bool demoMode = true;
@@ -97,6 +103,38 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private bool enforceOrder = true;
 
         [SerializeField] private bool verboseLogging = true;
+
+        private void OnEnable()
+        {
+            if (letterWritePresenter != null)
+                letterWritePresenter.OnLetterSubmitted += HandleLetterSubmitted;
+            if (bedInteraction != null)
+                bedInteraction.OnSlept += HandleSlept;
+            if (letterReadPresenter != null)
+                letterReadPresenter.OnPanelToggled += HandleLetterReadToggled;
+            if (exitDoor != null)
+                exitDoor.OnInteracted += HandleExitDoor;
+        }
+
+        private void OnDisable()
+        {
+            if (letterWritePresenter != null)
+                letterWritePresenter.OnLetterSubmitted -= HandleLetterSubmitted;
+            if (bedInteraction != null)
+                bedInteraction.OnSlept -= HandleSlept;
+            if (letterReadPresenter != null)
+                letterReadPresenter.OnPanelToggled -= HandleLetterReadToggled;
+            if (exitDoor != null)
+                exitDoor.OnInteracted -= HandleExitDoor;
+        }
+
+        private void HandleLetterSubmitted() => CompleteByPhaseID("MQ-03-P04");
+        private void HandleSlept() => CompleteByPhaseID("MQ-03-P05");
+        private void HandleLetterReadToggled(bool isOpen)
+        {
+            if (!isOpen) CompleteByPhaseID("MQ-04-P01");
+        }
+        private void HandleExitDoor() => CompleteByPhaseID("MQ-04-P02");
 
         private void Start()
         {
