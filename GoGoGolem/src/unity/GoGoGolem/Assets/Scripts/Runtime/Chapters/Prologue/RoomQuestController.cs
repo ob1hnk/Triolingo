@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using UI.Presenters;
 
 namespace Demo.Chapters.Prologue
 {
@@ -108,12 +110,30 @@ namespace Demo.Chapters.Prologue
         {
             if (letterWritePresenter != null)
                 letterWritePresenter.OnLetterSubmitted += HandleLetterSubmitted;
+            else if (verboseLogging)
+                Debug.LogWarning("[RoomQuestController] 구독 실패: letterWritePresenter 미연결 (P04 편지 작성)");
+
             if (bedInteraction != null)
                 bedInteraction.OnSlept += HandleSlept;
+            else if (verboseLogging)
+                Debug.LogWarning("[RoomQuestController] 구독 실패: bedInteraction 미연결 (P05 취침)");
+
             if (letterReadPresenter != null)
                 letterReadPresenter.OnPanelToggled += HandleLetterReadToggled;
+            else if (verboseLogging)
+                Debug.LogWarning("[RoomQuestController] 구독 실패: letterReadPresenter 미연결 (MQ-04-P01 편지 읽기)");
+
             if (exitDoor != null)
                 exitDoor.OnInteracted += HandleExitDoor;
+            else if (verboseLogging)
+                Debug.LogWarning("[RoomQuestController] 구독 실패: exitDoor 미연결 (MQ-04-P02 데모 종료)");
+
+            if (verboseLogging)
+                Debug.Log($"[RoomQuestController] 구독 완료 — " +
+                    $"letterWrite:{letterWritePresenter != null} " +
+                    $"bed:{bedInteraction != null} " +
+                    $"letterRead:{letterReadPresenter != null} " +
+                    $"exitDoor:{exitDoor != null}");
         }
 
         private void OnDisable()
@@ -126,26 +146,55 @@ namespace Demo.Chapters.Prologue
                 letterReadPresenter.OnPanelToggled -= HandleLetterReadToggled;
             if (exitDoor != null)
                 exitDoor.OnInteracted -= HandleExitDoor;
+
+            if (verboseLogging)
+                Debug.Log("[RoomQuestController] 구독 해제 완료");
         }
 
-        private void HandleLetterSubmitted() => CompleteByPhaseID("MQ-03-P04");
-        private void HandleSlept() => CompleteByPhaseID("MQ-03-P05");
+        private void HandleLetterSubmitted()
+        {
+            if (verboseLogging)
+                Debug.Log("[RoomQuestController] 이벤트 수신: OnLetterSubmitted → MQ-03-P04");
+            CompleteByPhaseID("MQ-03-P04");
+        }
+
+        private void HandleSlept()
+        {
+            if (verboseLogging)
+                Debug.Log("[RoomQuestController] 이벤트 수신: OnSlept → MQ-03-P05");
+            CompleteByPhaseID("MQ-03-P05");
+        }
+
         private void HandleLetterReadToggled(bool isOpen)
         {
+            if (verboseLogging)
+                Debug.Log($"[RoomQuestController] 이벤트 수신: OnPanelToggled(isOpen={isOpen})");
             if (!isOpen) CompleteByPhaseID("MQ-04-P01");
         }
-        private void HandleExitDoor() => CompleteByPhaseID("MQ-04-P02");
+
+        private void HandleExitDoor()
+        {
+            if (verboseLogging)
+                Debug.Log("[RoomQuestController] 이벤트 수신: OnInteracted (exitDoor) → MQ-04-P02");
+            CompleteByPhaseID("MQ-04-P02");
+        }
 
         private void Start()
         {
             if (requestCompletePhaseEvent == null)
-                Debug.LogError($"[RoomQuestController] requestCompletePhaseEvent가 연결되지 않았습니다.");
+                Debug.LogError("[RoomQuestController] requestCompletePhaseEvent가 연결되지 않았습니다.");
             if (requestStartQuestEvent == null)
-                Debug.LogError($"[RoomQuestController] requestStartQuestEvent가 연결되지 않았습니다.");
+                Debug.LogError("[RoomQuestController] requestStartQuestEvent가 연결되지 않았습니다.");
             if (phases == null || phases.Length == 0)
-                Debug.LogWarning($"[RoomQuestController] phases가 비어있습니다.");
+                Debug.LogWarning("[RoomQuestController] phases가 비어있습니다.");
+            if (Managers.Quest == null)
+                Debug.LogError("[RoomQuestController] Managers.Quest가 없습니다. 퀘스트 시스템 미초기화.");
 
-            if (verboseLogging) LogSequence();
+            if (verboseLogging)
+            {
+                LogSequence();
+                Debug.Log($"[RoomQuestController] 설정 — demoMode:{demoMode} enforceOrder:{enforceOrder}");
+            }
 
             if (demoMode) RunDemoSetup();
         }
