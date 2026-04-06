@@ -818,17 +818,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 312695999}
   m_CullTransparentMesh: 1
---- !u!114 &316326610 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4761198868915061062, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
-  m_PrefabInstance: {fileID: 681686852}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2daf0f0f9b85c4fd38e81d5b307d40b9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &317546832
 GameObject:
   m_ObjectHideFlags: 0
@@ -2560,6 +2549,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1328654403188600923, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1913104612255829201, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2463851785164066101, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -2582,6 +2579,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2463851785164066101, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2723250601250161706, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
+      propertyPath: m_SizeDelta.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2762505592153756292, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
@@ -2736,6 +2737,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -50
       objectReference: {fileID: 0}
+    - target: {fileID: 6490103355378964775, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6897585009896584447, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -2760,6 +2765,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8242453244086616010, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8580619676115683012, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -2779,6 +2788,10 @@ PrefabInstance:
     - target: {fileID: 8580619676115683012, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -50
+      objectReference: {fileID: 0}
+    - target: {fileID: 8849055968522012819, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -3291,7 +3304,7 @@ PrefabInstance:
     - target: {fileID: 7623169485613668585, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
       propertyPath: settingsPresenter
       value: 
-      objectReference: {fileID: 316326610}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -3307,6 +3320,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3776287221016111619, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1673341115}
+    - targetCorrespondingSourceObject: {fileID: 3776287221016111619, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1596796223}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
 --- !u!4 &972300590 stripped
@@ -3492,7 +3508,7 @@ MonoBehaviour:
   m_IsGlobal: 1
   priority: 0
   blendDistance: 0
-  weight: 1
+  weight: 0
   sharedProfile: {fileID: 11400000, guid: 2c777498e3da9443d8deeaffbb02f46c, type: 2}
 --- !u!4 &996753860
 Transform:
@@ -5038,6 +5054,100 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1566541546}
   m_CullTransparentMesh: 1
+--- !u!1 &1596796222
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1596796223}
+  - component: {fileID: 1596796224}
+  m_Layer: 0
+  m_Name: RoomQuestController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1596796223
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1596796222}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1471705851}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1596796224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1596796222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67b1caa1229d64ee8ae2a91c272ef546, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  primaryQuestID: MQ-03
+  secondaryQuestID: MQ-04
+  phases:
+  - label: 
+    questID: MQ-03
+    objectiveID: MQ-03-OBJ-01
+    phaseID: MQ-03-P01
+    handledByThisScene: 1
+    autoCompleteInDemo: 1
+  - label: 
+    questID: MQ-03
+    objectiveID: MQ-03-OBJ-01
+    phaseID: MQ-03-P02
+    handledByThisScene: 1
+    autoCompleteInDemo: 1
+  - label: 
+    questID: MQ-03
+    objectiveID: MQ-03-OBJ-01
+    phaseID: MQ-03-P03
+    handledByThisScene: 1
+    autoCompleteInDemo: 1
+  - label: 
+    questID: MQ-03
+    objectiveID: MQ-03-OBJ-02
+    phaseID: MQ-03-P04
+    handledByThisScene: 1
+    autoCompleteInDemo: 0
+  - label: 
+    questID: MQ-03
+    objectiveID: MQ-03-OBJ-02
+    phaseID: MQ-03-P05
+    handledByThisScene: 1
+    autoCompleteInDemo: 0
+  - label: 
+    questID: MQ-04
+    objectiveID: MQ-04-OBJ-01
+    phaseID: MQ-04-P01
+    handledByThisScene: 1
+    autoCompleteInDemo: 0
+  - label: 
+    questID: MQ-04
+    objectiveID: MQ-04-OBJ-02
+    phaseID: MQ-04-P02
+    handledByThisScene: 1
+    autoCompleteInDemo: 0
+  requestStartQuestEvent: {fileID: 11400000, guid: 87fe1939e402847efa7665ea1344e7b9, type: 2}
+  requestCompletePhaseEvent: {fileID: 11400000, guid: e2da95cd4a1d545b1b66af5c47cc8d21, type: 2}
+  demoMode: 1
+  enforceOrder: 1
+  verboseLogging: 1
 --- !u!1 &1650361344
 GameObject:
   m_ObjectHideFlags: 0
