@@ -15,15 +15,19 @@ tags: phase:MQ-01-P02
 title: DLG_002_LIFT_MID
 tags: phase:MQ-01-P02
 ---
+<<complete_phase MQ-01 MQ-01-OBJ-01 MQ-01-P02>>
 골렘: 얍!
 주인공: ... 느려!
 주인공: 훈련이 많이 필요하겠는걸
+<<complete_phase MQ-01 MQ-01-OBJ-01 MQ-01-P03>>
 ===
 
 title: DLG_002_PUSH_MID
 tags: phase:MQ-01-P02
 ---
+<<complete_phase MQ-01 MQ-01-OBJ-01 MQ-01-P02>>
 골렘: 이이잇!
 주인공: 으으, 너무 느려!
 주인공: 훈련이 많이 필요하겠는걸
+<<complete_phase MQ-01 MQ-01-OBJ-01 MQ-01-P03>>
 ===

@@ -23,7 +23,7 @@ MonoBehaviour:
     phases:
     - phaseID: MQ-02-P01
       phaseType: 0
-      contentID: DLG-002
+      contentID: 
       description: "\uAC15\uAC00 \uB3C4\uCC29 - \uBD88\uC5B4\uB09C \uAC15\uACFC \uD560\uC544\uBC84\uC9C0
         \uC870\uC6B0"
       conditionIDs: []
