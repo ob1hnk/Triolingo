@@ -242,6 +242,11 @@ public class InventoryUIView : MonoBehaviour
         return indexToItemID.ContainsKey(index);
     }
 
+    public string GetItemIdAt(int index)
+    {
+        return indexToItemID.TryGetValue(index, out var id) ? id : null;
+    }
+
 
     public void UpdatePointer(Vector2 mousePos)
     {
