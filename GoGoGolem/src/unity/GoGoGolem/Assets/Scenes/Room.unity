@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: ceb0a3ed2cb53a94fa21843cc958c52b, type: 2}
+  m_SkyboxMaterial: {fileID: 0}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -5596,6 +5596,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1750458016}
   m_CullTransparentMesh: 1
+--- !u!114 &1755796639 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4567889926389608927, guid: b1296c9382ac94f0c93dd52a07a6850c, type: 3}
+  m_PrefabInstance: {fileID: 6897440977508585436}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1792335300
 GameObject:
   m_ObjectHideFlags: 0
@@ -7707,6 +7718,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5902395111556270066, guid: b1296c9382ac94f0c93dd52a07a6850c, type: 3}
+      propertyPath: speakerNameText
+      value: 
+      objectReference: {fileID: 1755796639}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
