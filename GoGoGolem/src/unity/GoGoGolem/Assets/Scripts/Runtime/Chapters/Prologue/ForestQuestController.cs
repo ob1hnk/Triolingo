@@ -7,30 +7,46 @@ namespace Demo.Chapters.Prologue
     /// Forest 씬의 퀘스트(MQ-02) 흐름을 한 곳에서 문서화하고 라우팅하는 컨트롤러.
     ///
     /// 역할:
-    ///   - Forest 씬에서 진행되어야 할 MQ-02 phase의 **순서 전체**를 Inspector에 선언한다.
-    ///   - 외부 이벤트 소스(트리거 존, ItemUsableZone, UI 등)가 public 메소드를 호출하면
-    ///     QuestManager에 CompletePhase 이벤트를 대신 발행해준다.
-    ///   - Forest 씬이 책임지지 않는 phase(제스처, 골렘 대화, 할아버지 대화 등)는
-    ///     여전히 각자의 시스템에서 직접 발행한다. 여기 선언만 해두면 "순서를 눈으로" 볼 수 있다.
+    ///   - Forest 씬에서 진행되어야 할 MQ-02 phase의 순서 전체를 Inspector에 선언한다.
+    ///   - 외부 소스가 CompleteByPhaseID() / CompleteAt()을 호출하면
+    ///     enforceOrder gate 체크 후 QuestManager에 CompletePhase 이벤트를 발행한다.
     ///
     /// 설계 원칙:
-    ///   - ItemUsableZone, TriggerZone 등 소스 컴포넌트에 의존하지 않는다.
-    ///     그쪽에서 UnityEvent/코드/이벤트 구독 등 어떤 방식으로든 이 컨트롤러의
-    ///     public 메소드를 호출하기만 하면 된다.
-    ///   - 단일 퀘스트(MQ-02) 전용이 아니라 questID를 Inspector로 받아 재사용 가능.
-    ///     예: 같은 패턴으로 MQ-01을 담당하는 또 다른 인스턴스를 씬에 둘 수 있음.
+    ///   - 소스 컴포넌트(ItemUsableZone, TriggerZone 등)에 의존하지 않는다.
+    ///     소스 쪽에서 UnityEvent 등으로 이 컨트롤러의 public 메소드를 호출한다.
+    ///   - questID를 Inspector로 받아 재사용 가능.
     ///
-    /// MQ-02 Forest 씬 phase 참고 (씬이 책임지는 것만 ★표시):
-    ///   P01 강가 도착                  ★ Forest (트리거 존 진입)
-    ///   P02 상황 파악                     Yarn <<complete_phase>>
-    ///   P03 아이템 사용 (ITEM-001)      ★ Forest (ItemUsableZone step 0)
-    ///   P04 제스처 인식                   Gesture 씬
-    ///   P05 전달 실패                     Gesture 씬
-    ///   P06 음성 인식                     골렘 대화 시스템
-    ///   P07 아이템 사용 (ITEM-002)      ★ Forest (ItemUsableZone step 1)
-    ///   P08 제스처 인식                   Gesture 씬
-    ///   P09 전달 성공                     Gesture 씬
-    ///   P10 완료                          할아버지 NPCQuestHandler
+    /// ──────────────────────────────────────────────────────
+    /// MQ-02 Phase 완료 경로 (전체)
+    /// ──────────────────────────────────────────────────────
+    ///
+    /// 퀘스트 시작:
+    ///   DLG_006.yarn  →  <<start_quest MQ-02>>  →  QuestYarnCommands  →  QuestManager
+    ///
+    /// ★ = 이 컨트롤러(ForestQuestController)를 경유
+    ///
+    ///   *P01  강가 도착               TriggerZone.UnityEvent → CompleteByPhaseID("MQ-02-P01")
+    ///                              (TriggerZone은 팀원이 구현 중)
+    ///
+    ///   P02  상황 파악              DLG_007.yarn → <<complete_phase>> → QuestYarnCommands
+    ///                              (같은 노드에서 <<give_item ITEM-002>>로 식량 꾸러미 지급)
+    ///
+    ///   *P03  아이템 사용 (ITEM-001)  ItemUsableZone step[0].onPlaced → CompleteByPhaseID("MQ-02-P03")
+    ///                              (gate: P02 완료 필요)
+    ///
+    ///   P04  제스처 인식              GestureSceneController.NotifyEntryPhaseComplete() — 씬 진입 시
+    ///   P05  전달 실패               GestureSceneController.NotifyQuestPhaseComplete() — 제스처 성공 시
+    ///
+    ///   P06  골렘 대화               GolemDialogueSceneController.NotifyQuestPhaseComplete() — 대화 종료 시
+    ///
+    ///   *P07  아이템 사용 (ITEM-002)  ItemUsableZone step[1].onPlaced → CompleteByPhaseID("MQ-02-P07")
+    ///                              (gate: P06 완료 필요)
+    ///
+    ///   P08  제스처 인식              GestureSceneController.NotifyEntryPhaseComplete() — 씬 진입 시
+    ///   P09  전달 성공               GestureSceneController.NotifyQuestPhaseComplete() — 제스처 성공 시
+    ///
+    ///   P10  완료                    DLG_012.yarn → <<complete_phase>> → QuestYarnCommands
+    ///                              (QuestManager가 자동으로 퀘스트 완료 처리)
     /// </summary>
     public class ForestQuestController : MonoBehaviour
     {

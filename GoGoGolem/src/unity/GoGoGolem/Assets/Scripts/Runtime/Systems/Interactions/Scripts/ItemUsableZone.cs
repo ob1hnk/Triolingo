@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// 플레이어가 이 존 안에 있을 때 인벤토리에서 특정 아이템을 순서대로 배치할 수 있다.
@@ -18,7 +19,7 @@ public class ItemUsableZone : MonoBehaviour
     public static ItemUsableZone Current { get; private set; }
 
     [Serializable]
-    public struct PlacementStep
+    public class PlacementStep
     {
         [Tooltip("이 스텝에서 허용되는 아이템 ID")]
         public string itemID;
@@ -32,6 +33,10 @@ public class ItemUsableZone : MonoBehaviour
         public string gateQuestID;
         [Tooltip("requiredPhaseID가 속한 Objective ID")]
         public string gateObjectiveID;
+
+        [Header("Callback")]
+        [Tooltip("배치 성공 시 호출. ForestQuestController.CompleteByPhaseID 등을 바인딩.")]
+        public UnityEvent onPlaced;
     }
 
     [Header("Sequential Placement")]
@@ -152,6 +157,9 @@ public class ItemUsableZone : MonoBehaviour
 
         Transform sp = spawnPoint != null ? spawnPoint : transform;
         _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation);
+
+        step.onPlaced?.Invoke();
+
         _currentStep++;
 
         if (IsComplete && glowIndicator != null)
