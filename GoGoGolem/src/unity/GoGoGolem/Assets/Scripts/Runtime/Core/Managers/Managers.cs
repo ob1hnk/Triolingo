@@ -18,18 +18,32 @@ using UnityEngine;
         private QuestManager _quest;
         private DialogueManager _dialogue;
 
+        /// <summary>
+        /// 에디터에서 Domain Reload 없이 Play 모드 진입 시 static 초기화.
+        /// Do not reload Domain or Scene 설정에서 _instance가 잔류하는 문제 방지.
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatic()
+        {
+            _instance = null;
+        }
+
         private void Awake()
         {
+            Debug.Log($"[Managers] Awake 호출됨. _instance: {_instance}");
             if (_instance != null)
             {
+                Debug.Log("[Managers] 중복 인스턴스 → Destroy");
                 Destroy(gameObject);
                 return;
             }
 
             _instance = this;
+             Debug.Log("[Managers] DontDestroyOnLoad 호출");
             DontDestroyOnLoad(gameObject);
-
+            Debug.Log("[Managers] InitializeManagers 시작");
             InitializeManagers();
+            Debug.Log("[Managers] 초기화 완료");
         }
 
         private void InitializeManagers()

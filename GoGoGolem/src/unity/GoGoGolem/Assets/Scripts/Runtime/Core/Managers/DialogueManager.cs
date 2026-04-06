@@ -68,6 +68,7 @@ public class DialogueManager : MonoBehaviour
     /// </summary>
     public void StartDialogue(string dialogueID)
     {
+        Debug.Log($"[DialogueManager] StartDialogue called: {dialogueID}");
         if (dialogueRunner == null)
         {
             Debug.LogError("[DialogueManager] DialogueRunner가 없습니다!");

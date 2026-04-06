@@ -7,12 +7,10 @@ public class PlayerInteraction : MonoBehaviour
     public LayerMask interactableLayer;
 
     [Header("Event Channels")]
-    [SerializeField] private GameEvent onGatherEvent;  // Animator의 isGathering 트리거 대신 사용
-    // onSleepEvent 등 추후 Timeline 연동 시 동일 패턴으로 추가
+    [SerializeField] private GameEvent onGatherEvent;
 
     private IInteractable currentInteractable;
     private GameInputActions.PlayerActionsActions _playerActions;
-    private bool _initialized = false;
 
     private void Start()
     {
@@ -23,21 +21,19 @@ public class PlayerInteraction : MonoBehaviour
         }
 
         _playerActions = InputModeController.Instance.GetPlayerActionsActions();
-        _playerActions.Gather.performed += OnGather;
-        _playerActions.InteractNPC.performed += OnInteract;
-        _initialized = true;
     }
 
     private void OnEnable()
     {
-        if (!_initialized) return;
+        if (InputModeController.Instance == null) return;
+
+        _playerActions = InputModeController.Instance.GetPlayerActionsActions();
         _playerActions.Gather.performed += OnGather;
         _playerActions.InteractNPC.performed += OnInteract;
     }
 
     private void OnDisable()
     {
-        if (!_initialized) return;
         _playerActions.Gather.performed -= OnGather;
         _playerActions.InteractNPC.performed -= OnInteract;
     }
@@ -50,8 +46,9 @@ public class PlayerInteraction : MonoBehaviour
 
     private void OnInteract(InputAction.CallbackContext ctx)
     {
+        Debug.Log("[PlayerInteraction] OnInteract called");  // 임시
         if (currentInteractable == null) return;
-    
+
         switch (currentInteractable.InteractionType)
         {
             case InteractionType.TalkNPC:
@@ -64,7 +61,7 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
-    void Update()
+    private void Update()
     {
         CheckForInteractables();
     }
@@ -75,7 +72,7 @@ public class PlayerInteraction : MonoBehaviour
         currentInteractable.Interact();
     }
 
-    void CheckForInteractables()
+    private void CheckForInteractables()
     {
         Collider[] colliders = Physics.OverlapSphere(transform.position, interactionRange, interactableLayer);
 

@@ -4,6 +4,15 @@ public class InputModeController : MonoBehaviour
 {
     public static InputModeController Instance { get; private set; }
 
+    /// <summary>
+    /// 에디터에서 Domain Reload 없이 Play 모드 진입 시 static 초기화.
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatic()
+    {
+        Instance = null;
+    }
+
     [Header("Event Channels")]
     [SerializeField] private GameStateChangeEvent onGameStateChangedEvent;
 
