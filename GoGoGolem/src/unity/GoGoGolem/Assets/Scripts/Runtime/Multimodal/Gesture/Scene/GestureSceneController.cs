@@ -68,6 +68,10 @@ namespace Demo.GestureDetection
     [SerializeField] private string _phaseID_NoFly = "MQ-02-P05";
     [SerializeField] private string _phaseID_Fly   = "MQ-02-P09";
 
+    [Header("Quest - Entry Phase (제스처 인식 진입 시 완료)")]
+    [SerializeField] private string _entryPhaseID_NoFly = "MQ-02-P04";
+    [SerializeField] private string _entryPhaseID_Fly   = "MQ-02-P08";
+
     // 씬 오브젝트
     [Header("Scene Objects (Quest-Driven)")]
     [SerializeField] private GameObject _flyItem;    // OBJ-04에서 활성화
@@ -129,7 +133,10 @@ namespace Demo.GestureDetection
       
       // Config에서 타겟 제스처 로드
       _targetGesture = _sceneConfig != null ? _sceneConfig.targetGesture : GestureType.Wind;
-      
+
+      // 제스처 인식 진입 phase 완료 (P04 또는 P08)
+      NotifyEntryPhaseComplete();
+
       // OBJ-02일 때만 튜토리얼 먼저 실행
       bool needsTutorial =  _tutorialDirector != null && _currentObjectiveID == _objectiveID_NoFly;
 
@@ -275,6 +282,26 @@ namespace Demo.GestureDetection
 
     // Quest 완료 알림
 
+    /// <summary>씬 진입 시 제스처 인식 phase 완료 (P04 또는 P08)</summary>
+    private void NotifyEntryPhaseComplete()
+    {
+      if (_requestCompletePhaseEvent == null) return;
+
+      string phaseID = (_currentObjectiveID == _objectiveID_Fly)
+        ? _entryPhaseID_Fly
+        : _entryPhaseID_NoFly;
+
+      _requestCompletePhaseEvent.Raise(new CompletePhaseRequest
+      {
+        QuestID     = _questID,
+        ObjectiveID = _currentObjectiveID,
+        PhaseID     = phaseID
+      });
+
+      Debug.Log($"[GestureSceneController] Entry phase 완료: {phaseID}");
+    }
+
+    /// <summary>제스처 성공 시 결과 phase 완료 (P05 또는 P09)</summary>
     private void NotifyQuestPhaseComplete()
     {
       if (_requestCompletePhaseEvent == null)

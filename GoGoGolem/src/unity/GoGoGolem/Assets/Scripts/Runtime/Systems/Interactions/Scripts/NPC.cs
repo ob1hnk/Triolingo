@@ -3,7 +3,8 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// 범용 NPC 클래스. 대화 시작을 담당한다.
-/// 퀘스트 액션이 필요한 경우 같은 GameObject에 NPCQuestHandler를 추가한다.
+/// 퀘스트 액션(시작/완료 등)은 Yarn 커맨드(<<start_quest>>, <<complete_phase>>)
+/// 또는 씬별 QuestController를 통해 처리한다.
 ///
 /// 대화 방식:
 ///   - dialogueID가 설정된 경우 → Yarn 대화 (핵심 NPC)
@@ -40,7 +41,6 @@ public class NPC : MonoBehaviour, IInteractable
     private int _currentLineIndex = 0;
     private int _postQuestLineIndex = 0;
     private SpeechBubbleView _speechBubble;
-    private NPCQuestHandler _questHandler;
 
     // 말풍선 활성 중에만 사용하는 로컬 InputAction (Enter, Space, 클릭)
     private InputAction _bubbleAdvanceAction;
@@ -51,7 +51,6 @@ public class NPC : MonoBehaviour, IInteractable
     private void Awake()
     {
         _speechBubble = GetComponentInChildren<SpeechBubbleView>(true);
-        _questHandler = GetComponent<NPCQuestHandler>();
 
         _bubbleAdvanceAction = new InputAction("SpeechBubbleAdvance", InputActionType.Button);
         _bubbleAdvanceAction.AddBinding("<Keyboard>/enter");
@@ -153,8 +152,6 @@ public class NPC : MonoBehaviour, IInteractable
                 requestStartDialogueEvent.Raise(dialogueID);
             else
                 Debug.LogError($"[NPC] {gameObject.name}: requestStartDialogueEvent가 null입니다!");
-
-            if (_questHandler != null) _questHandler.Execute();
             return;
         }
 

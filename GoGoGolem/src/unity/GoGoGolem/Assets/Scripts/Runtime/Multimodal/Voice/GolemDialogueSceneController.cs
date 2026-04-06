@@ -45,6 +45,12 @@ public class GolemDialogueSceneController : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GolemDialogueUIView uiView;
 
+    [Header("Quest")]
+    [SerializeField] private CompletePhaseGameEvent requestCompletePhaseEvent;
+    [SerializeField] private string questID = "MQ-02";
+    [SerializeField] private string objectiveID = "MQ-02-OBJ-03";
+    [SerializeField] private string phaseID = "MQ-02-P06";
+
     private bool _isInDialogueMode = false;
     private bool _isVoiceSessionActive = false;
 
@@ -191,8 +197,25 @@ public class GolemDialogueSceneController : MonoBehaviour
         uiView.Hide();
         _isInDialogueMode = false;
 
+        // 골렘 대화 phase 완료 (P06)
+        NotifyQuestPhaseComplete();
+
         // 게임 상태 복구
         GameStateManager.Instance?.ChangeState(GameState.Gameplay);
+    }
+
+    // ── Quest 연동 ─────────────────────────────────────
+
+    private bool _questPhaseNotified = false;
+
+    private void NotifyQuestPhaseComplete()
+    {
+        if (_questPhaseNotified) return;
+        if (requestCompletePhaseEvent == null) return;
+
+        requestCompletePhaseEvent.Raise(new CompletePhaseRequest(questID, objectiveID, phaseID));
+        _questPhaseNotified = true;
+        Debug.Log($"[GolemDialogueSceneController] Phase 완료: {phaseID}");
     }
 
     // ── 이벤트 핸들러 ─────────────────────────────────────

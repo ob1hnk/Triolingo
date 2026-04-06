@@ -1269,8 +1269,16 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3776287221016111619, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
       insertIndex: -1
       addedObject: {fileID: 683253786}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5455568012631738946, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1597961156}
   m_SourcePrefab: {fileID: 100100000, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
+--- !u!1 &418076095 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5455568012631738946, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
+  m_PrefabInstance: {fileID: 418076094}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &430027455
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2344,7 +2352,47 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   questID: MQ-02
-  phases: []
+  phases:
+  - label: "P01 \uAC15\uAC00 \uB3C4\uCC29"
+    objectiveID: MQ-02-OBJ-01
+    phaseID: MQ-02-P01
+    handledByThisScene: 1
+  - label: "P02 \uC0C1\uD669 \uD30C\uC545"
+    objectiveID: MQ-02-OBJ-01
+    phaseID: MQ-02-P02
+    handledByThisScene: 0
+  - label: "P03 \uC544\uC774\uD15C \uC0AC\uC6A9 ITEM-001"
+    objectiveID: MQ-02-OBJ-02
+    phaseID: MQ-02-P03
+    handledByThisScene: 1
+  - label: "P04 \uC81C\uC2A4\uCC98 \uC778\uC2DD"
+    objectiveID: MQ-02-OBJ-02
+    phaseID: MQ-02-P04
+    handledByThisScene: 0
+  - label: "P05 \uC804\uB2EC \uC2E4\uD328"
+    objectiveID: MQ-02-OBJ-02
+    phaseID: MQ-02-P05
+    handledByThisScene: 0
+  - label: "P06 \uC74C\uC131 \uC778\uC2DD"
+    objectiveID: MQ-02-OBJ-03
+    phaseID: "\uC2DDMQ-02-P06"
+    handledByThisScene: 0
+  - label: "P07 \uC544\uC774\uD15C \uC0AC\uC6A9 ITEM-002"
+    objectiveID: MQ-02-OBJ-04
+    phaseID: MQ-02-P07
+    handledByThisScene: 1
+  - label: "P08 \uC81C\uC2A4\uCC98 \uC778\uC2DD"
+    objectiveID: MQ-02-OBJ-04
+    phaseID: MQ-02-P08
+    handledByThisScene: 0
+  - label: "P09 \uC804\uB2EC \uC131\uACF5"
+    objectiveID: MQ-02-OBJ-04
+    phaseID: MQ-02-P09
+    handledByThisScene: 0
+  - label: "P10 \uC644\uB8CC"
+    objectiveID: MQ-02-OBJ-05
+    phaseID: MQ-02-P10
+    handledByThisScene: 1
   requestCompletePhaseEvent: {fileID: 0}
   enforceOrder: 1
   verboseLogging: 1
@@ -3889,7 +3937,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -5004,12 +5053,27 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6641873236602143295, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
   m_PrefabInstance: {fileID: 418076094}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 418076095}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4bec29c0a230741bdac901dba8da47ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1597961156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 418076095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59d2ac6075f874082a23d0ae12a73eed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  requestStartQuestEvent: {fileID: 11400000, guid: 87fe1939e402847efa7665ea1344e7b9, type: 2}
+  requestCompletePhaseEvent: {fileID: 11400000, guid: e2da95cd4a1d545b1b66af5c47cc8d21, type: 2}
+  requestAcquireItemEvent: {fileID: 11400000, guid: d031284a599c844f2ac3a990d68e11dc, type: 2}
 --- !u!1001 &1599808275
 PrefabInstance:
   m_ObjectHideFlags: 0
