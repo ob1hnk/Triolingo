@@ -1265,9 +1265,20 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 3776287221016111619, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 683253786}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5455568012631738946, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1597961156}
   m_SourcePrefab: {fileID: 100100000, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
+--- !u!1 &418076095 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5455568012631738946, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
+  m_PrefabInstance: {fileID: 418076094}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &430027455
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2296,6 +2307,95 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &683253785
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 683253786}
+  - component: {fileID: 683253787}
+  m_Layer: 0
+  m_Name: ForestQuestController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &683253786
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683253785}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1023138050}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &683253787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683253785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8e0bc3ef06364997a9374a7e3328f84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  questID: MQ-02
+  phases:
+  - label: "P01 \uAC15\uAC00 \uB3C4\uCC29"
+    objectiveID: MQ-02-OBJ-01
+    phaseID: MQ-02-P01
+    handledByThisScene: 1
+  - label: "P02 \uC0C1\uD669 \uD30C\uC545"
+    objectiveID: MQ-02-OBJ-01
+    phaseID: MQ-02-P02
+    handledByThisScene: 0
+  - label: "P03 \uC544\uC774\uD15C \uC0AC\uC6A9 ITEM-001"
+    objectiveID: MQ-02-OBJ-02
+    phaseID: MQ-02-P03
+    handledByThisScene: 1
+  - label: "P04 \uC81C\uC2A4\uCC98 \uC778\uC2DD"
+    objectiveID: MQ-02-OBJ-02
+    phaseID: MQ-02-P04
+    handledByThisScene: 0
+  - label: "P05 \uC804\uB2EC \uC2E4\uD328"
+    objectiveID: MQ-02-OBJ-02
+    phaseID: MQ-02-P05
+    handledByThisScene: 0
+  - label: "P06 \uC74C\uC131 \uC778\uC2DD"
+    objectiveID: MQ-02-OBJ-03
+    phaseID: "\uC2DDMQ-02-P06"
+    handledByThisScene: 0
+  - label: "P07 \uC544\uC774\uD15C \uC0AC\uC6A9 ITEM-002"
+    objectiveID: MQ-02-OBJ-04
+    phaseID: MQ-02-P07
+    handledByThisScene: 1
+  - label: "P08 \uC81C\uC2A4\uCC98 \uC778\uC2DD"
+    objectiveID: MQ-02-OBJ-04
+    phaseID: MQ-02-P08
+    handledByThisScene: 0
+  - label: "P09 \uC804\uB2EC \uC131\uACF5"
+    objectiveID: MQ-02-OBJ-04
+    phaseID: MQ-02-P09
+    handledByThisScene: 0
+  - label: "P10 \uC644\uB8CC"
+    objectiveID: MQ-02-OBJ-05
+    phaseID: MQ-02-P10
+    handledByThisScene: 1
+  requestCompletePhaseEvent: {fileID: 0}
+  enforceOrder: 1
+  verboseLogging: 1
 --- !u!1 &700620248
 GameObject:
   m_ObjectHideFlags: 0
@@ -3132,6 +3232,11 @@ Transform:
   - {fileID: 1692600633}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &1023138050 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3776287221016111619, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
+  m_PrefabInstance: {fileID: 418076094}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1038458433
 GameObject:
   m_ObjectHideFlags: 0
@@ -3792,46 +3897,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Old Man
       objectReference: {fileID: 0}
-    - target: {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
-      propertyPath: entries.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
-      propertyPath: requestCompletePhaseEvent
-      value: 
-      objectReference: {fileID: 11400000, guid: e2da95cd4a1d545b1b66af5c47cc8d21, type: 2}
-    - target: {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
-      propertyPath: entries.Array.data[0].action
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
-      propertyPath: entries.Array.data[1].action
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
-      propertyPath: entries.Array.data[1].phaseID
-      value: MQ-02-P10
-      objectReference: {fileID: 0}
-    - target: {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
-      propertyPath: entries.Array.data[0].condition
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
-      propertyPath: entries.Array.data[1].condition
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
-      propertyPath: entries.Array.data[1].objectiveID
-      value: MQ-02-OBJ-05
-      objectReference: {fileID: 0}
-    - target: {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
-      propertyPath: entries.Array.data[1].requiredCompletedPhaseID
-      value: MQ-02-P09
-      objectReference: {fileID: 0}
-    - target: {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
-      propertyPath: entries.Array.data[1].requiredCompletedObjectiveID
-      value: MQ-02-OBJ-04
-      objectReference: {fileID: 0}
     - target: {fileID: 6117759445529761038, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
       propertyPath: m_LocalPosition.x
       value: 90.71
@@ -3872,7 +3937,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4046864422521629573, guid: 77cc9de0297e44250b68a6b23f519a14, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -4987,12 +5053,27 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6641873236602143295, guid: 274062ac0d1144683a48a3480469f0bc, type: 3}
   m_PrefabInstance: {fileID: 418076094}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 418076095}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4bec29c0a230741bdac901dba8da47ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1597961156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 418076095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59d2ac6075f874082a23d0ae12a73eed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  requestStartQuestEvent: {fileID: 11400000, guid: 87fe1939e402847efa7665ea1344e7b9, type: 2}
+  requestCompletePhaseEvent: {fileID: 11400000, guid: e2da95cd4a1d545b1b66af5c47cc8d21, type: 2}
+  requestAcquireItemEvent: {fileID: 11400000, guid: d031284a599c844f2ac3a990d68e11dc, type: 2}
 --- !u!1001 &1599808275
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5766,6 +5847,8 @@ MonoBehaviour:
     prefab: {fileID: 3374622099483747709, guid: f108a6dcb1bb44fdeb5abafe4a151cbb, type: 3}
   spawnPoint: {fileID: 524863667}
   glowIndicator: {fileID: 700620248}
+  _currentStep: 0
+  _spawnedInstance: {fileID: 0}
 --- !u!65 &1787629044
 BoxCollider:
   m_ObjectHideFlags: 0
