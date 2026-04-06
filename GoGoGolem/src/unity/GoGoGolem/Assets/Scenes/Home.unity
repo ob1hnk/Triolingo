@@ -5057,6 +5057,7 @@ MonoBehaviour:
   introSceneName: Scenes/Intro
   settingsPresenter: {fileID: 1915448656}
   privacyConsentPresenter: {fileID: 1669792577}
+  skipTargetScene: Forest
 --- !u!4 &1763570767
 Transform:
   m_ObjectHideFlags: 0
