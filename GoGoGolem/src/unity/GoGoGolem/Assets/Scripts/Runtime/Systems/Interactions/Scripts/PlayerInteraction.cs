@@ -55,9 +55,10 @@ public class PlayerInteraction : MonoBehaviour
         switch (currentInteractable.InteractionType)
         {
             case InteractionType.TalkNPC:
-                currentInteractable.Interact();
-                break;
             case InteractionType.TalkGolem:
+            case InteractionType.WriteLetter:
+            case InteractionType.Sleep:
+            case InteractionType.ChangeScene:
                 currentInteractable.Interact();
                 break;
         }

@@ -46,7 +46,7 @@ public class QuestYarnCommands : MonoBehaviour
     {
         if (string.IsNullOrEmpty(questID))
         {
-            Debug.LogWarning("[QuestYarnCommands] start_quest: questID가 비어있습니다.");
+            Debug.LogError("[QuestYarnCommands] start_quest: questID가 비어있습니다.");
             return;
         }
         if (requestStartQuestEvent == null)
@@ -59,31 +59,35 @@ public class QuestYarnCommands : MonoBehaviour
 
     private void OnCompletePhase(string questID, string objectiveID, string phaseID)
     {
-        if (string.IsNullOrEmpty(questID) || string.IsNullOrEmpty(objectiveID) || string.IsNullOrEmpty(phaseID))
-        {
-            Debug.LogWarning("[QuestYarnCommands] complete_phase: 인자가 비어있습니다.");
-            return;
-        }
         if (requestCompletePhaseEvent == null)
         {
             Debug.LogError("[QuestYarnCommands] requestCompletePhaseEvent가 연결되지 않았습니다.");
             return;
         }
+
+        if (string.IsNullOrEmpty(questID) || string.IsNullOrEmpty(objectiveID) || string.IsNullOrEmpty(phaseID))
+        {
+            Debug.LogError($"[QuestYarnCommands] complete_phase 인자가 비어있습니다: questID={questID}, objectiveID={objectiveID}, phaseID={phaseID}");
+            return;
+        }
+
         requestCompletePhaseEvent.Raise(new CompletePhaseRequest(questID, objectiveID, phaseID));
     }
 
     private void OnGiveItem(string itemID)
     {
-        if (string.IsNullOrEmpty(itemID))
-        {
-            Debug.LogWarning("[QuestYarnCommands] give_item: itemID가 비어있습니다.");
-            return;
-        }
         if (requestAcquireItemEvent == null)
         {
             Debug.LogError("[QuestYarnCommands] requestAcquireItemEvent가 연결되지 않았습니다.");
             return;
         }
+
+        if (string.IsNullOrEmpty(itemID))
+        {
+            Debug.LogError("[QuestYarnCommands] give_item의 itemID가 비어있습니다.");
+            return;
+        }
+
         requestAcquireItemEvent.Raise(itemID);
     }
 }

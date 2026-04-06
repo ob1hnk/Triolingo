@@ -6,7 +6,20 @@ using UnityEngine;
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
+    public static GameManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                var go = new GameObject("GameManager (Auto)");
+                _instance = go.AddComponent<GameManager>();
+            }
+            return _instance;
+        }
+        private set => _instance = value;
+    }
+    private static GameManager _instance;
 
     private const string SaveKey = "PlayerData";
 
@@ -14,7 +27,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null)
+        if (_instance != null && _instance != this)
         {
             Destroy(gameObject);
             return;

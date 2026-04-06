@@ -93,6 +93,20 @@ namespace UI.Views
 
         private void OnInputChanged(string text)
         {
+            // 멀티라인 InputField에서 Enter 입력 시 줄바꿈 대신 전송
+            if (text.Contains('\n') || text.Contains('\r'))
+            {
+                string cleaned = text.Replace("\n", "").Replace("\r", "");
+                letterInputField.text = cleaned;
+
+                if (!string.IsNullOrWhiteSpace(cleaned))
+                {
+                    Debug.Log($"[LetterWriteView] Enter 키로 제출 - 내용: '{cleaned}' ({cleaned.Length}자)");
+                    OnSubmit?.Invoke(cleaned);
+                }
+                return;
+            }
+
             UpdateCharCount();
         }
 

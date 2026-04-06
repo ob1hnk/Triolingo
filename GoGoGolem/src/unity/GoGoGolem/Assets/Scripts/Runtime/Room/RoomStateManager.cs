@@ -60,6 +60,8 @@ public class RoomStateManager : MonoBehaviour
 
     private void Start()
     {
+        // GameManager가 없는 씬에서도 자동 생성되도록 보장
+        _ = GameManager.Instance;
         ApplyState(RoomState.BeforeLetter);
     }
 

@@ -22,8 +22,24 @@ public class InventoryLogic
         OnInventoryChanged?.Invoke();
     }
 
+    public bool RemoveItem(string id, int count = 1)
+    {
+        if (!items.TryGetValue(id, out int current) || current < count) return false;
+        int next = current - count;
+        if (next <= 0) items.Remove(id);
+        else items[id] = next;
+        OnInventoryChanged?.Invoke();
+        return true;
+    }
+
     public bool HasItem(string id) => items.ContainsKey(id) && items[id] > 0;
 
     public Dictionary<string, int> GetAllItems() => items;
-    
+
+    public void Clear()
+    {
+        if (items.Count == 0) return;
+        items.Clear();
+        OnInventoryChanged?.Invoke();
+    }
 }
