@@ -65,10 +65,8 @@ public class QuestManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-#if !UNITY_EDITOR
         if (autoSave && isInitialized)
             SaveProgress();
-#endif
     }
 
     #endregion
@@ -104,9 +102,7 @@ public class QuestManager : MonoBehaviour
 
         if (loadOnStart)
         {
-#if !UNITY_EDITOR
             LoadProgress();
-#endif
         }
     }
 
@@ -277,6 +273,17 @@ public class QuestManager : MonoBehaviour
         Quest quest = progressTracker?.GetActiveQuest(questID)
                 ?? progressTracker?.GetCompletedQuest(questID);
         return quest?.IsObjectiveCompleted(objectiveID) ?? false;
+    }
+
+    /// <summary>
+    /// 특정 Phase가 완료됐는지 확인
+    /// Active 또는 Completed 퀘스트 모두에서 조회
+    /// </summary>
+    public bool IsPhaseCompleted(string questID, string objectiveID, string phaseID)
+    {
+        Quest quest = progressTracker?.GetActiveQuest(questID)
+                ?? progressTracker?.GetCompletedQuest(questID);
+        return quest?.IsPhaseCompleted(objectiveID, phaseID) ?? false;
     }
 
     public float GetQuestProgress(string questID)

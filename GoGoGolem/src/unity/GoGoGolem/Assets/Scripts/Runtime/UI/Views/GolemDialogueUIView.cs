@@ -63,6 +63,17 @@ public class GolemDialogueUIView : MonoBehaviour
         statusUI.SetActive(false);
 
         spaceActionText.text = "말하기";
+
+        if (playerNameText != null && GameManager.Instance != null)
+            playerNameText.text = GameManager.Instance.PlayerName;
+    }
+
+    /// <summary>Space 눌러 StartVoice() 호출 직후 — 서버 연결 대기 중</summary>
+    public void ShowVoiceConnectingState()
+    {
+        statusUI.SetActive(true);
+        if (statusText != null) statusText.text = "준비 중...";
+        spaceActionText.text = "중지";
     }
 
     /// <summary>Space 눌러 StartVoice() 호출 직후 — 서버 연결 + 마이크 시작</summary>

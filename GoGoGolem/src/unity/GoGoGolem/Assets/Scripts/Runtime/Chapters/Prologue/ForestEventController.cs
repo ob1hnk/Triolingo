@@ -86,6 +86,8 @@ namespace Demo.Chapters.Prologue
         [Header("Event Channels")]
         [Tooltip("DialogueManager의 onDialogueCompletedEvent SO와 동일한 것 연결")]
         [SerializeField] private GameEvent _onDialogueCompletedEvent;
+        [SerializeField] private GameEvent _requestHideHUDEvent;
+        [SerializeField] private GameEvent _requestShowHUDEvent;
 
         [Header("Player")]
         [Tooltip("이동 제어할 PlayerController")]
@@ -401,6 +403,7 @@ namespace Demo.Chapters.Prologue
         {
             ChangeState(ForestEventState.Dialogue);
             _dialogueCanvas?.SetActive(true);
+            _requestHideHUDEvent?.Raise();
 
             if (Managers.Dialogue == null)
             {
@@ -566,6 +569,7 @@ namespace Demo.Chapters.Prologue
             _golemFollow?.StartFollowingSmooth();
 
             _dialogueCanvas?.SetActive(false);
+            _requestShowHUDEvent?.Raise();
 
             // TODO: Quest 완료 이벤트 발행 (한나님 QuestManager 연동 후)
             // Managers.Quest.CompleteObjective("...");
