@@ -51,8 +51,16 @@ public class PlayerInteraction : MonoBehaviour
     private void OnInteract(InputAction.CallbackContext ctx)
     {
         if (currentInteractable == null) return;
-        if (currentInteractable.InteractionType != InteractionType.Gather)
-            currentInteractable.Interact();
+    
+        switch (currentInteractable.InteractionType)
+        {
+            case InteractionType.TalkNPC:
+                currentInteractable.Interact();
+                break;
+            case InteractionType.TalkGolem:
+                currentInteractable.Interact();
+                break;
+        }
     }
 
     void Update()
