@@ -98,26 +98,6 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[GameManager] Gesture learned: {gestureTypeName}");
     }
 
-    [ContextMenu("Debug/Set Player Name (테스트)")]
-    public void DebugSetPlayerName()
-    {
-        SetPlayerName("도윤");
-        Debug.Log($"[GameManager] Player name set to: {PlayerName}");
-    }
-
-    [ContextMenu("Debug/Set Golem Name (테스트)")]
-    public void DebugSetGolemName()
-    {
-        SetGolemName("돌돌이");
-        Debug.Log($"[GameManager] Golem name set to: {GolemName}");
-    }
-
-    [ContextMenu("Debug/Print Current Data")]
-    public void DebugPrintData()
-    {
-        Debug.Log($"[GameManager] PlayerName: '{PlayerName}', GolemName: '{GolemName}', LetterId: '{CurrentLetterId}', Gestures: [{string.Join(", ", _data.learnedGestures)}]");
-    }
-
     [ContextMenu("Reset All Player Data")]
     public void ResetAllData()
     {
