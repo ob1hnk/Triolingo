@@ -1,0 +1,174 @@
+using System;
+using UnityEngine;
+
+/// <summary>
+/// 플레이어가 이 존 안에 있을 때 인벤토리에서 특정 아이템을 순서대로 배치할 수 있다.
+/// Trigger Collider가 필요하며, 플레이어 오브젝트에 "Player" 태그가 있어야 한다.
+///
+/// 사용 흐름:
+///   1. 플레이어가 존에 진입 → Current = this, glow 활성화
+///   2. 인벤토리 열고 아이템 선택 + E 키 (InventoryUIPresenter가 처리)
+///   3. 현재 스텝의 itemID와 일치하면 TryPlace로 spawnPoint에 프리팹 스폰, 다음 스텝으로 진행
+///   4. 모든 스텝 완료 후에는 Accepts가 false를 반환
+/// </summary>
+[RequireComponent(typeof(Collider))]
+public class ItemUsableZone : MonoBehaviour
+{
+    /// <summary>현재 플레이어가 위치한 존. 없으면 null.</summary>
+    public static ItemUsableZone Current { get; private set; }
+
+    [Serializable]
+    public struct PlacementStep
+    {
+        [Tooltip("이 스텝에서 허용되는 아이템 ID")]
+        public string itemID;
+        [Tooltip("이 스텝에서 스폰할 프리팹")]
+        public GameObject prefab;
+
+        [Header("Phase Gate (선택)")]
+        [Tooltip("이 phase가 완료되어야 배치 가능. 비워두면 gate 없음.")]
+        public string requiredPhaseID;
+        [Tooltip("requiredPhaseID가 속한 Quest ID")]
+        public string gateQuestID;
+        [Tooltip("requiredPhaseID가 속한 Objective ID")]
+        public string gateObjectiveID;
+    }
+
+    [Header("Sequential Placement")]
+    [Tooltip("순서대로 배치해야 할 아이템 목록. 한 번 배치되면 다음 스텝으로 넘어간다.")]
+    [SerializeField] private PlacementStep[] sequence;
+
+    [Header("Spawn")]
+    [Tooltip("비워두면 이 오브젝트 위치에 스폰")]
+    [SerializeField] private Transform spawnPoint;
+
+    [Header("Visual")]
+    [Tooltip("플레이어 진입 시 활성화할 발광 오브젝트 (자식으로 배치)")]
+    [SerializeField] private GameObject glowIndicator;
+
+    private int _currentStep;
+    private GameObject _spawnedInstance;
+
+    public bool IsComplete => sequence == null || _currentStep >= sequence.Length;
+    public string NextExpectedItemID => IsComplete ? null : sequence[_currentStep].itemID;
+
+    private void Awake()
+    {
+        var col = GetComponent<Collider>();
+        col.isTrigger = true;
+
+        if (glowIndicator != null) glowIndicator.SetActive(false);
+    }
+
+    private void Start()
+    {
+        if (sequence == null || sequence.Length == 0)
+        {
+            Debug.LogWarning($"[ItemUsableZone] '{name}': sequence가 비어있습니다. 아무 아이템도 배치할 수 없습니다.");
+            return;
+        }
+
+        for (int i = 0; i < sequence.Length; i++)
+        {
+            var s = sequence[i];
+            if (string.IsNullOrEmpty(s.itemID))
+                Debug.LogError($"[ItemUsableZone] '{name}': sequence[{i}]의 itemID가 비어있습니다.");
+            if (s.prefab == null)
+                Debug.LogError($"[ItemUsableZone] '{name}': sequence[{i}] ({s.itemID})의 prefab이 비어있습니다.");
+        }
+
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"[ItemUsableZone] '{name}' sequence: ");
+        for (int i = 0; i < sequence.Length; i++)
+        {
+            if (i > 0) sb.Append(" → ");
+            sb.Append($"[{i}] {sequence[i].itemID}");
+        }
+        Debug.Log(sb.ToString());
+    }
+
+    private void OnDisable()
+    {
+        if (Current == this)
+        {
+            Current = null;
+            if (glowIndicator != null) glowIndicator.SetActive(false);
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!other.CompareTag("Player")) return;
+        Current = this;
+        if (glowIndicator != null) glowIndicator.SetActive(true);
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (!other.CompareTag("Player") || Current != this) return;
+        Current = null;
+        if (glowIndicator != null) glowIndicator.SetActive(false);
+    }
+
+    /// <summary>현재 스텝에서 이 itemID를 배치할 수 있는지 검사.</summary>
+    public bool Accepts(string itemID)
+    {
+        if (IsComplete) return false;
+        if (!IsGateSatisfied(_currentStep)) return false;
+        return sequence[_currentStep].itemID == itemID;
+    }
+
+    /// <summary>스텝의 선행 phase가 완료됐는지 확인. gate가 설정되지 않았으면 항상 true.</summary>
+    private bool IsGateSatisfied(int stepIndex)
+    {
+        var step = sequence[stepIndex];
+        if (string.IsNullOrEmpty(step.requiredPhaseID)) return true;
+        if (Managers.Quest == null) return true;
+
+        var quest = Managers.Quest.GetActiveQuest(step.gateQuestID)
+                 ?? Managers.Quest.GetCompletedQuest(step.gateQuestID);
+        if (quest == null) return false;
+
+        var phase = quest.GetPhase(step.gateObjectiveID, step.requiredPhaseID);
+        return phase != null && phase.IsCompleted;
+    }
+
+    /// <summary>
+    /// 현재 스텝의 아이템이면 spawnPoint에 배치하고 다음 스텝으로 진행.
+    /// 성공 시 true 반환. InventoryUIPresenter는 true가 돌아올 때만 아이템을 차감해야 한다.
+    /// </summary>
+    public bool TryPlace(string itemID)
+    {
+        if (!Accepts(itemID)) return false;
+
+        var step = sequence[_currentStep];
+        if (step.prefab == null)
+        {
+            Debug.LogWarning($"[ItemUsableZone] step {_currentStep} ({step.itemID})의 prefab이 비어있습니다.");
+            return false;
+        }
+
+        if (_spawnedInstance != null) Destroy(_spawnedInstance);
+
+        Transform sp = spawnPoint != null ? spawnPoint : transform;
+        _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation);
+        _currentStep++;
+
+        if (IsComplete && glowIndicator != null)
+            glowIndicator.SetActive(false);
+
+        return true;
+    }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Current == this ? Color.green : new Color(0f, 1f, 0f, 0.25f);
+        var col = GetComponent<Collider>();
+        if (col is BoxCollider box)
+            Gizmos.DrawWireCube(transform.position + box.center, box.size);
+        else if (col is SphereCollider sphere)
+            Gizmos.DrawWireSphere(transform.position + sphere.center, sphere.radius);
+    }
+#endif
+}
