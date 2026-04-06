@@ -6,7 +6,20 @@ using UnityEngine;
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
+    public static GameManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                var go = new GameObject("GameManager (Auto)");
+                _instance = go.AddComponent<GameManager>();
+            }
+            return _instance;
+        }
+        private set => _instance = value;
+    }
+    private static GameManager _instance;
 
     private const string SaveKey = "PlayerData";
 
@@ -14,7 +27,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null)
+        if (_instance != null && _instance != this)
         {
             Destroy(gameObject);
             return;
@@ -83,6 +96,26 @@ public class GameManager : MonoBehaviour
         _data.learnedGestures.Add(gestureTypeName);
         Save();
         Debug.Log($"[GameManager] Gesture learned: {gestureTypeName}");
+    }
+
+    [ContextMenu("Debug/Set Player Name (테스트)")]
+    public void DebugSetPlayerName()
+    {
+        SetPlayerName("도윤");
+        Debug.Log($"[GameManager] Player name set to: {PlayerName}");
+    }
+
+    [ContextMenu("Debug/Set Golem Name (테스트)")]
+    public void DebugSetGolemName()
+    {
+        SetGolemName("돌돌이");
+        Debug.Log($"[GameManager] Golem name set to: {GolemName}");
+    }
+
+    [ContextMenu("Debug/Print Current Data")]
+    public void DebugPrintData()
+    {
+        Debug.Log($"[GameManager] PlayerName: '{PlayerName}', GolemName: '{GolemName}', LetterId: '{CurrentLetterId}', Gestures: [{string.Join(", ", _data.learnedGestures)}]");
     }
 
     [ContextMenu("Reset All Player Data")]
