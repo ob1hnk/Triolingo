@@ -61,7 +61,7 @@ using UnityEngine;
             // QuestManager는 자체 Awake에서 Initialize를 호출하므로 별도 Init 불필요
 
             // DialogueManager 초기화
-            _dialogue = GetComponentInChildren<DialogueManager>();
+            _dialogue = FindObjectOfType<DialogueManager>();
             if (_dialogue == null)
             {
                 Debug.LogWarning("Managers: DialogueManager 컴포넌트가 없습니다.");
