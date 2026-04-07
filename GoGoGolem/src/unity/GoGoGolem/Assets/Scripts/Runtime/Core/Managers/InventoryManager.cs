@@ -31,8 +31,7 @@ public class InventoryManager : MonoBehaviour
         foreach (var entry in data.items)
             Logic.AddItem(entry.itemID, entry.count);
 
-        // 변경 시 자동 저장
-        Logic.OnInventoryChanged += SaveInventory;
+        // 저장은 OnApplicationQuit에서만 수행 (씬 전환 중 파일 I/O 크래시 방지)
     }
 
     private void OnEnable()
