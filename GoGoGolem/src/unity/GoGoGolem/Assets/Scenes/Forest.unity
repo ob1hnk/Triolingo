@@ -566,7 +566,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3873406eac079497b9aa311c0d11d6a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  requiredQuestId: 
+  requiredPhaseID: MQ-02-P05
+  requiredQuestID: MQ-02
+  requiredObjectiveID: MQ-02-OBJ-02
   requestEnterDialogueEvent: {fileID: 11400000, guid: 7ab5d8b65d1adb9488a8ed88428bcbad, type: 2}
   promptData: {fileID: 11400000, guid: c31112cbfa743834f959af687acc2637, type: 2}
 --- !u!1 &147977248
@@ -1387,6 +1389,7 @@ MonoBehaviour:
     requiredPhaseID: MQ-02-P02
     gateQuestID: MQ-02
     gateObjectiveID: MQ-02-OBJ-01
+    completedPhaseID: MQ-02-P03
     onPlaced:
       m_PersistentCalls:
         m_Calls:
@@ -1408,6 +1411,7 @@ MonoBehaviour:
     requiredPhaseID: MQ-02-P06
     gateQuestID: MQ-02
     gateObjectiveID: MQ-02-OBJ-03
+    completedPhaseID: MQ-02-P07
     onPlaced:
       m_PersistentCalls:
         m_Calls:

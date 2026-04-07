@@ -29,10 +29,15 @@ public class ItemUsableZone : MonoBehaviour, IInteractable
         [Header("Phase Gate (선택)")]
         [Tooltip("이 phase가 완료되어야 배치 가능. 비워두면 gate 없음.")]
         public string requiredPhaseID;
-        [Tooltip("requiredPhaseID가 속한 Quest ID")]
+        [Tooltip("requiredPhaseID가 속한 Quest ID (completedPhaseID 조회에도 사용)")]
         public string gateQuestID;
         [Tooltip("requiredPhaseID가 속한 Objective ID")]
         public string gateObjectiveID;
+
+        [Header("Completion Phase (씬 재진입 시 복원용)")]
+        [Tooltip("이 스텝이 완료됐음을 나타내는 phase ID. 씬 재로드 시 _currentStep 복원에 사용.\n" +
+                 "gateQuestID와 동일한 퀘스트에서 탐색. 비워두면 복원 안 함.")]
+        public string completedPhaseID;
 
         [Header("Callback")]
         [Tooltip("배치 성공 시 호출. ForestQuestController.CompleteByPhaseID 등을 바인딩.")]
@@ -94,6 +99,8 @@ public class ItemUsableZone : MonoBehaviour, IInteractable
                 Debug.LogError($"[ItemUsableZone] '{name}': sequence[{i}] ({s.itemID})의 prefab이 비어있습니다.");
         }
 
+        RestoreCurrentStep();
+
         var sb = new System.Text.StringBuilder();
         sb.Append($"[ItemUsableZone] '{name}' sequence: ");
         for (int i = 0; i < sequence.Length; i++)
@@ -102,6 +109,58 @@ public class ItemUsableZone : MonoBehaviour, IInteractable
             sb.Append($"[{i}] {sequence[i].itemID}");
         }
         Debug.Log(sb.ToString());
+    }
+
+    /// <summary>
+    /// 씬 재진입 시 퀘스트 phase 완료 상태 기반으로 _currentStep을 복원한다.
+    /// 각 PlacementStep의 completedPhaseID가 완료됐으면 해당 스텝은 이미 배치된 것으로 간주.
+    /// </summary>
+    private void RestoreCurrentStep()
+    {
+        if (Managers.Quest == null) return;
+
+        for (int i = 0; i < sequence.Length; i++)
+        {
+            if (!IsStepAlreadyPlaced(sequence[i])) break;
+
+            // 프리팹 재스폰 (씬 리로드로 사라진 것 복원)
+            var step = sequence[i];
+            if (step.prefab != null)
+            {
+                if (_spawnedInstance != null) Destroy(_spawnedInstance);
+                Transform sp = spawnPoint != null ? spawnPoint : transform;
+                _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation);
+            }
+
+            _currentStep = i + 1;
+        }
+
+        if (_currentStep > 0)
+            Debug.Log($"[ItemUsableZone] '{name}' 씬 재진입: step {_currentStep}까지 배치 완료 상태로 복원");
+    }
+
+    /// <summary>
+    /// 이 스텝의 completedPhaseID가 완료됐으면 true. gateQuestID 퀘스트 전체에서 탐색.
+    /// </summary>
+    private bool IsStepAlreadyPlaced(PlacementStep step)
+    {
+        if (string.IsNullOrEmpty(step.completedPhaseID) || string.IsNullOrEmpty(step.gateQuestID))
+            return false;
+
+        var quest = Managers.Quest.GetActiveQuest(step.gateQuestID)
+                 ?? Managers.Quest.GetCompletedQuest(step.gateQuestID);
+        if (quest == null) return false;
+
+        // 퀘스트 자체가 완료됐으면 모든 phase 완료
+        if (quest.Status == QuestStatus.Completed) return true;
+
+        // objective 전체 탐색 (phaseID만으로 조회)
+        foreach (var obj in quest.GetAllObjectives())
+        {
+            var phase = obj.GetPhase(step.completedPhaseID);
+            if (phase != null) return phase.IsCompleted;
+        }
+        return false;
     }
 
     private void OnDisable()
