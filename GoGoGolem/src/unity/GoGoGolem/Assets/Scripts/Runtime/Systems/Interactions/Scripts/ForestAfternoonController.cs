@@ -52,8 +52,6 @@ public class ForestAfternoonController : MonoBehaviour
     // WindSkillInteractable onInteract UnityEvent → 연결
     public void StartCutscene()
     {
-        grandfatherAfternoon?.SetActive(false);
-
         if (cameraFollow != null)
             cameraFollow.enabled = false;
 
