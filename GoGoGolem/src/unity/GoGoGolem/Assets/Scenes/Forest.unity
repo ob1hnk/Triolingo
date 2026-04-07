@@ -1382,24 +1382,51 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sequence:
-  - itemID: ITEM-001
-    prefab: {fileID: 2301954674980029947, guid: bec22e7104d1f4716bff7bc6b1cf9bf2, type: 3}
-    requiredPhaseID: 
-    gateQuestID: 
-    gateObjectiveID: 
-    onPlaced:
-      m_PersistentCalls:
-        m_Calls: []
   - itemID: ITEM-002
-    prefab: {fileID: 3374622099483747709, guid: f108a6dcb1bb44fdeb5abafe4a151cbb, type: 3}
-    requiredPhaseID: 
-    gateQuestID: 
-    gateObjectiveID: 
+    prefab: {fileID: 2301954674980029947, guid: bec22e7104d1f4716bff7bc6b1cf9bf2, type: 3}
+    requiredPhaseID: MQ-02-P02
+    gateQuestID: MQ-02
+    gateObjectiveID: MQ-02-OBJ-01
     onPlaced:
       m_PersistentCalls:
-        m_Calls: []
+        m_Calls:
+        - m_Target: {fileID: 1234101073}
+          m_TargetAssemblyTypeName: Demo.Chapters.Prologue.ForestQuestController,
+            Assembly-CSharp
+          m_MethodName: CompleteByPhaseID
+          m_Mode: 5
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: MQ-02-P03
+            m_BoolArgument: 0
+          m_CallState: 2
+  - itemID: ITEM-001
+    prefab: {fileID: 3374622099483747709, guid: f108a6dcb1bb44fdeb5abafe4a151cbb, type: 3}
+    requiredPhaseID: MQ-02-P06
+    gateQuestID: MQ-02
+    gateObjectiveID: MQ-02-OBJ-03
+    onPlaced:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1234101073}
+          m_TargetAssemblyTypeName: Demo.Chapters.Prologue.ForestQuestController,
+            Assembly-CSharp
+          m_MethodName: CompleteByPhaseID
+          m_Mode: 5
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: MQ-02-P07
+            m_BoolArgument: 0
+          m_CallState: 2
   spawnPoint: {fileID: 805164138}
   glowIndicator: {fileID: 2023142757}
+  promptData: {fileID: 11400000, guid: 3737c5df7d166b944b3baa023fb80cd3, type: 2}
 --- !u!65 &327317383
 BoxCollider:
   m_ObjectHideFlags: 0

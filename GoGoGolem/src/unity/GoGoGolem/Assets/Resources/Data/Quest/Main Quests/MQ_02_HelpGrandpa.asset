@@ -30,7 +30,7 @@ MonoBehaviour:
       actionIDs: []
     - phaseID: MQ-02-P02
       phaseType: 0
-      contentID: DLG-002
+      contentID: 
       description: "\uC0C1\uD669 \uD30C\uC545 - \uD560\uC544\uBC84\uC9C0 \uB300\uD654
         \uC774\uBCA4\uD2B8"
       conditionIDs: []

@@ -59,6 +59,7 @@ public class PlayerInteraction : MonoBehaviour
             case InteractionType.WriteLetter:
             case InteractionType.Sleep:
             case InteractionType.ChangeScene:
+            case InteractionType.UseItem:
                 currentInteractable.Interact();
                 break;
         }

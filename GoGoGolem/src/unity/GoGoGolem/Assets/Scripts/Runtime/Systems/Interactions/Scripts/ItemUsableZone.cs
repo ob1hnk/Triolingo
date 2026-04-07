@@ -13,7 +13,7 @@ using UnityEngine.Events;
 ///   4. 모든 스텝 완료 후에는 Accepts가 false를 반환
 /// </summary>
 [RequireComponent(typeof(Collider))]
-public class ItemUsableZone : MonoBehaviour
+public class ItemUsableZone : MonoBehaviour, IInteractable
 {
     /// <summary>현재 플레이어가 위치한 존. 없으면 null.</summary>
     public static ItemUsableZone Current { get; private set; }
@@ -51,11 +51,23 @@ public class ItemUsableZone : MonoBehaviour
     [Tooltip("플레이어 진입 시 활성화할 발광 오브젝트 (자식으로 배치)")]
     [SerializeField] private GameObject glowIndicator;
 
+    [Header("Interaction Prompt")]
+    [SerializeField] private InteractionPromptData promptData;
+
     private int _currentStep;
     private GameObject _spawnedInstance;
 
     public bool IsComplete => sequence == null || _currentStep >= sequence.Length;
     public string NextExpectedItemID => IsComplete ? null : sequence[_currentStep].itemID;
+
+    // ── IInteractable ──────────────────────────────────
+    public InteractionType InteractionType => InteractionType.UseItem;
+    public bool CanInteract => !IsComplete && IsGateSatisfied(_currentStep);
+    public string GetActionLabel() => promptData != null ? promptData.ActionLabel : "아이템 사용";
+    public Sprite GetKeyHintSprite() => promptData?.KeyHintSprite;
+    public Vector3 GetPromptOffset() => promptData != null ? promptData.WorldOffset : new Vector3(0f, 1.5f, 0f);
+    public void Interact() => GameStateManager.Instance?.ChangeState(GameState.InventoryUI);
+    // ──────────────────────────────────────────────────
 
     private void Awake()
     {

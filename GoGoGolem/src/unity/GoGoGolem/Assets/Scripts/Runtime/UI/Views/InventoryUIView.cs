@@ -192,6 +192,16 @@ public class InventoryUIView : MonoBehaviour
     public int MoveSelection(int currentIndex, Vector2 direction)
     {
         int nextIndex = CalculateNextIndex(currentIndex, direction);
+
+        // dimmed 슬롯이면 undimmed 슬롯이 나올 때까지 같은 방향으로 한 칸씩 더 이동
+        int safety = TotalSlotCount;
+        while (safety-- > 0 && nextIndex != currentIndex)
+        {
+            var slot = GetSlotAt(nextIndex);
+            if (slot == null || !slot.IsDimmed) break;
+            nextIndex = CalculateNextIndex(nextIndex, direction);
+        }
+
         SelectItem(nextIndex);
         return nextIndex;
     }
@@ -247,6 +257,31 @@ public class InventoryUIView : MonoBehaviour
         return indexToItemID.TryGetValue(index, out var id) ? id : null;
     }
 
+
+    /// <summary>
+    /// acceptedItemID와 일치하지 않는 슬롯을 dim 처리해 선택/클릭 차단.
+    /// null이나 빈 문자열을 넘기면 ClearFilter와 동일.
+    /// </summary>
+    public void ApplyFilter(string acceptedItemID)
+    {
+        if (string.IsNullOrEmpty(acceptedItemID))
+        {
+            ClearFilter();
+            return;
+        }
+
+        foreach (var kv in indexToItemID)
+        {
+            var slot = GetSlotAt(kv.Key);
+            slot?.SetDimmed(kv.Value != acceptedItemID);
+        }
+    }
+
+    public void ClearFilter()
+    {
+        foreach (var slot in itemSlots)  slot?.SetDimmed(false);
+        foreach (var slot in skillSlots) slot?.SetDimmed(false);
+    }
 
     public void UpdatePointer(Vector2 mousePos)
     {
