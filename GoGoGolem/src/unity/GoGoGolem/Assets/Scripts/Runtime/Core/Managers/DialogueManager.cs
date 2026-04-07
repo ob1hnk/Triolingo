@@ -80,7 +80,7 @@ public class DialogueManager : MonoBehaviour
             return;
         }
 
-        dialogueCanvas?.SetActive(true);
+        if (dialogueCanvas != null) dialogueCanvas.SetActive(true);
         requestHideHUDEvent?.Raise();
 
         string nodeName = dialogueID.Replace('-', '_');
@@ -113,6 +113,6 @@ public class DialogueManager : MonoBehaviour
     {
         requestShowHUDEvent?.Raise();
         onDialogueCompletedEvent?.Raise();
-        dialogueCanvas?.SetActive(false);
+        if (dialogueCanvas != null) dialogueCanvas.SetActive(false);
     }
 }
