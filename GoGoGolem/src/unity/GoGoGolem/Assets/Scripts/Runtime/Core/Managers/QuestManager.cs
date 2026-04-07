@@ -384,7 +384,12 @@ public class QuestManager : MonoBehaviour
         }
 
         Quest quest = new Quest(questData);
-        quest.Complete();
+
+        // 모든 objective/phase를 완료 상태로 복원한 뒤 Complete() 호출
+        // (Status만 세팅하면 phase.IsCompleted가 false로 남아 씬 복원 로직이 오동작)
+        foreach (var obj in questData.objectives)
+            foreach (var phase in obj.phases)
+                quest.CompletePhase(obj.objectiveID, phase.phaseID);
 
         progressTracker.MoveToCompleted(quest);
     }
