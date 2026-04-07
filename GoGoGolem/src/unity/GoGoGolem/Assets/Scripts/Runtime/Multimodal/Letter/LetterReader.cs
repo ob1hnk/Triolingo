@@ -47,7 +47,6 @@ namespace Multimodal.Letter
         private void Awake()
         {
             _db = FirebaseFirestore.DefaultInstance;
-            DebugLog("LetterReader initialized");
         }
         #endregion
 
