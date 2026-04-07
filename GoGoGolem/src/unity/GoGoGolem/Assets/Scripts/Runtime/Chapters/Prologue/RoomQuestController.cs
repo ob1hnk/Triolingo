@@ -55,6 +55,7 @@ namespace Demo.Chapters.Prologue
     /// </summary>
     public class RoomQuestController : MonoBehaviour
     {
+
         [Serializable]
         public struct PhaseEntry
         {

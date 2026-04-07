@@ -107,6 +107,7 @@ public class QuestUIPresenter : MonoBehaviour
 
     private void OnQuestStarted(Quest quest)
     {
+        Debug.Log($"[QuestUIPresenter] OnQuestStarted 수신: {quest.QuestID}");
         view.AddQuestEntry(quest.QuestID, quest.QuestType, quest.QuestName, quest.GetAllObjectives());
     }
 
@@ -122,8 +123,14 @@ public class QuestUIPresenter : MonoBehaviour
 
     private void LoadActiveQuests()
     {
-        if (questManager == null) return;
-        foreach (var quest in questManager.GetAllActiveQuests())
+        if (questManager == null)
+        {
+            Debug.LogWarning("[QuestUIPresenter] LoadActiveQuests: questManager가 null");
+            return;
+        }
+        var quests = questManager.GetAllActiveQuests();
+        Debug.Log($"[QuestUIPresenter] LoadActiveQuests: 활성 퀘스트 {quests.Count}개");
+        foreach (var quest in quests)
             OnQuestStarted(quest);
     }
 }
