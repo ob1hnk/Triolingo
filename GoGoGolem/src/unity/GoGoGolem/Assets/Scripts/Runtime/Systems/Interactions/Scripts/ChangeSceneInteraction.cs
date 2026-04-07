@@ -18,10 +18,18 @@ public class ChangeSceneInteraction : MonoBehaviour, IInteractable
     [Header("Prompt")]
     [SerializeField] private InteractionPromptData promptData;
 
+    [Header("Bark (선택)")]
+    [Tooltip("설정하면 Bark 출력 후 씬 전환. 비워두면 즉시 전환.")]
+    [SerializeField] private BarkTrigger bark;
+
     public event Action OnInteracted;
 
+    private bool _canInteract = true;
+
     public InteractionType InteractionType => InteractionType.ChangeScene;
-    public bool CanInteract => !string.IsNullOrEmpty(sceneName);
+    public bool CanInteract => _canInteract && !string.IsNullOrEmpty(sceneName);
+
+    public void SetCanInteract(bool value) => _canInteract = value;
 
     public string GetActionLabel() => promptData != null ? promptData.ActionLabel : "이동하기";
     public Sprite GetKeyHintSprite() => promptData != null ? promptData.KeyHintSprite : null;
@@ -35,8 +43,21 @@ public class ChangeSceneInteraction : MonoBehaviour, IInteractable
             return;
         }
 
-        Debug.Log($"[ChangeSceneInteraction] 씬 전환: {sceneName}");
+        Debug.Log($"[ChangeSceneInteraction] 상호작용: {sceneName}");
         OnInteracted?.Invoke();
-        SceneManager.LoadScene(sceneName);
+
+        if (bark != null)
+        {
+            _canInteract = false; // Bark 중 재호출 방지
+            bark.Fire(() =>
+            {
+                Debug.Log($"[ChangeSceneInteraction] Bark 완료. 씬 전환: {sceneName}");
+                SceneManager.LoadScene(sceneName);
+            });
+        }
+        else
+        {
+            SceneManager.LoadScene(sceneName);
+        }
     }
 }
