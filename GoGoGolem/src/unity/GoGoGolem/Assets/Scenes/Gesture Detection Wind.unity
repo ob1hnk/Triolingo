@@ -3169,7 +3169,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &721241768
 Transform:
   m_ObjectHideFlags: 0
@@ -7529,6 +7529,8 @@ MonoBehaviour:
   _questID: MQ-02
   _phaseID_NoFly: MQ-02-P05
   _phaseID_Fly: MQ-02-P09
+  _entryPhaseID_NoFly: MQ-02-P04
+  _entryPhaseID_Fly: MQ-02-P08
   _flyItem: {fileID: 1554780054}
   _noFlyItem: {fileID: 1742802888}
   _debugOverride: 0
