@@ -23,7 +23,7 @@ public class QuestItemView : MonoBehaviour
     {
         this.questId = questId;
 
-        string typeLabel = questType == QuestType.MainQuest ? "<메인>" : "<서브>";
+        string typeLabel = questType == QuestType.MainQuest ? "[메인]" : "[서브]";
         questHeaderText.text = $"{typeLabel} {questName}";
 
         for (int i = 0; i < objectives.Count; i++)
