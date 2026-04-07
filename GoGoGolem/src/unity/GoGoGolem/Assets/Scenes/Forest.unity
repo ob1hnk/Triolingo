@@ -1428,6 +1428,8 @@ MonoBehaviour:
             m_StringArgument: MQ-02-P07
             m_BoolArgument: 0
           m_CallState: 2
+  cleanupPhaseID: MQ-02-P09
+  cleanupQuestID: MQ-02
   spawnPoint: {fileID: 805164138}
   glowIndicator: {fileID: 2023142757}
   promptData: {fileID: 11400000, guid: 3737c5df7d166b944b3baa023fb80cd3, type: 2}
@@ -1461,7 +1463,7 @@ Transform:
   m_GameObject: {fileID: 327317381}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 88.44, y: 3.34, z: 34.54}
+  m_LocalPosition: {x: 88.44, y: 3.34, z: 35.35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

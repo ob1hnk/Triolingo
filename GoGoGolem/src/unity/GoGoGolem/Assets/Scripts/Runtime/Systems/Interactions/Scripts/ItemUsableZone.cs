@@ -48,6 +48,11 @@ public class ItemUsableZone : MonoBehaviour, IInteractable
     [Tooltip("순서대로 배치해야 할 아이템 목록. 한 번 배치되면 다음 스텝으로 넘어간다.")]
     [SerializeField] private PlacementStep[] sequence;
 
+    [Header("Cleanup (씬 재진입 시 비활성화 조건)")]
+    [Tooltip("이 phase가 완료되면 스폰된 프리팹과 존을 비활성화 (예: 제스처 성공으로 날아감). gateQuestID와 동일한 퀘스트 탐색.")]
+    [SerializeField] private string cleanupPhaseID;
+    [SerializeField] private string cleanupQuestID;
+
     [Header("Spawn")]
     [Tooltip("비워두면 이 오브젝트 위치에 스폰")]
     [SerializeField] private Transform spawnPoint;
@@ -101,6 +106,12 @@ public class ItemUsableZone : MonoBehaviour, IInteractable
 
         RestoreCurrentStep();
 
+        if (ShouldCleanup())
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
         var sb = new System.Text.StringBuilder();
         sb.Append($"[ItemUsableZone] '{name}' sequence: ");
         for (int i = 0; i < sequence.Length; i++)
@@ -129,7 +140,7 @@ public class ItemUsableZone : MonoBehaviour, IInteractable
             {
                 if (_spawnedInstance != null) Destroy(_spawnedInstance);
                 Transform sp = spawnPoint != null ? spawnPoint : transform;
-                _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation);
+                _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation, transform);
             }
 
             _currentStep = i + 1;
@@ -137,6 +148,25 @@ public class ItemUsableZone : MonoBehaviour, IInteractable
 
         if (_currentStep > 0)
             Debug.Log($"[ItemUsableZone] '{name}' 씬 재진입: step {_currentStep}까지 배치 완료 상태로 복원");
+    }
+
+    /// <summary>cleanupPhaseID가 완료됐으면 존 전체를 비활성화해야 함.</summary>
+    private bool ShouldCleanup()
+    {
+        if (string.IsNullOrEmpty(cleanupPhaseID) || string.IsNullOrEmpty(cleanupQuestID)) return false;
+        if (Managers.Quest == null) return false;
+
+        var quest = Managers.Quest.GetActiveQuest(cleanupQuestID)
+                 ?? Managers.Quest.GetCompletedQuest(cleanupQuestID);
+        if (quest == null) return false;
+        if (quest.Status == QuestStatus.Completed) return true;
+
+        foreach (var obj in quest.GetAllObjectives())
+        {
+            var phase = obj.GetPhase(cleanupPhaseID);
+            if (phase != null) return phase.IsCompleted;
+        }
+        return false;
     }
 
     /// <summary>
@@ -227,7 +257,7 @@ public class ItemUsableZone : MonoBehaviour, IInteractable
         if (_spawnedInstance != null) Destroy(_spawnedInstance);
 
         Transform sp = spawnPoint != null ? spawnPoint : transform;
-        _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation);
+        _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation, transform);
 
         step.onPlaced?.Invoke();
 
