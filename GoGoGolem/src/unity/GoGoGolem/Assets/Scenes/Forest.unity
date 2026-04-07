@@ -14155,6 +14155,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 502238674879970783, guid: 61ae7ce6ad90a13408ca5b686a480e03, type: 3}
+      propertyPath: characterNameText
+      value: 
+      objectReference: {fileID: 6415803229293964758}
     - target: {fileID: 744156565054287348, guid: 61ae7ce6ad90a13408ca5b686a480e03, type: 3}
       propertyPath: m_Name
       value: DialogueCanvas
