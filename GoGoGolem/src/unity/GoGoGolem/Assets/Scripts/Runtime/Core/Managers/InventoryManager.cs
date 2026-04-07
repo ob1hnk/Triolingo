@@ -11,19 +11,28 @@ public class InventoryManager : MonoBehaviour
     public InventoryLogic Logic { get; private set; }
     public ItemDatabaseSO ItemDB { get; private set; }
 
+    private InventorySaveSystem _saveSystem;
+
     public void Init()
     {
         if (itemCatalogue == null)
-        {
             Debug.LogError("[InventoryManager] itemCatalogue이 Inspector에 연결되지 않았습니다.");
-        }
         else
         {
             ItemDB = itemCatalogue;
             ItemDB.Initialize();
         }
 
+        _saveSystem = new InventorySaveSystem();
         Logic = new InventoryLogic();
+
+        // 저장 파일에서 인벤토리 복원
+        var data = _saveSystem.Load();
+        foreach (var entry in data.items)
+            Logic.AddItem(entry.itemID, entry.count);
+
+        // 변경 시 자동 저장
+        Logic.OnInventoryChanged += SaveInventory;
     }
 
     private void OnEnable()
@@ -38,6 +47,11 @@ public class InventoryManager : MonoBehaviour
             requestAcquireItemEvent.Unregister(AcquireItem);
     }
 
+    private void OnApplicationQuit()
+    {
+        SaveInventory();
+    }
+
     public void AcquireItem(string itemID)
     {
         var itemData = ItemDB.GetItem(itemID);
@@ -47,5 +61,46 @@ public class InventoryManager : MonoBehaviour
             return;
         }
         Logic.AddItem(itemID);
+    }
+
+    /// <summary>
+    /// 아이템 보유 여부를 퀘스트 상태와 대조해 보정.
+    /// shouldHave=true이고 없으면 추가, false이고 있으면 제거.
+    /// </summary>
+    public void ReconcileItem(string itemID, bool shouldHave)
+    {
+        bool has = Logic.HasItem(itemID);
+        if (shouldHave && !has)
+        {
+            Logic.AddItem(itemID);
+            Debug.Log($"[InventoryManager] Reconcile: {itemID} 추가 (퀘스트 상태 기준 보유해야 함)");
+        }
+        else if (!shouldHave && has)
+        {
+            Logic.RemoveItem(itemID, Logic.GetAllItems()[itemID]);
+            Debug.Log($"[InventoryManager] Reconcile: {itemID} 제거 (퀘스트 상태 기준 없어야 함)");
+        }
+    }
+
+    private void SaveInventory()
+    {
+        _saveSystem?.Save(Logic.GetAllItems());
+    }
+
+    // ── Debug ────────────────────────────────────────
+
+    [ContextMenu("Clear All Items (Debug)")]
+    public void ClearAll()
+    {
+        Logic?.Clear();
+        Debug.Log("[InventoryManager] 인벤토리 초기화 (Debug)");
+    }
+
+    [ContextMenu("Delete Save File (Debug)")]
+    public void DeleteSaveFile()
+    {
+        _saveSystem?.Delete();
+        Logic?.Clear();
+        Debug.Log("[InventoryManager] 저장 파일 삭제 + 인벤토리 초기화 (Debug)");
     }
 }
