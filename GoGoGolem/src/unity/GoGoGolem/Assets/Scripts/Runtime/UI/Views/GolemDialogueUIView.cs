@@ -128,6 +128,16 @@ public class GolemDialogueUIView : MonoBehaviour
         golemSpeechText.text += delta;
     }
 
+    /// <summary>
+    /// RESPONSE_END 수신 시 full_text로 최종 보정
+    /// 스트리밍 delta 누락 시 안전장치
+    /// </summary>
+    public void SetGolemText(string fullText)
+    {
+        golemSpeechBubble.SetActive(true);
+        golemSpeechText.text = fullText;
+    }
+
     // ── 대화 종료 ─────────────────────────────────
 
     public void Hide()
