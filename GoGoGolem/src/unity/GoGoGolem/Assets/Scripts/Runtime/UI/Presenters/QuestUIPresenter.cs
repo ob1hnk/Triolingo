@@ -49,7 +49,7 @@ public class QuestUIPresenter : MonoBehaviour
         onObjectiveCompletedEvent?.Register(OnObjectiveCompleted);
 
         LoadActiveQuests();
-        view.Hide();
+        view?.Hide();
     }
 
     private void OnEnable()
@@ -88,14 +88,14 @@ public class QuestUIPresenter : MonoBehaviour
     public void Show()
     {
         _isVisible = true;
-        view.Show();
+        view?.Show();
         OnVisibilityChanged?.Invoke(true);
     }
 
     public void Hide()
     {
         _isVisible = false;
-        view.Hide();
+        view?.Hide();
         OnVisibilityChanged?.Invoke(false);
     }
 
