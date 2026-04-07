@@ -180,6 +180,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   promptData: {fileID: 11400000, guid: 55d53be006d32448588001c00cdc4e96, type: 2}
+  requiredPhaseID: MQ-02-P07
+  requiredQuestID: MQ-02
+  requiredObjectiveID: MQ-02-OBJ-04
+  completedPhaseID: MQ-02-P09
+  completedQuestID: MQ-02
+  completedObjectiveID: MQ-02-OBJ-04
   onInteract:
     m_PersistentCalls:
       m_Calls:
