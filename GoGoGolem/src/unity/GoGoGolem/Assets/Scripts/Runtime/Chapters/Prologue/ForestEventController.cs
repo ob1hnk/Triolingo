@@ -88,7 +88,6 @@ namespace Demo.Chapters.Prologue
         [Tooltip("통나무 앞 Yarn 노드명 (DLG_002)")]
         [SerializeField] private string _dialogueStartNode = "DLG_002";
         [SerializeField] private ForestDialogueCommands _dialogueCommands;
-        [SerializeField] private GameObject _dialogueCanvas;
 
         [Tooltip("Lift Timeline 중간 대사 Yarn 노드명")]
         [SerializeField] private string _liftMidDialogueNode = "DLG_002_LIFT_MID";
@@ -106,8 +105,6 @@ namespace Demo.Chapters.Prologue
         [Header("Event Channels")]
         [Tooltip("DialogueManager의 onDialogueCompletedEvent SO와 동일한 것 연결")]
         [SerializeField] private GameEvent _onDialogueCompletedEvent;
-        [SerializeField] private GameEvent _requestHideHUDEvent;
-        [SerializeField] private GameEvent _requestShowHUDEvent;
 
         [Header("Player")]
         [Tooltip("이동 제어할 PlayerController")]
@@ -306,8 +303,6 @@ namespace Demo.Chapters.Prologue
                 Debug.LogError("[ForestEventController] Managers.Dialogue가 없습니다.");
                 return;
             }
-            _dialogueCanvas?.SetActive(true);
-            _requestHideHUDEvent?.Raise();
             _onDialogueCompletedEvent?.Register(OnIntroDialogueComplete);
             StartCoroutine(StartDialogueNextFrame(_introDialogueNode));
             Debug.Log($"[ForestEventController] Zone 0 진입 → {_introDialogueNode} 시작");
@@ -324,9 +319,7 @@ namespace Demo.Chapters.Prologue
         {
             yield return null;
             _onDialogueCompletedEvent?.Unregister(OnIntroDialogueComplete);
-            _dialogueCanvas?.SetActive(false);
-            _requestShowHUDEvent?.Raise();
-            Debug.Log("[ForestEventController] DLG_001 완료 → 캔버스 닫기");
+            Debug.Log("[ForestEventController] DLG_001 완료");
         }
 
         /// <summary>Zone 1: 메인 이벤트 (통나무) 시작</summary>
@@ -398,8 +391,6 @@ namespace Demo.Chapters.Prologue
             }
 
             HideZone4NpcSpeechBubble();
-            _dialogueCanvas?.SetActive(true);
-            _requestHideHUDEvent?.Raise();
             _onDialogueCompletedEvent?.Register(OnZone4DialogueComplete);
             StartCoroutine(StartDialogueNextFrame(_zone4DialogueNode));
             Debug.Log($"[ForestEventController] Zone 4 진입 → {_zone4DialogueNode} 시작");
@@ -415,9 +406,7 @@ namespace Demo.Chapters.Prologue
         {
             yield return null;
             _onDialogueCompletedEvent?.Unregister(OnZone4DialogueComplete);
-            _dialogueCanvas?.SetActive(false);
-            _requestShowHUDEvent?.Raise();
-            Debug.Log("[ForestEventController] DLG_006 완료 → 캔버스 닫기");
+            Debug.Log("[ForestEventController] DLG_006 완료");
         }
 
         // =============================================
@@ -597,9 +586,6 @@ namespace Demo.Chapters.Prologue
         private void EnterDialogueState()
         {
             ChangeState(ForestEventState.Dialogue);
-            _dialogueCanvas?.SetActive(true);
-            _requestHideHUDEvent?.Raise();
-
 
             if (Managers.Dialogue == null)
             {
@@ -678,7 +664,6 @@ namespace Demo.Chapters.Prologue
         {
             _midDialogueActive = true;
             _pendingComplete = false;
-            _dialogueCanvas?.SetActive(true);
             _onDialogueCompletedEvent?.Register(OnDialogueComplete);
             StartCoroutine(StartDialogueNextFrame(nodeName));
             Debug.Log($"[ForestEventController] 중간 대화 시작: {nodeName}");
@@ -774,9 +759,6 @@ namespace Demo.Chapters.Prologue
             // 골렘 NavMesh Agent 재활성화 + 추적 재개
             _golemFollow?.EnableAgent();
             _golemFollow?.StartFollowingSmooth();
-
-            _dialogueCanvas?.SetActive(false);
-            _requestShowHUDEvent?.Raise();
 
             // 타임라인 후 통나무 transform → After 값으로 고정
             if (_logTransform != null)

@@ -2966,7 +2966,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &622381772
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3216,7 +3216,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1631426317291190496, guid: b1296c9382ac94f0c93dd52a07a6850c, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2157033590405140305, guid: b1296c9382ac94f0c93dd52a07a6850c, type: 3}
       propertyPath: m_Pivot.x
@@ -10351,7 +10351,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1993647571
 Transform:
   m_ObjectHideFlags: 0
@@ -11984,9 +11984,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dialogueRunner: {fileID: 1597961155}
+  dialogueCanvas: {fileID: 0}
   requestStartDialogueEvent: {fileID: 11400000, guid: ca888b404df0e43159ca0269a5b95649, type: 2}
   onDialogueStartedEvent: {fileID: 11400000, guid: 8dcd5affb2bdc442288b1f7b80d2d56d, type: 2}
   onDialogueCompletedEvent: {fileID: 11400000, guid: 13d32723c5d854b5ca2eccbae2555d66, type: 2}
+  requestHideHUDEvent: {fileID: 0}
+  requestShowHUDEvent: {fileID: 0}
 --- !u!1001 &3422200173484429107
 PrefabInstance:
   m_ObjectHideFlags: 0
