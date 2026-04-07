@@ -86,7 +86,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   questHeaderText: {fileID: 4319271271326438075}
   objectiveContent: {fileID: 8695355715592005632}
-  objectiveItemPrefab: {fileID: 2427054191400492454, guid: 2ea307203bfb64912973762508727fff, type: 3}
+  objectiveItemPrefab: {fileID: 4058799457109714781, guid: bf70078fa9eb34d8cb3c709efee16631, type: 3}
 --- !u!222 &9018078364190778265
 CanvasRenderer:
   m_ObjectHideFlags: 0
