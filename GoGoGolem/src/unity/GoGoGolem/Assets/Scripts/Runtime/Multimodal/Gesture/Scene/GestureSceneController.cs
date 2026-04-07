@@ -80,7 +80,7 @@ namespace Demo.GestureDetection
     // 테스트용 ─────────────────────────────────────────
     [Header("--- DEBUG (테스트용) ---")]
     [Tooltip("체크하면 Managers.Quest 무시하고 아래 설정으로 강제 적용")]
-    [SerializeField] private bool _debugOverride = true;
+    [SerializeField] private bool _debugOverride = false;
     [Tooltip("true = OBJ-04(Fly), false = OBJ-02(NoFly)")]
     [SerializeField] private bool _debugIsFly = false;
 
