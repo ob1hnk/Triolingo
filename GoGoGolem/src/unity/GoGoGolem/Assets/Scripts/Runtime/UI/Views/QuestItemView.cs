@@ -23,11 +23,32 @@ public class QuestItemView : MonoBehaviour
     {
         this.questId = questId;
 
-        string typeLabel = questType == QuestType.MainQuest ? "<메인>" : "<서브>";
+        string typeLabel = questType == QuestType.MainQuest ? "[메인]" : "[서브]";
         questHeaderText.text = $"{typeLabel} {questName}";
 
         for (int i = 0; i < objectives.Count; i++)
             AddObjective(objectives[i], i == 0);
+
+        // 이미 완료된 objective 처리: 완료된 것은 visible + 회색, 그 다음도 visible
+        for (int i = 0; i < objectiveOrder.Count; i++)
+        {
+            var id = objectiveOrder[i];
+            if (!objectiveViews.TryGetValue(id, out var view)) continue;
+
+            if (objectives[i].IsCompleted)
+            {
+                view.SetVisible(true);
+                view.SetCompleted(true);
+
+                // 다음 objective도 보이게
+                if (i + 1 < objectiveOrder.Count)
+                {
+                    var nextId = objectiveOrder[i + 1];
+                    if (objectiveViews.TryGetValue(nextId, out var nextView))
+                        nextView.SetVisible(true);
+                }
+            }
+        }
     }
 
     private void AddObjective(QuestObjective objective, bool visible)

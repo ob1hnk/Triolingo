@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -17,6 +18,8 @@ public class ChangeSceneInteraction : MonoBehaviour, IInteractable
     [Header("Prompt")]
     [SerializeField] private InteractionPromptData promptData;
 
+    public event Action OnInteracted;
+
     public InteractionType InteractionType => InteractionType.ChangeScene;
     public bool CanInteract => !string.IsNullOrEmpty(sceneName);
 
@@ -33,6 +36,7 @@ public class ChangeSceneInteraction : MonoBehaviour, IInteractable
         }
 
         Debug.Log($"[ChangeSceneInteraction] 씬 전환: {sceneName}");
+        OnInteracted?.Invoke();
         SceneManager.LoadScene(sceneName);
     }
 }

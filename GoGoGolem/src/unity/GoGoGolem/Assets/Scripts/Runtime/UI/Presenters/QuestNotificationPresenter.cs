@@ -54,7 +54,7 @@ public class QuestNotificationPresenter : MonoBehaviour
 
     private string FormatQuestHeader(Quest quest)
     {
-        string label = quest.QuestType == QuestType.MainQuest ? "<메인>" : "<서브>";
+        string label = quest.QuestType == QuestType.MainQuest ? "[메인]" : "[서브]";
         return $"{label} {quest.QuestName}";
     }
 
