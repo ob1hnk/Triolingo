@@ -32,6 +32,15 @@ namespace Demo.Chapters.Prologue
     ///   Zone 2 진입 → OnPlayerEnterRainStart(): 비 서서히 시작 + 말풍선
     ///   Zone 4 진입 → OnPlayerEnterRainStop():  비 서서히 멈춤
     ///
+    /// MQ-01 퀘스트 연동:
+    ///   P02: EnterDialogueState() 직전
+    ///   P03: Yarn 대화 완료 직후 (Timeline 시작 전)
+    ///   P04: EnterCompleteState() (Timeline 완료)
+    ///
+    /// 씬 재진입 복원:
+    ///   MQ-01-P04 완료 → 통나무(Log) 오브젝트를 비활성화 상태로 복원
+    ///   Zone 2 통과 + Zone 4 미통과 → 비 파티클 즉시 활성화
+    ///
     /// Inspector 세팅:
     ///   - Player Start Point: 플레이어가 이동할 목표 위치 Transform
     ///   - Golem Start Point:  골렘이 이동할 목표 위치 Transform
@@ -73,21 +82,29 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private string _golemWalkParam = "isWalking";
 
         [Header("Yarn Dialogue")]
-        [Tooltip("Yarn 노드명 (DLG_002)")]
+        [Tooltip("Zone 0 진입 시 실행할 Yarn 노드명 (DLG_001)\n이 대화에서 <<start_quest MQ-01>>을 호출한다.")]
+        [SerializeField] private string _introDialogueNode = "DLG_001";
+
+        [Tooltip("통나무 앞 Yarn 노드명 (DLG_002)")]
         [SerializeField] private string _dialogueStartNode = "DLG_002";
         [SerializeField] private ForestDialogueCommands _dialogueCommands;
-        [SerializeField] private GameObject _dialogueCanvas;
 
         [Tooltip("Lift Timeline 중간 대사 Yarn 노드명")]
         [SerializeField] private string _liftMidDialogueNode = "DLG_002_LIFT_MID";
         [Tooltip("Push Timeline 중간 대사 Yarn 노드명")]
         [SerializeField] private string _pushMidDialogueNode = "DLG_002_PUSH_MID";
 
+        [Header("Zone 4 - 비 멈춤 NPC")]
+        [Tooltip("Zone 4 진입 시 표시할 NPC(할아버지) 말풍선\n플레이어가 말 걸 때까지 유지 (DLG_006 시작 시 Hide)")]
+        [SerializeField] private FollowSpeechBubbleView _zone4NpcSpeechBubble;
+        [Tooltip("Zone 4 NPC 말풍선 대사")]
+        [SerializeField] private string _zone4NpcMessage = "에구구... 강물이 이렇게나 불어나다니... 이를 어쩐다";
+        [Tooltip("Zone 4 진입 시 실행할 Yarn 노드명 (DLG_006)\n<<start_quest MQ-02>>를 포함한다.")]
+        [SerializeField] private string _zone4DialogueNode = "DLG_006";
+
         [Header("Event Channels")]
         [Tooltip("DialogueManager의 onDialogueCompletedEvent SO와 동일한 것 연결")]
         [SerializeField] private GameEvent _onDialogueCompletedEvent;
-        [SerializeField] private GameEvent _requestHideHUDEvent;
-        [SerializeField] private GameEvent _requestShowHUDEvent;
 
         [Header("Player")]
         [Tooltip("이동 제어할 PlayerController")]
@@ -118,6 +135,31 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private float _speechBubbleDuration = 3f;
         [Tooltip("비 시작 후 말풍선 표시까지 딜레이 (초)")]
         [SerializeField] private float _speechBubbleDelay = 1.5f;
+
+        // ─────────────────────────────────────────────
+        // MQ-01 퀘스트 연동
+        // ─────────────────────────────────────────────
+        [Header("Quest (MQ-01)")]
+        [Tooltip("ForestQuestController 연결")]
+        [SerializeField] private ForestQuestController _questController;
+
+        [Tooltip("씬 재진입 복원 대상: 통나무 오브젝트 Transform")]
+        [SerializeField] private Transform _logTransform;
+
+        [Tooltip("타임라인 실행 전 통나무 Position\n(씬 재진입 시 P04 미완료면 이 값으로 복원)")]
+        [SerializeField] private Vector3 _logPositionBefore;
+        [Tooltip("타임라인 실행 전 통나무 Rotation (Euler)\n(씬 재진입 시 P04 미완료면 이 값으로 복원)")]
+        [SerializeField] private Vector3 _logRotationBefore;
+        [Tooltip("타임라인 실행 전 통나무 LocalScale\n(씬 재진입 시 P04 미완료면 이 값으로 복원)")]
+        [SerializeField] private Vector3 _logScaleBefore = Vector3.one;
+
+        [Tooltip("타임라인 실행 후 통나무 Position\n(씬 재진입 시 P04 완료면 이 값으로 복원)")]
+        [SerializeField] private Vector3 _logPositionAfter;
+        [Tooltip("타임라인 실행 후 통나무 Rotation (Euler)\n(씬 재진입 시 P04 완료면 이 값으로 복원)")]
+        [SerializeField] private Vector3 _logRotationAfter;
+        [Tooltip("타임라인 실행 후 통나무 LocalScale\n(씬 재진입 시 P04 완료면 이 값으로 복원)")]
+        [SerializeField] private Vector3 _logScaleAfter = Vector3.one;
+
         // ─────────────────────────────────────────────
 
         [Header("Debug")]
@@ -177,6 +219,9 @@ namespace Demo.Chapters.Prologue
             // 말풍선 초기 비활성화
             _rainSpeechBubble?.Hide();
 
+            // ── 씬 재진입 복원 ──
+            RestoreSceneState();
+
             if (_debugSkipIntro)
                 EnterDialogueState();
         }
@@ -184,12 +229,98 @@ namespace Demo.Chapters.Prologue
         private void OnDestroy()
         {
             UnsubscribeAllDirectorEvents();
+            _onDialogueCompletedEvent?.Unregister(OnIntroDialogueComplete);
             _onDialogueCompletedEvent?.Unregister(OnDialogueComplete);
+        }
+
+        // =============================================
+        // 씬 재진입 복원
+        // =============================================
+
+        /// <summary>
+        /// 씬 재로드 시 퀘스트 진행 상태에 따라 오브젝트/이펙트 상태를 복원한다.
+        /// </summary>
+        private void RestoreSceneState()
+        {
+            if (_questController == null) return;
+
+            bool p04Done = _questController.IsPhaseCompleted("MQ-01-P04");
+
+            // 통나무 transform 복원: P04 완료 여부에 따라 after/before 값 적용
+            if (_logTransform != null)
+            {
+                if (p04Done)
+                {
+                    _logTransform.position   = _logPositionAfter;
+                    _logTransform.rotation   = Quaternion.Euler(_logRotationAfter);
+                    _logTransform.localScale = _logScaleAfter;
+                    Debug.Log("[ForestEventController] 씬 재진입: MQ-01-P04 완료 → 통나무 After transform 복원");
+                }
+                else
+                {
+                    _logTransform.position   = _logPositionBefore;
+                    _logTransform.rotation   = Quaternion.Euler(_logRotationBefore);
+                    _logTransform.localScale = _logScaleBefore;
+                    Debug.Log("[ForestEventController] 씬 재진입: MQ-01-P04 미완료 → 통나무 Before transform 복원");
+                }
+            }
+
+            // P04 완료 = 이벤트 끝, Complete 상태로 간주
+            if (p04Done)
+                _state = ForestEventState.Complete;
+
+            // Zone 2 통과(P04 완료) + Zone 4 미통과(P05 미완료) → 비 즉시 활성화
+            if (p04Done && !_questController.IsPhaseCompleted("MQ-01-P05"))
+                RestoreRain();
+        }
+
+        /// <summary>
+        /// 비 파티클을 즉시 최대 emission으로 활성화 (씬 재진입 시 복원)
+        /// </summary>
+        private void RestoreRain()
+        {
+            if (_rainParticle == null) return;
+
+            _rainParticle.gameObject.SetActive(true);
+            var emission = _rainParticle.emission;
+            emission.rateOverTime = _rainMaxEmissionRate;
+            _rainParticle.Play();
+            Debug.Log("[ForestEventController] 씬 재진입: 비 상태 복원 (즉시 최대치)");
         }
 
         // =============================================
         // 트리거 진입 (TriggerZone에서 호출)
         // =============================================
+
+        /// <summary>
+        /// Zone 0: 스폰 지점 진입 → DLG_001 실행 (<<start_quest MQ-01>> 포함)
+        /// MQ-01-P01 미완료 조건은 TriggerZone의 Blocked Phase ID로 처리.
+        /// </summary>
+        public void OnPlayerEnterDialogue()
+        {
+            if (Managers.Dialogue == null)
+            {
+                Debug.LogError("[ForestEventController] Managers.Dialogue가 없습니다.");
+                return;
+            }
+            _onDialogueCompletedEvent?.Register(OnIntroDialogueComplete);
+            StartCoroutine(StartDialogueNextFrame(_introDialogueNode));
+            Debug.Log($"[ForestEventController] Zone 0 진입 → {_introDialogueNode} 시작");
+        }
+
+        private void OnIntroDialogueComplete()
+        {
+            Debug.Log("[ForestEventController] OnIntroDialogueComplete 호출됨 (몇 번 찍히는지 확인)");
+            if (this == null) return;
+            StartCoroutine(IntroDialogueCompleteNextFrame());
+        }
+
+        private IEnumerator IntroDialogueCompleteNextFrame()
+        {
+            yield return null;
+            _onDialogueCompletedEvent?.Unregister(OnIntroDialogueComplete);
+            Debug.Log("[ForestEventController] DLG_001 완료");
+        }
 
         /// <summary>Zone 1: 메인 이벤트 (통나무) 시작</summary>
         public void OnPlayerEnterTrigger()
@@ -218,8 +349,9 @@ namespace Demo.Chapters.Prologue
         }
 
         /// <summary>
-        /// Zone 4: 비 멈춤 연출
-        /// Emission Rate를 서서히 0으로 줄이고 남은 파티클이 사라지면 Stop
+        /// Zone 4: 비 멈춤 연출 + NPC 말풍선 표시
+        /// Emission Rate를 서서히 0으로 줄이고 남은 파티클이 사라지면 Stop.
+        /// NPC 말풍선은 플레이어가 말을 걸 때까지 유지 (DLG_006 시작 시 Hide).
         /// </summary>
         public void OnPlayerEnterRainStop()
         {
@@ -229,6 +361,52 @@ namespace Demo.Chapters.Prologue
                 StopCoroutine(_rainCoroutine);
 
             _rainCoroutine = StartCoroutine(RainFadeOutRoutine());
+
+            // NPC(할아버지) 말풍선 표시 — 플레이어가 말 걸 때까지 유지
+            if (!string.IsNullOrEmpty(_zone4NpcMessage))
+                _zone4NpcSpeechBubble?.Show(_zone4NpcMessage);
+        }
+
+        /// <summary>
+        /// Zone 4 NPC 말풍선 숨김.
+        /// DLG_006 시작 시 Yarn 커맨드 또는 UnityEvent에서 호출.
+        /// </summary>
+        public void HideZone4NpcSpeechBubble()
+        {
+            _zone4NpcSpeechBubble?.Hide();
+        }
+
+        /// <summary>
+        /// Zone 4: DLG_006 대화 시작.
+        /// NPC 말풍선을 숨기고 대화 캔버스를 열어 DLG_006을 실행한다.
+        /// DLG_006 내부에서 <<start_quest MQ-02>>가 호출된다.
+        /// Zone 4 TriggerZone의 OnPlayerEnter에 OnPlayerEnterRainStop과 함께 연결.
+        /// </summary>
+        public void OnPlayerEnterZone4Dialogue()
+        {
+            if (Managers.Dialogue == null)
+            {
+                Debug.LogError("[ForestEventController] Managers.Dialogue가 없습니다.");
+                return;
+            }
+
+            HideZone4NpcSpeechBubble();
+            _onDialogueCompletedEvent?.Register(OnZone4DialogueComplete);
+            StartCoroutine(StartDialogueNextFrame(_zone4DialogueNode));
+            Debug.Log($"[ForestEventController] Zone 4 진입 → {_zone4DialogueNode} 시작");
+        }
+
+        private void OnZone4DialogueComplete()
+        {
+            if (this == null) return;
+            StartCoroutine(Zone4DialogueCompleteNextFrame());
+        }
+
+        private IEnumerator Zone4DialogueCompleteNextFrame()
+        {
+            yield return null;
+            _onDialogueCompletedEvent?.Unregister(OnZone4DialogueComplete);
+            Debug.Log("[ForestEventController] DLG_006 완료");
         }
 
         // =============================================
@@ -308,6 +486,12 @@ namespace Demo.Chapters.Prologue
         {
             yield return new WaitForSeconds(delay);
             _rainSpeechBubble?.Hide();
+        }
+
+        private IEnumerator StartDialogueNextFrame(string node)
+        {
+            yield return null;
+            Managers.Dialogue.StartDialogue(node);
         }
 
         // =============================================
@@ -402,8 +586,6 @@ namespace Demo.Chapters.Prologue
         private void EnterDialogueState()
         {
             ChangeState(ForestEventState.Dialogue);
-            _dialogueCanvas?.SetActive(true);
-            _requestHideHUDEvent?.Raise();
 
             if (Managers.Dialogue == null)
             {
@@ -412,7 +594,7 @@ namespace Demo.Chapters.Prologue
             }
 
             _onDialogueCompletedEvent?.Register(OnDialogueComplete);
-            Managers.Dialogue.StartDialogue(_dialogueStartNode);
+            StartCoroutine(StartDialogueNextFrame(_dialogueStartNode));
         }
 
         /// <summary>
@@ -422,6 +604,7 @@ namespace Demo.Chapters.Prologue
         {
             if (_state != ForestEventState.Dialogue) return;
             _onDialogueCompletedEvent?.Unregister(OnDialogueComplete);
+
             ChangeState(ForestEventState.PushTimeline);
             PlayChoiceTimeline(_pushDirector);
         }
@@ -433,6 +616,7 @@ namespace Demo.Chapters.Prologue
         {
             if (_state != ForestEventState.Dialogue) return;
             _onDialogueCompletedEvent?.Unregister(OnDialogueComplete);
+
             ChangeState(ForestEventState.LiftTimeline);
             PlayChoiceTimeline(_liftDirector);
         }
@@ -480,9 +664,8 @@ namespace Demo.Chapters.Prologue
         {
             _midDialogueActive = true;
             _pendingComplete = false;
-            _dialogueCanvas?.SetActive(true);
             _onDialogueCompletedEvent?.Register(OnDialogueComplete);
-            Managers.Dialogue.StartDialogue(nodeName);
+            StartCoroutine(StartDialogueNextFrame(nodeName));
             Debug.Log($"[ForestEventController] 중간 대화 시작: {nodeName}");
         }
 
@@ -514,6 +697,15 @@ namespace Demo.Chapters.Prologue
         /// </summary>
         private void OnDialogueComplete()
         {
+            // Raise() 도중 Unregister하면 GameEvent 내부 리스트 인덱스가 깨지므로
+            // 1프레임 뒤에 처리
+            if (this == null) return;
+            StartCoroutine(DialogueCompleteNextFrame());
+        }
+
+        private IEnumerator DialogueCompleteNextFrame()
+        {
+            yield return null;
             _onDialogueCompletedEvent?.Unregister(OnDialogueComplete);
 
             if (_midDialogueActive)
@@ -528,7 +720,7 @@ namespace Demo.Chapters.Prologue
                     EnterCompleteState();
                 }
                 // pendingComplete가 false면 Timeline이 아직 재생 중이므로 대기
-                return;
+                yield break;
             }
 
             // 초기 선택지 대화가 선택 커맨드 없이 끝난 경우 fallback
@@ -568,11 +760,16 @@ namespace Demo.Chapters.Prologue
             _golemFollow?.EnableAgent();
             _golemFollow?.StartFollowingSmooth();
 
-            _dialogueCanvas?.SetActive(false);
-            _requestShowHUDEvent?.Raise();
+            // 타임라인 후 통나무 transform → After 값으로 고정
+            if (_logTransform != null)
+            {
+                _logTransform.position   = _logPositionAfter;
+                _logTransform.rotation   = Quaternion.Euler(_logRotationAfter);
+                _logTransform.localScale = _logScaleAfter;
+            }
 
-            // TODO: Quest 완료 이벤트 발행 (한나님 QuestManager 연동 후)
-            // Managers.Quest.CompleteObjective("...");
+            // MQ-01-P04: 상호작용 연출 완료 (Timeline 끝)
+            _questController?.CompleteByPhaseID("MQ-01-P04");
 
             Debug.Log("[ForestEventController] 이벤트 완료");
         }
@@ -672,6 +869,8 @@ namespace Demo.Chapters.Prologue
                 Debug.LogError("[ForestEventController] ForestDialogueCommands가 연결되지 않았습니다!");
                 valid = false;
             }
+            if (_questController == null)
+                Debug.LogWarning("[ForestEventController] QuestController 없음 → MQ-01 퀘스트 연동 스킵");
             if (_player == null)
                 Debug.LogWarning("[ForestEventController] Player Transform 없음");
             if (_golem == null)

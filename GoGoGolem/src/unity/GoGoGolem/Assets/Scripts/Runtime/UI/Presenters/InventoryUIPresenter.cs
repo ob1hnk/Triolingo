@@ -67,6 +67,7 @@ public class InventoryUIPresenter : MonoBehaviour
         }
 
         inventoryLogic.RemoveItem(itemID, 1);
+        view?.ClearFilter();
         GameStateManager.Instance.ChangeState(GameState.Gameplay);
     }
 
@@ -281,6 +282,12 @@ public class InventoryUIPresenter : MonoBehaviour
 
         view.RenderItems(items);
         view.RenderSkills(skills);
+
+        var zone = ItemUsableZone.Current;
+        if (zone != null && !zone.IsComplete)
+            view.ApplyFilter(zone.NextExpectedItemID);
+        else
+            view.ClearFilter();
     }
 
     private void ResetSelection()

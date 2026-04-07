@@ -23,14 +23,14 @@ MonoBehaviour:
     phases:
     - phaseID: MQ-02-P01
       phaseType: 0
-      contentID: DLG-002
+      contentID: 
       description: "\uAC15\uAC00 \uB3C4\uCC29 - \uBD88\uC5B4\uB09C \uAC15\uACFC \uD560\uC544\uBC84\uC9C0
         \uC870\uC6B0"
       conditionIDs: []
       actionIDs: []
     - phaseID: MQ-02-P02
       phaseType: 0
-      contentID: DLG-002
+      contentID: 
       description: "\uC0C1\uD669 \uD30C\uC545 - \uD560\uC544\uBC84\uC9C0 \uB300\uD654
         \uC774\uBCA4\uD2B8"
       conditionIDs: []
@@ -63,7 +63,7 @@ MonoBehaviour:
     phases:
     - phaseID: MQ-02-P06
       phaseType: 0
-      contentID: DLG-004
+      contentID: 
       description: "\uC74C\uC131 \uC778\uC2DD - \uACE8\uB818\uACFC \uB300\uD654\uD574
         \uD78C\uD2B8 \uC5BB\uC74C"
       conditionIDs: []

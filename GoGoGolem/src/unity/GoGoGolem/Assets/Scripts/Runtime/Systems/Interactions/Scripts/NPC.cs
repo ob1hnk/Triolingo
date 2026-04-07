@@ -21,11 +21,23 @@ public class NPC : MonoBehaviour, IInteractable
     [TextArea(2, 4)]
     [SerializeField] private string[] dialogueLines;
 
+    [Header("Dialogue Switch (특정 phase 완료 후 Yarn → 말풍선 전환)")]
+    [Tooltip("이 phase가 완료되면 Yarn 대신 dialogueLines 말풍선 모드로 전환.")]
+    [SerializeField] private string yarnSwitchPhaseID;
+    [SerializeField] private string yarnSwitchQuestID;
+    [SerializeField] private string yarnSwitchObjectiveID;
+
     [Header("Post-Quest Dialogue (퀘스트 완료 후 고정 대사)")]
     [Tooltip("이 퀘스트가 완료된 이후에는 아래 대사를 반복 출력함.")]
     [SerializeField] private string completedQuestID;
     [TextArea(2, 4)]
     [SerializeField] private string[] postQuestLines;
+
+    [Header("Quest Gate")]
+    [Tooltip("이 phase가 완료되어야 상호작용 가능. 비워두면 항상 활성화.")]
+    [SerializeField] private string requiredPhaseID;
+    [SerializeField] private string requiredQuestID;
+    [SerializeField] private string requiredObjectiveID;
 
     [Header("Options")]
     [Tooltip("한 번만 상호작용 가능")]
@@ -45,8 +57,15 @@ public class NPC : MonoBehaviour, IInteractable
     // 말풍선 활성 중에만 사용하는 로컬 InputAction (Enter, Space, 클릭)
     private InputAction _bubbleAdvanceAction;
 
+    private bool IsGatePassed()
+    {
+        if (string.IsNullOrEmpty(requiredPhaseID)) return true;
+        if (Managers.Quest == null) return true;
+        return Managers.Quest.IsPhaseCompleted(requiredQuestID, requiredObjectiveID, requiredPhaseID);
+    }
+
     public InteractionType InteractionType => InteractionType.TalkNPC;
-    public bool CanInteract => true;
+    public bool CanInteract => IsGatePassed();
 
     private void Awake()
     {
@@ -123,6 +142,13 @@ public class NPC : MonoBehaviour, IInteractable
         }
     }
 
+    private bool IsYarnSwitched()
+    {
+        if (string.IsNullOrEmpty(yarnSwitchPhaseID)) return false;
+        if (Managers.Quest == null) return false;
+        return Managers.Quest.IsPhaseCompleted(yarnSwitchQuestID, yarnSwitchObjectiveID, yarnSwitchPhaseID);
+    }
+
     private bool IsPostQuestMode()
     {
         return !string.IsNullOrEmpty(completedQuestID)
@@ -144,10 +170,9 @@ public class NPC : MonoBehaviour, IInteractable
             return;
         }
 
-        // Yarn 모드
-        if (!string.IsNullOrEmpty(dialogueID))
+        // Yarn 모드 — yarnSwitchPhaseID 미완료 상태에서만
+        if (!string.IsNullOrEmpty(dialogueID) && !IsYarnSwitched())
         {
-            hasInteracted = true;
             if (requestStartDialogueEvent != null)
                 requestStartDialogueEvent.Raise(dialogueID);
             else
@@ -155,7 +180,7 @@ public class NPC : MonoBehaviour, IInteractable
             return;
         }
 
-        // 말풍선 모드 — 첫 E키 입력으로 시작, 이후 Enter/Space/클릭으로 진행
+        // 말풍선 모드 — yarnSwitchPhaseID 완료 후 or dialogueID 없는 경우
         if (dialogueLines != null && dialogueLines.Length > 0)
         {
             _bubbleAdvanceAction.Enable();

@@ -15,8 +15,17 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Sprite backgroundSelectedSprite;
 
     private int slotIndex = -1;
+    private CanvasGroup _canvasGroup;
+    public bool IsDimmed { get; private set; }
 
     public System.Action<int> OnSlotClicked;
+
+    private void Awake()
+    {
+        _canvasGroup = GetComponent<CanvasGroup>();
+        if (_canvasGroup == null)
+            _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+    }
 
     public void SetIndex(int index)
     {
@@ -64,6 +73,15 @@ public class InventorySlot : MonoBehaviour, IPointerClickHandler
 
         if (backgroundImage != null)
             backgroundImage.sprite = selected ? backgroundSelectedSprite : backgroundNormalSprite;
+    }
+
+    public void SetDimmed(bool dimmed)
+    {
+        IsDimmed = dimmed;
+        if (_canvasGroup == null) return;
+        _canvasGroup.alpha = dimmed ? 0.35f : 1f;
+        _canvasGroup.interactable = !dimmed;
+        _canvasGroup.blocksRaycasts = !dimmed;
     }
 
     public void OnPointerClick(PointerEventData eventData)

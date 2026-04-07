@@ -13,7 +13,7 @@ using UnityEngine.Events;
 ///   4. 모든 스텝 완료 후에는 Accepts가 false를 반환
 /// </summary>
 [RequireComponent(typeof(Collider))]
-public class ItemUsableZone : MonoBehaviour
+public class ItemUsableZone : MonoBehaviour, IInteractable
 {
     /// <summary>현재 플레이어가 위치한 존. 없으면 null.</summary>
     public static ItemUsableZone Current { get; private set; }
@@ -29,10 +29,15 @@ public class ItemUsableZone : MonoBehaviour
         [Header("Phase Gate (선택)")]
         [Tooltip("이 phase가 완료되어야 배치 가능. 비워두면 gate 없음.")]
         public string requiredPhaseID;
-        [Tooltip("requiredPhaseID가 속한 Quest ID")]
+        [Tooltip("requiredPhaseID가 속한 Quest ID (completedPhaseID 조회에도 사용)")]
         public string gateQuestID;
         [Tooltip("requiredPhaseID가 속한 Objective ID")]
         public string gateObjectiveID;
+
+        [Header("Completion Phase (씬 재진입 시 복원용)")]
+        [Tooltip("이 스텝이 완료됐음을 나타내는 phase ID. 씬 재로드 시 _currentStep 복원에 사용.\n" +
+                 "gateQuestID와 동일한 퀘스트에서 탐색. 비워두면 복원 안 함.")]
+        public string completedPhaseID;
 
         [Header("Callback")]
         [Tooltip("배치 성공 시 호출. ForestQuestController.CompleteByPhaseID 등을 바인딩.")]
@@ -43,6 +48,11 @@ public class ItemUsableZone : MonoBehaviour
     [Tooltip("순서대로 배치해야 할 아이템 목록. 한 번 배치되면 다음 스텝으로 넘어간다.")]
     [SerializeField] private PlacementStep[] sequence;
 
+    [Header("Cleanup (씬 재진입 시 비활성화 조건)")]
+    [Tooltip("이 phase가 완료되면 스폰된 프리팹과 존을 비활성화 (예: 제스처 성공으로 날아감). gateQuestID와 동일한 퀘스트 탐색.")]
+    [SerializeField] private string cleanupPhaseID;
+    [SerializeField] private string cleanupQuestID;
+
     [Header("Spawn")]
     [Tooltip("비워두면 이 오브젝트 위치에 스폰")]
     [SerializeField] private Transform spawnPoint;
@@ -51,11 +61,23 @@ public class ItemUsableZone : MonoBehaviour
     [Tooltip("플레이어 진입 시 활성화할 발광 오브젝트 (자식으로 배치)")]
     [SerializeField] private GameObject glowIndicator;
 
+    [Header("Interaction Prompt")]
+    [SerializeField] private InteractionPromptData promptData;
+
     private int _currentStep;
     private GameObject _spawnedInstance;
 
     public bool IsComplete => sequence == null || _currentStep >= sequence.Length;
     public string NextExpectedItemID => IsComplete ? null : sequence[_currentStep].itemID;
+
+    // ── IInteractable ──────────────────────────────────
+    public InteractionType InteractionType => InteractionType.UseItem;
+    public bool CanInteract => !IsComplete && IsGateSatisfied(_currentStep);
+    public string GetActionLabel() => promptData != null ? promptData.ActionLabel : "아이템 사용";
+    public Sprite GetKeyHintSprite() => promptData?.KeyHintSprite;
+    public Vector3 GetPromptOffset() => promptData != null ? promptData.WorldOffset : new Vector3(0f, 1.5f, 0f);
+    public void Interact() => GameStateManager.Instance?.ChangeState(GameState.InventoryUI);
+    // ──────────────────────────────────────────────────
 
     private void Awake()
     {
@@ -82,6 +104,14 @@ public class ItemUsableZone : MonoBehaviour
                 Debug.LogError($"[ItemUsableZone] '{name}': sequence[{i}] ({s.itemID})의 prefab이 비어있습니다.");
         }
 
+        RestoreCurrentStep();
+
+        if (ShouldCleanup())
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
         var sb = new System.Text.StringBuilder();
         sb.Append($"[ItemUsableZone] '{name}' sequence: ");
         for (int i = 0; i < sequence.Length; i++)
@@ -90,6 +120,77 @@ public class ItemUsableZone : MonoBehaviour
             sb.Append($"[{i}] {sequence[i].itemID}");
         }
         Debug.Log(sb.ToString());
+    }
+
+    /// <summary>
+    /// 씬 재진입 시 퀘스트 phase 완료 상태 기반으로 _currentStep을 복원한다.
+    /// 각 PlacementStep의 completedPhaseID가 완료됐으면 해당 스텝은 이미 배치된 것으로 간주.
+    /// </summary>
+    private void RestoreCurrentStep()
+    {
+        if (Managers.Quest == null) return;
+
+        for (int i = 0; i < sequence.Length; i++)
+        {
+            if (!IsStepAlreadyPlaced(sequence[i])) break;
+
+            // 프리팹 재스폰 (씬 리로드로 사라진 것 복원)
+            var step = sequence[i];
+            if (step.prefab != null)
+            {
+                if (_spawnedInstance != null) Destroy(_spawnedInstance);
+                Transform sp = spawnPoint != null ? spawnPoint : transform;
+                _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation, transform);
+            }
+
+            _currentStep = i + 1;
+        }
+
+        if (_currentStep > 0)
+            Debug.Log($"[ItemUsableZone] '{name}' 씬 재진입: step {_currentStep}까지 배치 완료 상태로 복원");
+    }
+
+    /// <summary>cleanupPhaseID가 완료됐으면 존 전체를 비활성화해야 함.</summary>
+    private bool ShouldCleanup()
+    {
+        if (string.IsNullOrEmpty(cleanupPhaseID) || string.IsNullOrEmpty(cleanupQuestID)) return false;
+        if (Managers.Quest == null) return false;
+
+        var quest = Managers.Quest.GetActiveQuest(cleanupQuestID)
+                 ?? Managers.Quest.GetCompletedQuest(cleanupQuestID);
+        if (quest == null) return false;
+        if (quest.Status == QuestStatus.Completed) return true;
+
+        foreach (var obj in quest.GetAllObjectives())
+        {
+            var phase = obj.GetPhase(cleanupPhaseID);
+            if (phase != null) return phase.IsCompleted;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 이 스텝의 completedPhaseID가 완료됐으면 true. gateQuestID 퀘스트 전체에서 탐색.
+    /// </summary>
+    private bool IsStepAlreadyPlaced(PlacementStep step)
+    {
+        if (string.IsNullOrEmpty(step.completedPhaseID) || string.IsNullOrEmpty(step.gateQuestID))
+            return false;
+
+        var quest = Managers.Quest.GetActiveQuest(step.gateQuestID)
+                 ?? Managers.Quest.GetCompletedQuest(step.gateQuestID);
+        if (quest == null) return false;
+
+        // 퀘스트 자체가 완료됐으면 모든 phase 완료
+        if (quest.Status == QuestStatus.Completed) return true;
+
+        // objective 전체 탐색 (phaseID만으로 조회)
+        foreach (var obj in quest.GetAllObjectives())
+        {
+            var phase = obj.GetPhase(step.completedPhaseID);
+            if (phase != null) return phase.IsCompleted;
+        }
+        return false;
     }
 
     private void OnDisable()
@@ -156,7 +257,7 @@ public class ItemUsableZone : MonoBehaviour
         if (_spawnedInstance != null) Destroy(_spawnedInstance);
 
         Transform sp = spawnPoint != null ? spawnPoint : transform;
-        _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation);
+        _spawnedInstance = Instantiate(step.prefab, sp.position, sp.rotation, transform);
 
         step.onPlaced?.Invoke();
 

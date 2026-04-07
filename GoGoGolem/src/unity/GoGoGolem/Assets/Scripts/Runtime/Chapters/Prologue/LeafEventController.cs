@@ -25,16 +25,27 @@ namespace Demo.Chapters.Prologue
     ///        손 부착, 골렘 복귀, 주인공 손 뻗기)
     ///     → Signal: OnNpcSpeech()         → NPC(골렘) 말풍선: "우산이에요!"
     ///     → Signal: OnPlayerReceiveLeaf() → 나뭇잎 전달 + 주인공 말풍선: "고마워"
-    ///     → Signal: OnItemReceived()      → 아이템 획득 (TODO: Quest/Inventory 연동)
-    ///     → Timeline 종료 → 주인공 제어 복원 → Complete
+    ///     → Signal: OnItemReceived()      → 아이템 획득 (RequestAcquireItem SO)
+    ///     → Timeline 종료 → MQ-01-P05 완료 → MQ-01-P06 완료 → 주인공 제어 복원 → Complete
+    ///
+    /// MQ-01 퀘스트 연동:
+    ///   P05: Timeline 종료 (EnterCompleteState) — 돌발 이벤트 완료
+    ///   P06: EnterCompleteState() P05 완료 직후 — 나뭇잎 획득 완료 (MQ-01 종료 → MQ-02 시작 조건 충족)
+    ///   ※ enforceOrder 때문에 P05 완료 후 P06을 호출해야 함. OnItemReceived에서는 P06을 호출하지 않음.
+    ///
+    /// 씬 재진입 복원:
+    ///   MQ-01-P05 완료 → _leafHandObject 비활성화 유지 (이미 획득한 상태)
+    ///                  → _leafFloorObject 비활성화 유지 (이미 사라진 상태)
     ///
     /// Inspector 세팅:
-    ///   - Leaf Timeline Director: 트리거 존 3용 PlayableDirector
-    ///   - Player Speech Bubble:   주인공 FollowSpeechBubbleView
-    ///   - Npc Speech Bubble:      골렘 FollowSpeechBubbleView
-    ///   - Player*:                ForestEventController와 동일한 레퍼런스 연결
-    ///   - Walk Duration:          이동에 걸리는 시간 (초)
-    ///   - Rotate Duration:        도착 후 최종 회전 정렬에 걸리는 시간 (초)
+    ///   - Leaf Timeline Director:  트리거 존 3용 PlayableDirector
+    ///   - Leaf Hand Object:        골렘/주인공 손에 붙이는 나뭇잎 오브젝트
+    ///   - Leaf Floor Object:       씬 바닥에 놓인 나뭇잎 오브젝트 (퀘스트 완료 후 비활성화)
+    ///   - Player Speech Bubble:    주인공 FollowSpeechBubbleView
+    ///   - Npc Speech Bubble:       골렘 FollowSpeechBubbleView
+    ///   - Player*:                 ForestEventController와 동일한 레퍼런스 연결
+    ///   - Quest Controller:        ForestQuestController 연결
+    ///   - Request Acquire Item Event: RequestAcquireItem SO 연결
     ///
     /// 나뭇잎 부착 오프셋:
     ///   _golemHandPositionOffset / _golemHandRotationOffset
@@ -48,8 +59,11 @@ namespace Demo.Chapters.Prologue
         [SerializeField] private PlayableDirector _leafDirector;
 
         [Header("나뭇잎 오브젝트")]
-        [Tooltip("나뭇잎 오브젝트 (평소엔 비활성화)")]
-        [SerializeField] private GameObject _leafObject;
+        [Tooltip("골렘/주인공 손에 붙이는 나뭇잎 오브젝트 (타임라인 중 활성화, 수령 후 비활성화)")]
+        [SerializeField] private GameObject _leafHandObject;
+
+        [Tooltip("씬 바닥에 놓인 나뭇잎 오브젝트 (MQ-01-P05 완료 후 비활성화 유지)")]
+        [SerializeField] private GameObject _leafFloorObject;
  
         [Header("골렘 손 부착")]
         [Tooltip("골렘 손 Bone Transform")]
@@ -97,12 +111,26 @@ namespace Demo.Chapters.Prologue
         [Tooltip("NPC(골렘) 머리 위 말풍선 (FollowSpeechBubbleView)")]
         [SerializeField] private FollowSpeechBubbleView _npcSpeechBubble;
 
-        [Header("Debug")]
-        [SerializeField] private bool _debugSkipToLeaf = false;
-
         [Header("Event Channels")]
         [SerializeField] private GameEvent _requestHideHUDEvent;
         [SerializeField] private GameEvent _requestShowHUDEvent;
+
+        // ─────────────────────────────────────────────
+        // MQ-01 퀘스트 연동
+        // ─────────────────────────────────────────────
+        [Header("Quest (MQ-01)")]
+        [Tooltip("ForestQuestController 연결")]
+        [SerializeField] private ForestQuestController _questController;
+
+        [Tooltip("아이템 획득 요청 이벤트 SO (RequestAcquireItem.asset)\n" +
+                 ".Raise(itemID)를 호출하면 인벤토리에 아이템 추가됨")]
+        [SerializeField] private StringGameEvent _requestAcquireItemEvent;
+
+        [Tooltip("나뭇잎 아이템 ID (퀘스트 DB 기준)")]
+        [SerializeField] private string _leafItemID = "ITEM-001";
+
+        [Header("Debug")]
+        [SerializeField] private bool _debugSkipToLeaf = false;
 
         private LeafEventState _state = LeafEventState.Idle;
 
@@ -113,7 +141,19 @@ namespace Demo.Chapters.Prologue
         private void Start()
         {
             ValidateComponents();
-            _leafObject?.SetActive(false);
+
+            // 손 부착용 나뭇잎은 항상 비활성화 상태로 시작
+            _leafHandObject?.SetActive(false);
+
+            // ── 씬 재진입 복원 ──
+            // MQ-01-P05 완료 = 나뭇잎 이벤트 끝남 → Complete 상태로 복원
+            if (_questController != null && _questController.IsPhaseCompleted("MQ-01-P05"))
+            {
+                _state = LeafEventState.Complete;
+                // 바닥 나뭇잎도 이미 사라진 상태여야 함
+                _leafFloorObject?.SetActive(false);
+                Debug.Log("[LeafEventController] 씬 재진입: MQ-01-P05 완료 → Leaf 이벤트 Complete 상태 복원, LeafFloor 비활성화");
+            }
 
             if (_debugSkipToLeaf)
                 OnLeafTimelineTrigger();
@@ -139,14 +179,17 @@ namespace Demo.Chapters.Prologue
             Debug.Log("[LeafEventController] 나뭇잎 타임라인 시작");
             ChangeState(LeafEventState.LeafTimeline);
             _playerSpeechBubble?.Hide();
-            _requestHideHUDEvent?.Raise();
             SetPlayerMovement(false);
             ResetPlayerState();
+            _requestHideHUDEvent?.Raise();
 
             // 골렘 추적 중단 + 지정 위치로 이동
             _golemFollow?.StopFollowing();
             if (_golemFollow != null && _golemStartPoint != null)
+            {
+                _playerSpeechBubble?.Show("어디가?");
                 _golemFollow.MoveToPoint(_golemStartPoint);
+            }
 
             if (_leafDirector == null)
             {
@@ -210,6 +253,7 @@ namespace Demo.Chapters.Prologue
 
                 yield return null;
             }
+
             _player.position = endPos;
 
             // 걷기 애니메이션 OFF
@@ -227,9 +271,11 @@ namespace Demo.Chapters.Prologue
                 _player.rotation = Quaternion.Slerp(moveRotation, finalRot, t);
                 yield return null;
             }
+
             _player.rotation = finalRot;
 
             // 타임라인 재생
+            _playerSpeechBubble?.Hide();
             _golemFollow?.DisableAgent();
             _leafDirector.stopped += OnLeafTimelineStopped;
             _leafDirector.Play();
@@ -242,13 +288,13 @@ namespace Demo.Chapters.Prologue
         /// </summary>
         public void OnGolemPickupLeaf()
         {
-            if (_leafObject == null || _golemHandBone == null)
+            if (_leafHandObject == null || _golemHandBone == null)
             {
-                Debug.LogWarning("[LeafEventController] LeafObject 또는 GolemHandBone 없음");
+                Debug.LogWarning("[LeafEventController] LeafHandObject 또는 GolemHandBone 없음");
                 return;
             }
- 
-            _leafObject.SetActive(true);
+
+            _leafHandObject.SetActive(true);
             AttachLeaf(_golemHandBone, _golemHandPositionOffset, _golemHandRotationOffset);
             Debug.Log("[LeafEventController] 나뭇잎 → 골렘 손에 부착");
         }
@@ -271,12 +317,12 @@ namespace Demo.Chapters.Prologue
         /// </summary>
         public void OnPlayerReceiveLeaf()
         {
-            if (_leafObject == null || _playerHandBone == null)
+            if (_leafHandObject == null || _playerHandBone == null)
             {
-                Debug.LogWarning("[LeafEventController] LeafObject 또는 PlayerHandBone 없음");
+                Debug.LogWarning("[LeafEventController] LeafHandObject 또는 PlayerHandBone 없음");
                 return;
             }
- 
+
             AttachLeaf(_playerHandBone, _playerHandPositionOffset, _playerHandRotationOffset);
             Debug.Log("[LeafEventController] 나뭇잎 → 주인공 손으로 이동");
 
@@ -285,7 +331,10 @@ namespace Demo.Chapters.Prologue
         }
 
         /// <summary>
-        /// Signal: 아이템 획득 메세지 표시 + 주인공 나뭇잎 비활성화 타이밍.
+        /// Signal: 아이템 획득 타이밍.
+        /// - 나뭇잎 오브젝트 비활성화
+        /// - RequestAcquireItem SO로 인벤토리에 ITEM-001 추가
+        /// ※ MQ-01-P06 완료는 enforceOrder 보장을 위해 EnterCompleteState()에서 P05 완료 후 처리.
         /// Signal Receiver에서 이 메서드 연결.
         /// </summary>
         public void OnItemReceived()
@@ -293,19 +342,24 @@ namespace Demo.Chapters.Prologue
             if (_state != LeafEventState.LeafTimeline) return;
 
             // 나뭇잎 주머니에 넣기 (부모 해제 후 비활성화)
-            if (_leafObject != null)
+            if (_leafHandObject != null)
             {
-                _leafObject.transform.SetParent(null);
-                _leafObject.SetActive(false);
+                _leafHandObject.transform.SetParent(null);
+                _leafHandObject.SetActive(false);
             }
 
             _playerSpeechBubble?.Hide();
-            Debug.Log("[LeafEventController] 아이템 획득!");
 
-            // TODO: 한나 Quest/Inventory 시스템 머지 후 아래 주석 해제
-            // Managers.Quest.AddItem("leaf");
-            // Managers.Inventory.ShowItemGetMessage("leaf");
-            Debug.Log("[LeafEventController] TODO: 아이템 획득 메세지 표시 (한나 시스템 연동 후)");
+            // 인벤토리에 아이템 추가
+            if (_requestAcquireItemEvent != null)
+            {
+                _requestAcquireItemEvent.Raise(_leafItemID);
+                Debug.Log($"[LeafEventController] 아이템 획득: {_leafItemID}");
+            }
+            else
+            {
+                Debug.LogWarning("[LeafEventController] RequestAcquireItemEvent가 연결되지 않았습니다. 아이템 획득 스킵.");
+            }
         }
 
         private void OnLeafTimelineStopped(PlayableDirector director)
@@ -331,6 +385,14 @@ namespace Demo.Chapters.Prologue
             _golemFollow?.EnableAgent();
             _golemFollow?.StartFollowingSmooth();
 
+            // MQ-01-P05: 돌발 이벤트 완료 (Leaf 타임라인 종료)
+            _questController?.CompleteByPhaseID("MQ-01-P05");
+            Debug.Log("[LeafEventController] MQ-01-P05 완료 요청 (Leaf 이벤트 완료)");
+
+            // MQ-01-P06: 나뭇잎 획득 완료 (enforceOrder 보장을 위해 P05 완료 직후 호출)
+            _questController?.CompleteByPhaseID("MQ-01-P06");
+            Debug.Log("[LeafEventController] MQ-01-P06 완료 요청 (나뭇잎 획득 → MQ-01 완료)");
+
             Debug.Log("[LeafEventController] Leaf 이벤트 완료");
         }
 
@@ -343,9 +405,9 @@ namespace Demo.Chapters.Prologue
         /// </summary>
         private void AttachLeaf(Transform targetBone, Vector3 positionOffset, Vector3 rotationOffset)
         {
-            _leafObject.transform.SetParent(targetBone);
-            _leafObject.transform.localPosition = positionOffset;
-            _leafObject.transform.localRotation = Quaternion.Euler(rotationOffset);
+            _leafHandObject.transform.SetParent(targetBone);
+            _leafHandObject.transform.localPosition = positionOffset;
+            _leafHandObject.transform.localRotation = Quaternion.Euler(rotationOffset);
         }
 
         /// <summary>
@@ -381,8 +443,10 @@ namespace Demo.Chapters.Prologue
         {
             if (_leafDirector == null)
                 Debug.LogWarning("[LeafEventController] LeafDirector 없음");
-            if (_leafObject == null)
-                Debug.LogWarning("[LeafEventController] LeafObject 없음");
+            if (_leafHandObject == null)
+                Debug.LogWarning("[LeafEventController] LeafHandObject 없음 (손 부착용 나뭇잎)");
+            if (_leafFloorObject == null)
+                Debug.LogWarning("[LeafEventController] LeafFloorObject 없음 (바닥 나뭇잎)");
             if (_golemHandBone == null)
                 Debug.LogWarning("[LeafEventController] GolemHandBone 없음");
             if (_playerHandBone == null)
@@ -403,6 +467,10 @@ namespace Demo.Chapters.Prologue
                 Debug.LogWarning("[LeafEventController] PlayerSpeechBubble 없음 → 주인공 말풍선 스킵");
             if (_npcSpeechBubble == null)
                 Debug.LogWarning("[LeafEventController] NpcSpeechBubble 없음 → NPC 말풍선 스킵");
+            if (_questController == null)
+                Debug.LogWarning("[LeafEventController] QuestController 없음 → MQ-01 퀘스트 연동 스킵");
+            if (_requestAcquireItemEvent == null)
+                Debug.LogWarning("[LeafEventController] RequestAcquireItemEvent 없음 → 아이템 획득 스킵");
         }
     }
 }

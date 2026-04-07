@@ -10,10 +10,18 @@ public class DialogueManager : MonoBehaviour
     [Header("Yarn Spinner")]
     [SerializeField] private DialogueRunner dialogueRunner;
 
+    [Header("Dialogue UI")]
+    [Tooltip("대화 시작 시 활성화, 종료 시 비활성화할 Canvas GameObject")]
+    [SerializeField] private GameObject dialogueCanvas;
+
     [Header("Event Channels")]
     [SerializeField] private StringGameEvent requestStartDialogueEvent;
     [SerializeField] private GameEvent onDialogueStartedEvent;
     [SerializeField] private GameEvent onDialogueCompletedEvent;
+    [Tooltip("대화 시작 시 HUD 숨김 요청 (선택)")]
+    [SerializeField] private GameEvent requestHideHUDEvent;
+    [Tooltip("대화 종료 시 HUD 표시 요청 (선택)")]
+    [SerializeField] private GameEvent requestShowHUDEvent;
 
     private void Awake()
     {
@@ -72,6 +80,9 @@ public class DialogueManager : MonoBehaviour
             return;
         }
 
+        dialogueCanvas?.SetActive(true);
+        requestHideHUDEvent?.Raise();
+
         string nodeName = dialogueID.Replace('-', '_');
         RunDialogueAsync(nodeName);
     }
@@ -98,5 +109,10 @@ public class DialogueManager : MonoBehaviour
 
     private void HandleDialogueStart() => onDialogueStartedEvent?.Raise();
 
-    private void HandleDialogueComplete() => onDialogueCompletedEvent?.Raise();
+    private void HandleDialogueComplete()
+    {
+        requestShowHUDEvent?.Raise();
+        onDialogueCompletedEvent?.Raise();
+        dialogueCanvas?.SetActive(false);
+    }
 }

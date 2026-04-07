@@ -8,7 +8,8 @@ public enum InteractionType
     WriteLetter,  // 편지 쓰기 / 읽기
     Sleep,        // 잠들기
     UseWindSkill, // 배치된 아이템에 바람 스킬 시전
-    ChangeScene, // 씬 전환
+    ChangeScene,  // 씬 전환
+    UseItem,      // 아이템 배치 존 (인벤토리 열어 아이템 사용)
 }
 
 public interface IInteractable
