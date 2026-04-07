@@ -60,6 +60,7 @@ public class PlayerInteraction : MonoBehaviour
             case InteractionType.Sleep:
             case InteractionType.ChangeScene:
             case InteractionType.UseItem:
+            case InteractionType.UseWindSkill:
                 currentInteractable.Interact();
                 break;
         }
