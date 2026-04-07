@@ -15,7 +15,7 @@ namespace Mediapipe.Unity.Sample
 
     public InferenceMode inferenceMode { get; private set; }
     public bool isFinished { get; private set; }
-    private bool _isGlogInitialized;
+    private static bool _isGlogInitialized;
 
     private void OnEnable()
     {
@@ -35,8 +35,18 @@ namespace Mediapipe.Unity.Sample
 
       Debug.Log("Setting global flags...");
       _appSettings.ResetGlogFlags();
-      Glog.Initialize("MediaPipeUnityPlugin");
-      _isGlogInitialized = true;
+      if (!_isGlogInitialized)
+      {
+        try
+        {
+          Glog.Initialize("MediaPipeUnityPlugin");
+        }
+        catch (MediaPipeException)
+        {
+          Debug.LogWarning("[Bootstrap] Glog already initialized (native state persisted), skipping.");
+        }
+        _isGlogInitialized = true;
+      }
 
       Debug.Log("Initializing AssetLoader...");
       switch (_appSettings.assetLoaderType)
