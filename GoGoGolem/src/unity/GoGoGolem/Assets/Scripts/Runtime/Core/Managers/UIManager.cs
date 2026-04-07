@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
@@ -13,26 +14,40 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        if (inventoryPresenter == null)
-            Debug.LogWarning("UIManager: InventoryUIPresenter가 할당되지 않았습니다.");
-
-        if (settingsPresenter == null)
-            Debug.LogWarning("UIManager: SettingsPresenter가 할당되지 않았습니다.");
-
-        inventoryPresenter?.Hide();
-        settingsPresenter?.Hide();
+        FindPresenters();
     }
 
     private void OnEnable()
     {
         if (onGameStateChangedEvent != null)
             onGameStateChangedEvent.Register(OnGameStateChanged);
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnDisable()
     {
         if (onGameStateChangedEvent != null)
             onGameStateChangedEvent.Unregister(OnGameStateChanged);
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // 씬 전환 후 Presenter 참조가 끊어졌을 수 있으므로 다시 찾는다
+        FindPresenters();
+    }
+
+    private void FindPresenters()
+    {
+        if (inventoryPresenter == null)
+            inventoryPresenter = FindObjectOfType<InventoryUIPresenter>(true);
+        if (questPresenter == null)
+            questPresenter = FindObjectOfType<QuestUIPresenter>(true);
+        if (settingsPresenter == null)
+            settingsPresenter = FindObjectOfType<SettingsPresenter>(true);
+
+        inventoryPresenter?.Hide();
+        settingsPresenter?.Hide();
     }
 
     private void OnGameStateChanged(GameStateChange change)
