@@ -9413,6 +9413,10 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8325410509734299387, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ClosePanel
+      objectReference: {fileID: 0}
     - target: {fileID: 8580619676115683012, guid: fad2c2682f5bc4c99b15a15d29b3dfd1, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
