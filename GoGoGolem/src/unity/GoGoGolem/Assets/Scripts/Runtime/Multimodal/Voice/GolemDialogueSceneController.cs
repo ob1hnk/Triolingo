@@ -69,6 +69,7 @@ public class GolemDialogueSceneController : MonoBehaviour
 
     private bool _isInDialogueMode = false;
     private bool _isVoiceSessionActive = false;
+    private bool _needsClearGolemText = true;
 
     private void OnEnable()
     {
@@ -285,22 +286,35 @@ public class GolemDialogueSceneController : MonoBehaviour
         uiView.ShowSpeechDetectedIndicator();
     }
 
-    /// <summary>사용자 발화 인식 완료 → 플레이어 대화창 업데이트 + 골렘 말풍선 초기화</summary>
+    /// <summary>사용자 발화 인식 완료 → 플레이어 대화창 업데이트</summary>
     private void HandleTranscript(string transcript)
     {
         uiView.UpdatePlayerText(transcript);
-        uiView.ClearGolemText();
+        // ClearGolemText()를 여기서 호출하지 않음
+        // TRANSCRIPT는 TEXT_DELTA와 비동기적으로 도착하므로
+        // 스트리밍 중간에 끼어들어 말풍선을 초기화할 수 있음
     }
 
     /// <summary>골렘 응답 텍스트 조각 실시간 수신 → 말풍선에 바로 이어붙이기</summary>
     private void HandleStreamingText(string delta)
     {
+        if (_needsClearGolemText)
+        {
+            uiView.ClearGolemText();
+            _needsClearGolemText = false;
+        }
         uiView.AppendGolemText(delta);
     }
 
-    /// <summary>골렘 응답 완료 (이미 스트리밍으로 표시됨 - 추가 UI 처리 불필요)</summary>
+    /// <summary>골렘 응답 완료 → full_text로 최종 보정 + 다음 응답 준비</summary>
     private void HandleAIResponse(string fullText)
     {
-        // 응답 완료 후 필요한 처리 있으면 여기에 추가
+        // 안전장치: delta 누락 시 full_text로 보정
+        if (!string.IsNullOrEmpty(fullText))
+        {
+            uiView.SetGolemText(fullText);
+        }
+        // 다음 응답의 첫 TEXT_DELTA에서 말풍선 초기화
+        _needsClearGolemText = true;
     }
 }
