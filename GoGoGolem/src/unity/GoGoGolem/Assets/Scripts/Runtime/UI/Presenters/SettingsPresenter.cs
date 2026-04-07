@@ -64,6 +64,16 @@ public class SettingsPresenter : MonoBehaviour
         else Show();
     }
 
+    /// <summary>
+    /// X 버튼 등 UI 버튼에서 닫을 때 호출.
+    /// GameStateManager를 통해 Gameplay로 복원하여 입력 상태를 정상화한다.
+    /// </summary>
+    public void ClosePanel()
+    {
+        if (!_isVisible) return;
+        GameStateManager.Instance.ChangeState(GameState.Gameplay);
+    }
+
     private void InitializeVolumeSlider()
     {
         if (volumeSlider == null) return;
