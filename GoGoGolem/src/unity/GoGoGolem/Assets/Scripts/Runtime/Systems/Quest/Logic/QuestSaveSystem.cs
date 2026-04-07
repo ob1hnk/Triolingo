@@ -21,7 +21,6 @@ public class QuestSaveSystem
         if (!Directory.Exists(saveFolderPath))
         {
             Directory.CreateDirectory(saveFolderPath);
-            Debug.Log($"[QuestSaveSystem] Created save folder: {saveFolderPath}");
         }
     }
 
@@ -44,9 +43,6 @@ public class QuestSaveSystem
 
             // 파일에 쓰기
             File.WriteAllText(SaveFilePath, json);
-
-            Debug.Log($"[QuestSaveSystem] ✓ Saved {saveData.activeQuests.Count} active, {saveData.completedQuestIDs.Count} completed quests");
-            Debug.Log($"[QuestSaveSystem] Save file: {SaveFilePath}");
         }
         catch (System.Exception e)
         {
