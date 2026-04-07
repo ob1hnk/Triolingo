@@ -41,7 +41,6 @@ public class Quest
             objectives.Add(new QuestObjective(objData));
         }
 
-        Debug.Log($"[Quest] Created: {QuestID} - {QuestName}");
     }
 
     /// <summary>
@@ -66,11 +65,9 @@ public class Quest
     public void Complete()
     {
         Status = QuestStatus.Completed;
-        Debug.Log($"[Quest] Completed: {QuestID} - {QuestName}");
         
         if (Reward != null && !Reward.IsEmpty())
         {
-            Debug.Log($"[Quest] Reward: {Reward}");
         }
     }
 

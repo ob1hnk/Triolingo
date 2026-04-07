@@ -29,9 +29,6 @@ public class RoomStateManager : MonoBehaviour
     [Header("Bed Interaction")]
     [SerializeField] private BedInteraction bedInteraction;
 
-    [Header("Debug")]
-    [SerializeField] private bool enableDebugLogs = true;
-
     // ── Unity Lifecycle ─────────────────────────────────────────
 
     private void OnEnable()
@@ -82,13 +79,11 @@ public class RoomStateManager : MonoBehaviour
 
     private void HandleLetterSubmitted()
     {
-        DebugLog("편지 제출됨. AfterLetter로 전환.");
         ApplyState(RoomState.AfterLetter);
     }
 
     private void HandleTaskIdReceived(string taskId)
     {
-        DebugLog($"taskId 수신 (taskId={taskId}).");
 
         if (GameManager.Instance != null)
             GameManager.Instance.SetLetterId(taskId);
@@ -96,7 +91,6 @@ public class RoomStateManager : MonoBehaviour
 
     private void HandleSlept()
     {
-        DebugLog("잠들기 완료. Morning으로 전환.");
         ApplyState(RoomState.Morning);
     }
 
@@ -105,7 +99,6 @@ public class RoomStateManager : MonoBehaviour
     private void ApplyState(RoomState state)
     {
         CurrentState = state;
-        DebugLog($"상태 전환: {state}");
 
         switch (state)
         {
@@ -170,11 +163,4 @@ public class RoomStateManager : MonoBehaviour
         }
     }
 
-    // ── Debug ────────────────────────────────────────────────────
-
-    private void DebugLog(string msg)
-    {
-        if (enableDebugLogs)
-            Debug.Log($"[RoomStateManager] {msg}");
-    }
 }

@@ -36,7 +36,6 @@ public class QuestDatabase : ScriptableObject
             questDataDictionary.Add(questData.questID, questData);
         }
 
-        Debug.Log($"[QuestDatabase] Initialized with {questDataDictionary.Count} quests.");
     }
 
     public QuestData GetQuestData(string questID)
@@ -90,7 +89,6 @@ public class QuestDatabase : ScriptableObject
             questDataList.Add(quest);
         }
 
-        Debug.Log($"Loaded {questDataList.Count} quests from Resources.");
         UnityEditor.EditorUtility.SetDirty(this);
     }
 #endif

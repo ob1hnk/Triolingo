@@ -56,7 +56,6 @@ public class QuestObjective
         if (phases.All(p => p.IsCompleted))
         {
             IsCompleted = true;
-            Debug.Log($"[Quest Objective] Completed: {ObjectiveID} - {Description}");
         }
     }
 

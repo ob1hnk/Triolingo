@@ -95,10 +95,6 @@ public class QuestManager : MonoBehaviour
 
         isInitialized = true;
 
-        if (showDebugLogs)
-        {
-            Debug.Log("[QuestManager] Initialized successfully.");
-        }
 
         if (loadOnStart)
         {

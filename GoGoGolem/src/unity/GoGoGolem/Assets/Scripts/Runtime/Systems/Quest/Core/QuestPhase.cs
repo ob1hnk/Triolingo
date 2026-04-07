@@ -48,7 +48,6 @@ public class QuestPhase
         }
 
         IsCompleted = true;
-        Debug.Log($"[Quest Phase] Completed: {PhaseID} ({Description})");
     }
 
     /// <summary>
