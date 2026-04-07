@@ -111,8 +111,8 @@ public class DialogueManager : MonoBehaviour
 
     private void HandleDialogueComplete()
     {
-        dialogueCanvas?.SetActive(false);
         requestShowHUDEvent?.Raise();
         onDialogueCompletedEvent?.Raise();
+        dialogueCanvas?.SetActive(false);
     }
 }
