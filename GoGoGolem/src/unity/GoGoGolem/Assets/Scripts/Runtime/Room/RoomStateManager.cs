@@ -29,6 +29,9 @@ public class RoomStateManager : MonoBehaviour
     [Header("Bed Interaction")]
     [SerializeField] private BedInteraction bedInteraction;
 
+    [Header("Exit Door")]
+    [SerializeField] private ChangeSceneInteraction exitDoor;
+
     [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = true;
 
@@ -138,6 +141,10 @@ public class RoomStateManager : MonoBehaviour
             bedInteraction.SetCanInteract(true);
             bedInteraction.SetBlocked(true);
         }
+
+        // 문: 비활성
+        if (exitDoor != null)
+            exitDoor.SetCanInteract(false);
     }
 
     private void ApplyAfterLetter()
@@ -151,6 +158,10 @@ public class RoomStateManager : MonoBehaviour
             bedInteraction.SetCanInteract(true);
             bedInteraction.SetBlocked(false);
         }
+
+        // 문: 비활성
+        if (exitDoor != null)
+            exitDoor.SetCanInteract(false);
     }
 
     private void ApplyMorning()
@@ -168,6 +179,10 @@ public class RoomStateManager : MonoBehaviour
             letterDesk.SetMode(LetterDesk.DeskMode.Read);
             letterDesk.SetCanInteract(true);
         }
+
+        // 문: 활성
+        if (exitDoor != null)
+            exitDoor.SetCanInteract(true);
     }
 
     // ── Debug ────────────────────────────────────────────────────
