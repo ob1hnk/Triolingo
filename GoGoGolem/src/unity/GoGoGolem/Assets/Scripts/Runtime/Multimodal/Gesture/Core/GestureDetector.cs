@@ -26,8 +26,7 @@ namespace Demo.GestureDetection
 
     // MediaPipe 컴포넌트
     private PoseLandmarker _poseLandmarker;
-    private Experimental.TextureFramePool _textureFramePoolHand;
-    private Experimental.TextureFramePool _textureFramePoolPose;
+    private Experimental.TextureFramePool _textureFramePool;
 
     // LIVE_STREAM 모드용 최신 결과
     private HandLandmarkerResult _latestHandResult;
@@ -39,20 +38,14 @@ namespace Demo.GestureDetection
     public override void Stop()
     {
       base.Stop();
-      
-      _textureFramePoolHand?.Dispose();
-      _textureFramePoolHand = null;
 
-      _textureFramePoolPose?.Dispose();
-      _textureFramePoolPose = null;
+      _textureFramePool?.Dispose();
+      _textureFramePool = null;
 
       _poseLandmarker?.Close();
       _poseLandmarker = null;
     }
 
-    /// <summary>
-    /// 현재 웹캠 텍스처 반환 (설정창 웹캠 미리보기용)
-    /// </summary>
     /// <summary>
     /// 현재 웹캠 텍스처 반환 (설정창 웹캠 미리보기용)
     /// ImageSource의 WebCamTexture를 직접 반환해 RawImage에서 실시간으로 갱신된다.
@@ -65,6 +58,19 @@ namespace Demo.GestureDetection
     }
 
     /// <summary>
+    /// 모델 파일을 미리 디스크에서 메모리로 로드 (첫 씬 끊김 방지)
+    /// Bootstrap 초기화 완료 후 호출하면 이후 Run()에서 즉시 사용 가능
+    /// </summary>
+    public static IEnumerator WarmUpModelsAsync()
+    {
+      var config = new GestureConfig();
+      Debug.Log($"[GestureDetector] Warming up models: {config.HandModelPath}, {config.PoseModelPath}");
+      yield return Mediapipe.Unity.Sample.AssetLoader.PrepareAssetAsync(config.HandModelPath);
+      yield return Mediapipe.Unity.Sample.AssetLoader.PrepareAssetAsync(config.PoseModelPath);
+      Debug.Log("[GestureDetector] Model warm-up complete");
+    }
+
+    /// <summary>
     /// MediaPipe 감지 메인 루프 (VisionTaskApiRunner의 추상 메서드 구현)
     /// </summary>
     protected override IEnumerator Run()
@@ -74,7 +80,7 @@ namespace Demo.GestureDetection
       // Config 생성
       _config = new GestureConfig();
 
-      // 1. 모델 로드
+      // 1. 모델 로드 (warm-up 이미 완료되었으면 캐시에서 즉시 반환)
       yield return Mediapipe.Unity.Sample.AssetLoader.PrepareAssetAsync(_config.HandModelPath);
       yield return Mediapipe.Unity.Sample.AssetLoader.PrepareAssetAsync(_config.PoseModelPath);
 
@@ -102,11 +108,8 @@ namespace Demo.GestureDetection
         yield break;
       }
 
-      // 4. TextureFramePool 초기화
-      _textureFramePoolHand = new Experimental.TextureFramePool(
-        imageSource.textureWidth, imageSource.textureHeight, TextureFormat.RGBA32, 10
-      );
-      _textureFramePoolPose = new Experimental.TextureFramePool(
+      // 4. TextureFramePool 초기화 (1개로 통합)
+      _textureFramePool = new Experimental.TextureFramePool(
         imageSource.textureWidth, imageSource.textureHeight, TextureFormat.RGBA32, 10
       );
 
@@ -148,23 +151,16 @@ namespace Demo.GestureDetection
           yield return new WaitWhile(() => isPaused);
         }
 
-        // Hand용 TextureFrame
-        if (!_textureFramePoolHand.TryGetTextureFrame(out var textureFrame))
+        // TextureFrame 1개만 가져옴
+        if (!_textureFramePool.TryGetTextureFrame(out var textureFrame))
         {
           yield return waitForEndOfFrame;
           continue;
         }
 
-        // Pose용 TextureFrame
-        if (!_textureFramePoolPose.TryGetTextureFrame(out var textureFrameForPose))
-        {
-          textureFrame.Release();
-          yield return waitForEndOfFrame;
-          continue;
-        }
-
-        // Hand용 이미지 빌드
+        // 텍스처를 1번만 읽고, Hand/Pose 양쪽에 사용할 이미지 생성
         Image imageForHand;
+        Image imageForPose;
         switch (_config.ImageReadMode)
         {
           case ImageReadMode.GPU:
@@ -174,6 +170,7 @@ namespace Demo.GestureDetection
             }
             textureFrame.ReadTextureOnGPU(imageSource.GetCurrentTexture(), flipHorizontally, flipVertically);
             imageForHand = textureFrame.BuildGPUImage(glContext);
+            imageForPose = textureFrame.BuildGPUImage(glContext);
             yield return waitForEndOfFrame;
             break;
 
@@ -181,6 +178,7 @@ namespace Demo.GestureDetection
             yield return waitForEndOfFrame;
             textureFrame.ReadTextureOnCPU(imageSource.GetCurrentTexture(), flipHorizontally, flipVertically);
             imageForHand = textureFrame.BuildCPUImage();
+            imageForPose = textureFrame.BuildCPUImage();
             textureFrame.Release();
             break;
 
@@ -192,41 +190,11 @@ namespace Demo.GestureDetection
             if (req.hasError)
             {
               Debug.LogWarning("[GestureDetector] Failed to read texture from the image source");
-              textureFrameForPose.Release();
               continue;
             }
             imageForHand = textureFrame.BuildCPUImage();
+            imageForPose = textureFrame.BuildCPUImage();
             textureFrame.Release();
-            break;
-        }
-
-        // Pose용 이미지 빌드
-        Image imageForPose;
-        switch (_config.ImageReadMode)
-        {
-          case ImageReadMode.GPU:
-            textureFrameForPose.ReadTextureOnGPU(imageSource.GetCurrentTexture(), flipHorizontally, flipVertically);
-            imageForPose = textureFrameForPose.BuildGPUImage(glContext);
-            break;
-
-          case ImageReadMode.CPU:
-            textureFrameForPose.ReadTextureOnCPU(imageSource.GetCurrentTexture(), flipHorizontally, flipVertically);
-            imageForPose = textureFrameForPose.BuildCPUImage();
-            textureFrameForPose.Release();
-            break;
-
-          case ImageReadMode.CPUAsync:
-          default:
-            req = textureFrameForPose.ReadTextureAsync(imageSource.GetCurrentTexture(), flipHorizontally, flipVertically);
-            yield return waitUntilReqDone;
-
-            if (req.hasError)
-            {
-              Debug.LogWarning("[GestureDetector] Failed to read texture from the image source (Pose)");
-              continue;
-            }
-            imageForPose = textureFrameForPose.BuildCPUImage();
-            textureFrameForPose.Release();
             break;
         }
 
