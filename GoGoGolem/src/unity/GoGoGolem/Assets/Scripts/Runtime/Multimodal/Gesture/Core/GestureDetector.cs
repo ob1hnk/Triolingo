@@ -34,6 +34,8 @@ namespace Demo.GestureDetection
     private readonly object _resultLock = new object();
     private bool _isHandResultDirty = false;
     private bool _isPoseResultDirty = false;
+    private bool _hasReceivedHandResult = false;
+    private bool _hasReceivedPoseResult = false;
 
     public override void Stop()
     {
@@ -273,19 +275,21 @@ namespace Demo.GestureDetection
       _poseLandmarker.DetectAsync(imageForPose, timestamp, imageProcessingOptions);
 
       // Dirty 플래그 확인하여 이벤트 발생
-      bool updateHand = false;
-      bool updatePose = false;
+      // 어느 한쪽이라도 업데이트 + 양쪽 모두 최소 1회 수신 완료 시 이벤트 발생
+      bool shouldUpdate = false;
 
       lock (_resultLock)
       {
-        updateHand = _isHandResultDirty;
-        updatePose = _isPoseResultDirty;
-
-        if (updateHand) _isHandResultDirty = false;
-        if (updatePose) _isPoseResultDirty = false;
+        if ((_isHandResultDirty || _isPoseResultDirty)
+            && _hasReceivedHandResult && _hasReceivedPoseResult)
+        {
+          _isHandResultDirty = false;
+          _isPoseResultDirty = false;
+          shouldUpdate = true;
+        }
       }
 
-      if (updateHand && updatePose)
+      if (shouldUpdate)
       {
         OnLandmarksUpdated?.Invoke(_latestHandResult, _latestPoseResult);
       }
@@ -300,6 +304,7 @@ namespace Demo.GestureDetection
       {
         result.CloneTo(ref _latestHandResult);
         _isHandResultDirty = true;
+        _hasReceivedHandResult = true;
       }
     }
 
@@ -312,6 +317,7 @@ namespace Demo.GestureDetection
       {
         result.CloneTo(ref _latestPoseResult);
         _isPoseResultDirty = true;
+        _hasReceivedPoseResult = true;
       }
     }
 
