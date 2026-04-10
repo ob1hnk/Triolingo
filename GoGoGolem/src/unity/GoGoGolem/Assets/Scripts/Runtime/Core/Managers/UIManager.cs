@@ -15,11 +15,11 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         if (inventoryPresenter == null)
-            inventoryPresenter = FindFirstObjectByType<InventoryUIPresenter>();
+            inventoryPresenter = FindFirstObjectByType<InventoryUIPresenter>(FindObjectsInactive.Include);
         if (settingsPresenter == null)
-            settingsPresenter = FindFirstObjectByType<SettingsPresenter>();
+            settingsPresenter = FindFirstObjectByType<SettingsPresenter>(FindObjectsInactive.Include);
         if (questPresenter == null)
-            questPresenter = FindFirstObjectByType<QuestUIPresenter>();
+            questPresenter = FindFirstObjectByType<QuestUIPresenter>(FindObjectsInactive.Include);
 
         inventoryPresenter?.Hide();
         settingsPresenter?.Hide();
@@ -41,9 +41,14 @@ public class UIManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        inventoryPresenter = FindFirstObjectByType<InventoryUIPresenter>();
-        settingsPresenter = FindFirstObjectByType<SettingsPresenter>();
-        questPresenter = FindFirstObjectByType<QuestUIPresenter>();
+        inventoryPresenter = FindFirstObjectByType<InventoryUIPresenter>(FindObjectsInactive.Include);
+        settingsPresenter = FindFirstObjectByType<SettingsPresenter>(FindObjectsInactive.Include);
+        questPresenter = FindFirstObjectByType<QuestUIPresenter>(FindObjectsInactive.Include);
+
+        if (settingsPresenter == null)
+            Debug.LogWarning($"[UIManager] SettingsPresenter not found in scene '{scene.name}'");
+        if (inventoryPresenter == null)
+            Debug.LogWarning($"[UIManager] InventoryUIPresenter not found in scene '{scene.name}'");
 
         inventoryPresenter?.Hide();
         settingsPresenter?.Hide();
