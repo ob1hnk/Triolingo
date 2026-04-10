@@ -46,7 +46,7 @@ namespace Demo.GestureDetection
     public string HandModelPath => "hand_landmarker.bytes";
 
     // ========== Pose Landmarker 설정 ==========
-    public PoseModelType PoseModel { get; set; } = PoseModelType.Full;
+    public PoseModelType PoseModel { get; set; } = PoseModelType.Lite;
     public int NumPoses { get; set; } = 1;
     public float MinPoseDetectionConfidence { get; set; } = 0.3f;
     public float MinPosePresenceConfidence { get; set; } = 0.3f;

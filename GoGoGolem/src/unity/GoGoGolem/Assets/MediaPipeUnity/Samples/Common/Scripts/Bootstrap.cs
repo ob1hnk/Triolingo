@@ -99,6 +99,10 @@ namespace Mediapipe.Unity.Sample
       // 메인 씬 Settings에서 저장된 카메라 선택을 적용
       ApplySavedCameraSelection();
 
+      // 제스처 모델 사전 로드 (첫 씬 진입 시 끊김 방지)
+      Debug.Log("Warming up gesture models...");
+      yield return Demo.GestureDetection.GestureDetector.WarmUpModelsAsync();
+
       isFinished = true;
     }
 
