@@ -9,12 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04a68c095bbac4ea88b140aa907e2a17, type: 3}
+  m_Script: {fileID: 11500000, guid: 5d798ce2d57f14a3e817b9218797d0c5, type: 3}
   m_Name: S001Wind
   m_EditorClassIdentifier: 
-  skillID: SKILL-001
-  skillName: "\uBC14\uB78C \uC2A4\uD0AC"
-  phase: MQ-02-P05
+  itemID: SKILL-001
+  itemName: "\uBC14\uB78C \uC2A4\uD0AC"
+  type: 1
+  phase: MQ-02-P04
   description: "\uBC14\uB78C \uB9C8\uBC95"
   usage: "\uC544\uC774\uD15C\uC744 \uBC14\uB78C\uC73C\uB85C \uB0A0\uB9BC"
   icon: {fileID: 21300000, guid: b3b9bb6bf092e4a16be4c9ea6b53d158, type: 3}
