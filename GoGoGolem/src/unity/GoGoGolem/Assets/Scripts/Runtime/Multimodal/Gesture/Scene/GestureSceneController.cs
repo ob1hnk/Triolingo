@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Playables;
+using UnityEngine.UI;
 
 namespace Demo.GestureDetection
 {
@@ -42,6 +43,12 @@ namespace Demo.GestureDetection
     [Header("Tutorial")]
     [Tooltip("OBJ-02 전용 튜토리얼 Timeline. null이면 튜토리얼 없이 바로 Playing.")]
     [SerializeField] private PlayableDirector _tutorialDirector;
+
+    [Header("Tutorial UI Buttons")]
+    [Tooltip("튜토리얼 건너뛰기 버튼 (Tutorial Canvas 내부, 타임라인이 Canvas 활성화 관리)")]
+    [SerializeField] private Button _skipButton;
+    [Tooltip("튜토리얼 재시청 버튼 (Main Canvas, Playing 상태에서만 표시)")]
+    [SerializeField] private Button _rewatchButton;
 
     [Header("Success")]
     [Tooltip("OBJ-02(NoFly) 성공 연출 Timeline.")]
@@ -92,6 +99,7 @@ namespace Demo.GestureDetection
 
     private void Start()
     {
+      SetupButtons();
       EnterEntryState();
     }
     
@@ -109,12 +117,33 @@ namespace Demo.GestureDetection
     
     private void OnDestroy()
     {
+      CleanupButtons();
       UnsubscribeTutorialEvents();
       UnsubscribeSuccessEvents();
       _gesturePlayPresenter?.Cleanup();
       GestureSceneEvents.ClearAllSubscribers();
     }
     
+    // ========== 버튼 설정 ==========
+
+    private void SetupButtons()
+    {
+      if (_skipButton != null)
+        _skipButton.onClick.AddListener(SkipTutorial);
+
+      if (_rewatchButton != null)
+        _rewatchButton.onClick.AddListener(RewatchTutorial);
+    }
+
+    private void CleanupButtons()
+    {
+      if (_skipButton != null)
+        _skipButton.onClick.RemoveListener(SkipTutorial);
+
+      if (_rewatchButton != null)
+        _rewatchButton.onClick.RemoveListener(RewatchTutorial);
+    }
+
     // ========== 상태 전환 메서드 ==========
     
     private void EnterEntryState()
@@ -388,7 +417,7 @@ namespace Demo.GestureDetection
       if (_state == newState) return;
       Debug.Log($"[GestureSceneController] State: {_state} → {newState}");
       _state = newState;
-      
+
       if (_state == GestureSceneState.Playing)
         GestureSceneEvents.RaiseGestureStart(_targetGesture);
     }
