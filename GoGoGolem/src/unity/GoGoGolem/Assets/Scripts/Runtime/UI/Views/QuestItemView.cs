@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 
@@ -49,6 +50,8 @@ public class QuestItemView : MonoBehaviour
                 }
             }
         }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(transform as RectTransform);
     }
 
     private void AddObjective(QuestObjective objective, bool visible)
@@ -76,5 +79,7 @@ public class QuestItemView : MonoBehaviour
             if (objectiveViews.TryGetValue(nextId, out var nextView))
                 nextView.SetVisible(true);
         }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(transform as RectTransform);
     }
 }
