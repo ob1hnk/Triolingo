@@ -2589,7 +2589,7 @@ PlayableDirector:
     value: {fileID: 1842373968}
   - key: {fileID: 687743757591212245, guid: 23324dfaaa86f5b4da2ebdfc4a58e83d, type: 2}
     value: {fileID: 8571076844012048780}
-  - key: {fileID: -2392277169406604619, guid: 23324dfaaa86f5b4da2ebdfc4a58e83d, type: 2}
+  - key: {fileID: -1331414059509535227, guid: 23324dfaaa86f5b4da2ebdfc4a58e83d, type: 2}
     value: {fileID: 562553842}
   m_ExposedReferences:
     m_References: []
@@ -7718,6 +7718,8 @@ MonoBehaviour:
   _gestureDetector: {fileID: 1596214718}
   _gesturePlayView: {fileID: 743251078}
   _tutorialDirector: {fileID: 1407397756}
+  _skipButton: {fileID: 509775636}
+  _rewatchButton: {fileID: 1198557890}
   _successDirector1: {fileID: 562553841}
   _successDirector2: {fileID: 1093221657}
   _debounceDuration: 0.2
@@ -7748,7 +7750,7 @@ GameObject:
   - component: {fileID: 1991747754}
   - component: {fileID: 1991747753}
   m_Layer: 5
-  m_Name: Pause Button
+  m_Name: Setting Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7956,9 +7958,9 @@ RectTransform:
   - {fileID: 1459076829}
   m_Father: {fileID: 8571076844006217398}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 240, y: -40}
   m_SizeDelta: {x: 200, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2003177403
