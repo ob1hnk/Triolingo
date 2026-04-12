@@ -47,11 +47,13 @@ class RealtimeLLMComponent:
         RESPONSE_AUDIO_DONE = "response.audio.done"
         ERROR = "error"
 
+    DEFAULT_MAX_OUTPUT_TOKENS = 1024
+
     def __init__(
         self,
         api_key: str,
         base_url: str = "wss://api.openai.com/v1/realtime",
-        model: str = "gpt-realtime-1.5",
+        model: str = "gpt-realtime-mini",
         timeout: float = 60.0,
     ):
         self.api_key = api_key
@@ -63,7 +65,6 @@ class RealtimeLLMComponent:
 
     async def connect(self) -> None:
         url = f"{self.base_url}?model={self.model}"
-        logger.info(f"[RealtimeLLM] Connecting with model={self.model}")
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "OpenAI-Beta": "realtime=v1",
@@ -87,7 +88,7 @@ class RealtimeLLMComponent:
         input_audio_transcription: Optional[Dict[str, Any]] = None,
         turn_detection: Optional[Dict[str, Any]] = None,
         temperature: float = 0.8,
-        max_response_output_tokens: Optional[int] = None,
+        max_output_tokens: Optional[int] = DEFAULT_MAX_OUTPUT_TOKENS,
     ) -> Dict[str, Any]:
         if not self.ws:
             raise RuntimeError("WebSocket not connected")
@@ -106,8 +107,8 @@ class RealtimeLLMComponent:
             session_config["input_audio_transcription"] = input_audio_transcription
         if turn_detection:
             session_config["turn_detection"] = turn_detection
-        if max_response_output_tokens:
-            session_config["max_response_output_tokens"] = max_response_output_tokens
+        if max_output_tokens is not None:
+            session_config["max_output_tokens"] = max_output_tokens
 
         await self._send_event(
             {
