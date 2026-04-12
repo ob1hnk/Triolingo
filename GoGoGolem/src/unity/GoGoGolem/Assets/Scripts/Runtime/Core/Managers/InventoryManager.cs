@@ -3,13 +3,13 @@ using UnityEngine;
 public class InventoryManager : MonoBehaviour
 {
     [Header("Data")]
-    [SerializeField] private ItemDatabaseSO itemCatalogue;
+    [SerializeField] private InventoryAssetDatabaseSO itemCatalogue;
 
     [Header("Event Channels")]
     [SerializeField] private StringGameEvent requestAcquireItemEvent;
 
     public InventoryLogic Logic { get; private set; }
-    public ItemDatabaseSO ItemDB { get; private set; }
+    public InventoryAssetDatabaseSO AssetDB { get; private set; }
 
     private InventorySaveSystem _saveSystem;
 
@@ -19,8 +19,8 @@ public class InventoryManager : MonoBehaviour
             Debug.LogError("[InventoryManager] itemCatalogue이 Inspector에 연결되지 않았습니다.");
         else
         {
-            ItemDB = itemCatalogue;
-            ItemDB.Initialize();
+            AssetDB = itemCatalogue;
+            AssetDB.Initialize();
         }
 
         _saveSystem = new InventorySaveSystem();
@@ -53,8 +53,8 @@ public class InventoryManager : MonoBehaviour
 
     public void AcquireItem(string itemID)
     {
-        var itemData = ItemDB.GetItem(itemID);
-        if (itemData == null)
+        var asset = AssetDB.GetAsset(itemID);
+        if (asset == null)
         {
             Debug.LogWarning($"DB에 존재하지 않는 아이템 ID: {itemID}");
             return;
@@ -71,6 +71,11 @@ public class InventoryManager : MonoBehaviour
         bool has = Logic.HasItem(itemID);
         if (shouldHave && !has)
         {
+            if (AssetDB.GetAsset(itemID) == null)
+            {
+                Debug.LogWarning($"[InventoryManager] Reconcile: DB에 없는 ID={itemID}, 스킵");
+                return;
+            }
             Logic.AddItem(itemID);
             Debug.Log($"[InventoryManager] Reconcile: {itemID} 추가 (퀘스트 상태 기준 보유해야 함)");
         }

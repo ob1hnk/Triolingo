@@ -266,15 +266,15 @@ public class InventoryUIPresenter : MonoBehaviour
         if (!isInventoryLogicInitialized || inventoryLogic == null || view == null) return;
 
         var allItems = inventoryLogic.GetAllItems();
-        var itemDB = Managers.Inventory?.ItemDB;
+        var assetDB = Managers.Inventory?.AssetDB;
 
         var items = new System.Collections.Generic.Dictionary<string, int>();
         var skills = new System.Collections.Generic.Dictionary<string, int>();
 
         foreach (var kv in allItems)
         {
-            var data = itemDB?.GetItem(kv.Key);
-            if (data != null && data.type == ItemType.Skill)
+            var data = assetDB?.GetAsset(kv.Key);
+            if (data != null && data.type == InventoryAssetType.Skill)
                 skills[kv.Key] = kv.Value;
             else
                 items[kv.Key] = kv.Value;

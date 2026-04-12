@@ -71,6 +71,10 @@ namespace Demo.GestureDetection
     [Header("Quest - Write")]
     [Tooltip("QuestManager의 requestCompletePhaseEvent와 동일한 SO")]
     [SerializeField] private CompletePhaseGameEvent _requestCompletePhaseEvent;
+    [Tooltip("InventoryManager가 구독하는 RequestAcquireItem SO — P04 진입 시 스킬 지급")]
+    [SerializeField] private StringGameEvent _requestAcquireItemEvent;
+    [Tooltip("P04(NoFly 진입) 완료 시 지급할 스킬 ID")]
+    [SerializeField] private string _skillID_NoFlyEntry = "SKILL-001";
     [SerializeField] private string _questID      = "MQ-02";
     [SerializeField] private string _phaseID_NoFly = "MQ-02-P05";
     [SerializeField] private string _phaseID_Fly   = "MQ-02-P09";
@@ -328,6 +332,13 @@ namespace Demo.GestureDetection
       });
 
       Debug.Log($"[GestureSceneController] Entry phase 완료: {phaseID}");
+
+      // P04(NoFly 진입) 완료 시 스킬 지급
+      if (phaseID == _entryPhaseID_NoFly && !string.IsNullOrEmpty(_skillID_NoFlyEntry))
+      {
+        _requestAcquireItemEvent?.Raise(_skillID_NoFlyEntry);
+        Debug.Log($"[GestureSceneController] 스킬 지급: {_skillID_NoFlyEntry}");
+      }
     }
 
     /// <summary>제스처 성공 시 결과 phase 완료 (P05 또는 P09)</summary>

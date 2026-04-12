@@ -51,7 +51,7 @@ public class GotItemToastPresenter : MonoBehaviour
     private void ShowToast(string itemID, int count)
     {
         var inventory = Managers.Inventory;
-        ItemData data = inventory != null && inventory.ItemDB != null ? inventory.ItemDB.GetItem(itemID) : null;
+        InventoryAsset data = inventory != null && inventory.AssetDB != null ? inventory.AssetDB.GetAsset(itemID) : null;
 
         if (iconImage != null)
         {

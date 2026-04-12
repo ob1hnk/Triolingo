@@ -26,10 +26,6 @@ public class QuestData : ScriptableObject
     [Tooltip("퀘스트의 Objective 목록")]
     public List<ObjectiveData> objectives = new List<ObjectiveData>();
 
-    [Header("Quest 보상")]
-    [Tooltip("퀘스트 완료 시 보상")]
-    public QuestReward reward;
-
     /// <summary>
     /// 데이터 유효성 검사
     /// </summary>

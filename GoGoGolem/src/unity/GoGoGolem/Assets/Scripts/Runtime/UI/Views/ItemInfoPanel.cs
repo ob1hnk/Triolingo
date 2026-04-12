@@ -31,9 +31,9 @@ public class ItemInfoPanel : MonoBehaviour
         ShowEmpty();
     }
 
-    public void ShowItemInfo(ItemData itemData)
+    public void ShowItemInfo(InventoryAsset asset)
     {
-        if (itemData == null)
+        if (asset == null)
         {
             ShowEmpty();
             return;
@@ -42,8 +42,8 @@ public class ItemInfoPanel : MonoBehaviour
         if (contentArea != null)  contentArea.SetActive(true);
         if (emptyMessage != null) emptyMessage.SetActive(false);
 
-        if (itemNameText != null)    itemNameText.text    = itemData.itemName;
-        if (descriptionText != null) descriptionText.text = itemData.description;
+        if (itemNameText != null)    itemNameText.text    = asset.itemName;
+        if (descriptionText != null) descriptionText.text = asset.description;
     }
 
     public void ShowEmpty()

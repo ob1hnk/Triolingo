@@ -7728,6 +7728,8 @@ MonoBehaviour:
   _objectiveID_NoFly: MQ-02-OBJ-02
   _objectiveID_Fly: MQ-02-OBJ-04
   _requestCompletePhaseEvent: {fileID: 11400000, guid: e2da95cd4a1d545b1b66af5c47cc8d21, type: 2}
+  _requestAcquireItemEvent: {fileID: 11400000, guid: d031284a599c844f2ac3a990d68e11dc, type: 2}
+  _skillID_NoFlyEntry: SKILL-001
   _questID: MQ-02
   _phaseID_NoFly: MQ-02-P05
   _phaseID_Fly: MQ-02-P09

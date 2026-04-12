@@ -154,14 +154,14 @@ public class InventoryUIView : MonoBehaviour
             CreateSlot(container, slotList, namePrefix, indexOffset + i);
         }
 
-        var itemDB = Managers.Inventory?.ItemDB;
+        var assetDB = Managers.Inventory?.AssetDB;
         int index = 0;
         foreach (var kv in data)
         {
             if (index >= slotList.Count) break;
 
-            var itemData = itemDB?.GetItem(kv.Key);
-            slotList[index].SetItem(itemData?.icon);
+            var asset = assetDB?.GetAsset(kv.Key);
+            slotList[index].SetItem(asset?.icon);
             indexToItemID[indexOffset + index] = kv.Key;
             index++;
         }
@@ -233,8 +233,8 @@ public class InventoryUIView : MonoBehaviour
             return;
         }
 
-        ItemData itemData = Managers.Inventory?.ItemDB?.GetItem(itemID);
-        if (itemData == null)
+        InventoryAsset asset = Managers.Inventory?.AssetDB?.GetAsset(itemID);
+        if (asset == null)
         {
             if (itemInfoPanel != null)
                 itemInfoPanel.ShowEmpty();
@@ -243,7 +243,7 @@ public class InventoryUIView : MonoBehaviour
 
         if (itemInfoPanel != null)
         {
-            itemInfoPanel.ShowItemInfo(itemData);
+            itemInfoPanel.ShowItemInfo(asset);
         }
     }
 

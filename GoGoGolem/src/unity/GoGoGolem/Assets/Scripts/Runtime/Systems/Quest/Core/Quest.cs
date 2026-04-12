@@ -13,7 +13,6 @@ public class Quest
     public string Description { get; private set; }
     public QuestType QuestType { get; private set; }
     public QuestStatus Status { get; private set; }
-    public QuestReward Reward { get; private set; }
 
     private List<QuestObjective> objectives;
 
@@ -33,7 +32,6 @@ public class Quest
         Description = questData.summary;
         QuestType = questData.questType;
         Status = QuestStatus.InProgress;
-        Reward = questData.reward;
 
         objectives = new List<QuestObjective>();
         foreach (var objData in questData.objectives)
@@ -67,11 +65,6 @@ public class Quest
     {
         Status = QuestStatus.Completed;
         Debug.Log($"[Quest] Completed: {QuestID} - {QuestName}");
-        
-        if (Reward != null && !Reward.IsEmpty())
-        {
-            Debug.Log($"[Quest] Reward: {Reward}");
-        }
     }
 
     /// <summary>

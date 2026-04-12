@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f4202c517c8e4a94b7795c2988e4b79, type: 3}
+  m_Script: {fileID: 11500000, guid: 5d798ce2d57f14a3e817b9218797d0c5, type: 3}
   m_Name: I002FoodSack
   m_EditorClassIdentifier: 
   itemID: ITEM-002
