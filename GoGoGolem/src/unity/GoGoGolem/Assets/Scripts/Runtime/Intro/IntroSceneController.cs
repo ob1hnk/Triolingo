@@ -7,8 +7,8 @@ using Yarn.Unity;
 ///
 /// 흐름:
 ///   [패널 1] 온보딩 (조명/카메라·음성 안내) → 아무 키 dismiss
-///   → DLG_INTRO 다이얼로그 실행
 ///   → [패널 2] 키 가이드 (WASD·E 설명) → 아무 키 dismiss
+///   → DLG_INTRO 다이얼로그 실행
 ///   → nextSceneName 씬 전환
 ///
 /// 두 패널 모두 Inspector에서 연결하지 않으면 해당 단계를 건너뛰고 다음으로 진행한다.
@@ -72,8 +72,6 @@ public class IntroSceneController : MonoBehaviour
             dialogueRunner.onDialogueComplete.RemoveListener(OnDialogueComplete);
         if (onboardingPanel != null)
             onboardingPanel.OnDismissed -= OnOnboardingDismissed;
-        if (keyGuidePanel != null)
-            keyGuidePanel.OnDismissed -= OnKeyGuideDismissed;
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -83,6 +81,22 @@ public class IntroSceneController : MonoBehaviour
     private void OnOnboardingDismissed()
     {
         onboardingPanel.OnDismissed -= OnOnboardingDismissed;
+
+        // 키 가이드가 있으면 온보딩 다음에 표시, 없으면 바로 대화 시작
+        if (keyGuidePanel != null)
+        {
+            keyGuidePanel.OnDismissed += OnKeyGuideDismissed;
+            keyGuidePanel.Show();
+        }
+        else
+        {
+            StartIntroDialogue();
+        }
+    }
+
+    private void OnKeyGuideDismissed()
+    {
+        keyGuidePanel.OnDismissed -= OnKeyGuideDismissed;
         StartIntroDialogue();
     }
 
@@ -106,21 +120,6 @@ public class IntroSceneController : MonoBehaviour
 
     private void OnDialogueComplete()
     {
-        // 키 가이드 패널이 연결되어 있으면 표시, 없으면 바로 씬 전환
-        if (keyGuidePanel != null)
-        {
-            keyGuidePanel.OnDismissed += OnKeyGuideDismissed;
-            keyGuidePanel.Show();
-        }
-        else
-        {
-            LoadNextScene();
-        }
-    }
-
-    private void OnKeyGuideDismissed()
-    {
-        keyGuidePanel.OnDismissed -= OnKeyGuideDismissed;
         LoadNextScene();
     }
 
