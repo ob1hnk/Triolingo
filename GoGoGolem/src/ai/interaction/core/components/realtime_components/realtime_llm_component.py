@@ -88,7 +88,7 @@ class RealtimeLLMComponent:
         input_audio_transcription: Optional[Dict[str, Any]] = None,
         turn_detection: Optional[Dict[str, Any]] = None,
         temperature: float = 0.8,
-        max_output_tokens: Optional[int] = DEFAULT_MAX_OUTPUT_TOKENS,
+        max_response_output_tokens: Optional[int] = DEFAULT_MAX_OUTPUT_TOKENS,
     ) -> Dict[str, Any]:
         if not self.ws:
             raise RuntimeError("WebSocket not connected")
@@ -107,8 +107,8 @@ class RealtimeLLMComponent:
             session_config["input_audio_transcription"] = input_audio_transcription
         if turn_detection:
             session_config["turn_detection"] = turn_detection
-        if max_output_tokens is not None:
-            session_config["max_output_tokens"] = max_output_tokens
+        if max_response_output_tokens is not None:
+            session_config["max_response_output_tokens"] = max_response_output_tokens
 
         await self._send_event(
             {
