@@ -51,7 +51,7 @@ class RealtimeLLMComponent:
         self,
         api_key: str,
         base_url: str = "wss://api.openai.com/v1/realtime",
-        model: str = "gpt-realtime-mini",
+        model: str = "gpt-realtime-1.5",
         timeout: float = 60.0,
     ):
         self.api_key = api_key
@@ -63,6 +63,7 @@ class RealtimeLLMComponent:
 
     async def connect(self) -> None:
         url = f"{self.base_url}?model={self.model}"
+        logger.info(f"[RealtimeLLM] Connecting with model={self.model}")
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "OpenAI-Beta": "realtime=v1",

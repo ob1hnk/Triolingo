@@ -28,10 +28,10 @@ class LLMRealtimeSpeechV1(RealtimeLLMComponent):
     def __init__(
         self,
         api_key: str,
-        model: str = "gpt-realtime-mini",
+        model: str = "gpt-realtime-1.5",
         base_url: str = "wss://api.openai.com/v1/realtime",
         default_system_prompt: Optional[str] = None,
-        transcription_model: str = "gpt-4o-mini-transcribe",
+        transcription_model: str = "gpt-4o-transcribe",
         transcription_language: str = "ko",
         timeout: float = 60.0,
     ):
@@ -40,7 +40,7 @@ class LLMRealtimeSpeechV1(RealtimeLLMComponent):
 
         Args:
             api_key: OpenAI API 키
-            model: Realtime 모델명 (기본값: gpt-realtime-mini)
+            model: Realtime 모델명 (기본값: gpt-realtime-1.5)
             base_url: Realtime API WebSocket URL
             default_system_prompt: 기본 시스템 프롬프트 (None이면 text_to_text_v2 프롬프트 사용)
             transcription_model: 입력 오디오 transcription 모델
