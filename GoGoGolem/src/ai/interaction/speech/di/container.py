@@ -71,7 +71,7 @@ class SpeechContainer(containers.DeclarativeContainer):
     realtime_speech_v1 = providers.Factory(
         LLMRealtimeSpeechV1,
         api_key=core_container.config.openai_api_key,
-        model="gpt-realtime-mini",
-        transcription_model="gpt-4o-mini-transcribe",
+        model="gpt-realtime-1.5",
+        transcription_model="gpt-4o-transcribe",
         transcription_language="ko",
     )
