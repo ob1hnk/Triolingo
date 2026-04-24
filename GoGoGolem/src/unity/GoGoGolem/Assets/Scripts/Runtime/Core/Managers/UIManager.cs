@@ -96,14 +96,22 @@ public class UIManager : MonoBehaviour
 
     private void HandleSettingsOpen()
     {
-        Time.timeScale = 0f;
+        // 제스처 씬에서는 timeScale=0 금지 — imageSource.Play()가 WaitForSeconds 기반이면 카메라 초기화가 멈춤
+        if (!IsGestureScene())
+            Time.timeScale = 0f;
         settingsPresenter?.Show();
     }
 
     private void HandleSettingsClose()
     {
-        Time.timeScale = 1f;
+        if (!IsGestureScene())
+            Time.timeScale = 1f;
         settingsPresenter?.Hide();
+    }
+
+    private bool IsGestureScene()
+    {
+        return FindFirstObjectByType<Demo.GestureDetection.GestureDetector>() != null;
     }
 
     private void HandleLetterOpen()
