@@ -15,6 +15,10 @@ using Yarn.Unity;
 /// </summary>
 public class IntroSceneController : MonoBehaviour
 {
+    private const string PrefKeyIntroWatched = "Intro_Watched";
+
+    public static bool HasWatched => PlayerPrefs.GetInt(PrefKeyIntroWatched, 0) == 1;
+
     [SerializeField] private DialogueRunner dialogueRunner;
     [SerializeField] private string nextSceneName = "World";
 
@@ -120,6 +124,8 @@ public class IntroSceneController : MonoBehaviour
 
     private void OnDialogueComplete()
     {
+        PlayerPrefs.SetInt(PrefKeyIntroWatched, 1);
+        PlayerPrefs.Save();
         LoadNextScene();
     }
 
