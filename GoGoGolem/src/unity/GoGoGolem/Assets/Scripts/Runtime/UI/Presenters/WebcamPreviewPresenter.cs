@@ -1,4 +1,3 @@
-using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,8 +24,8 @@ public class WebcamPreviewPresenter : MonoBehaviour
     // 자체 WebCamTexture (GestureDetector 없는 씬에서만 사용)
     private WebCamTexture _ownedTexture;
 
-    // 텍스처 대기 코루틴 (GestureDetector 텍스처가 아직 준비 안 됐을 때)
-    private Coroutine _waitCoroutine;
+    // 현재 텍스처를 빌려준 GestureDetector (구독 해제용)
+    private Demo.GestureDetection.GestureDetector _borrowedDetector;
 
     // ───────────────────────────────────────────
     // 생명주기
@@ -78,6 +77,13 @@ public class WebcamPreviewPresenter : MonoBehaviour
     {
         if (webcamPreview == null) return;
 
+        // 이전 구독이 남아있으면 먼저 해제 (중복 호출 방어)
+        if (_borrowedDetector != null)
+        {
+            _borrowedDetector.OnCameraReady -= OnDetectorCameraReady;
+            _borrowedDetector = null;
+        }
+
         var detector = FindObjectOfType<Demo.GestureDetection.GestureDetector>();
 
         if (detector != null)
@@ -86,13 +92,22 @@ public class WebcamPreviewPresenter : MonoBehaviour
             var tex = detector.GetWebcamTexture();
             if (tex != null)
             {
+                // 이미 준비됨 → 즉시 표시
                 ApplyTexture(tex);
+            }
+            else if (detector.IsCameraReady)
+            {
+                // OnCameraReady 이벤트가 이미 발동됨 (설정창을 늦게 열었을 때)
+                // 이벤트를 기다리면 영영 오지 않으므로 핸들러를 직접 호출
+                _borrowedDetector = detector;
+                OnDetectorCameraReady();
             }
             else
             {
-                // 텍스처가 아직 준비 안 됐으면 대기
+                // 아직 준비 안 됨 → OnCameraReady 이벤트로 대기 (폴링/timeScale 문제 없음)
                 webcamPreview.gameObject.SetActive(false);
-                _waitCoroutine = StartCoroutine(WaitForDetectorTexture(detector));
+                _borrowedDetector = detector;
+                detector.OnCameraReady += OnDetectorCameraReady;
             }
         }
         else
@@ -110,10 +125,11 @@ public class WebcamPreviewPresenter : MonoBehaviour
 
     private void StopPreview()
     {
-        if (_waitCoroutine != null)
+        // GestureDetector 이벤트 구독 해제
+        if (_borrowedDetector != null)
         {
-            StopCoroutine(_waitCoroutine);
-            _waitCoroutine = null;
+            _borrowedDetector.OnCameraReady -= OnDetectorCameraReady;
+            _borrowedDetector = null;
         }
 
         if (cameraDropdown != null)
@@ -127,20 +143,27 @@ public class WebcamPreviewPresenter : MonoBehaviour
     }
 
     // ───────────────────────────────────────────
-    // GestureDetector 텍스처 대기 (제스처 씬)
+    // GestureDetector 카메라 준비 완료 콜백 (제스처 씬)
     // ───────────────────────────────────────────
 
-    private IEnumerator WaitForDetectorTexture(Demo.GestureDetection.GestureDetector detector)
+    private void OnDetectorCameraReady()
     {
-        while (settingsPresenter != null && settingsPresenter.IsVisible)
+        var detector = _borrowedDetector;
+
+        // 이벤트는 한 번만 사용하므로 즉시 구독 해제
+        if (detector != null)
+        {
+            detector.OnCameraReady -= OnDetectorCameraReady;
+            _borrowedDetector = null;
+        }
+
+        // 설정창이 닫혔으면 표시 불필요
+        if (settingsPresenter == null || !settingsPresenter.IsVisible) return;
+
+        if (detector != null)
         {
             var tex = detector.GetWebcamTexture();
-            if (tex != null)
-            {
-                ApplyTexture(tex);
-                yield break;
-            }
-            yield return null;
+            if (tex != null) ApplyTexture(tex);
         }
     }
 

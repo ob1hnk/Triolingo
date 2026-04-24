@@ -20,6 +20,12 @@ namespace Demo.GestureDetection
     // 이벤트: Landmark 데이터가 업데이트될 때마다 호출
     public event Action<HandLandmarkerResult, PoseLandmarkerResult> OnLandmarksUpdated;
 
+    // 이벤트: ImageSource.Play() 완료 → WebCamTexture 사용 가능
+    public event Action OnCameraReady;
+
+    // 카메라 준비 완료 여부 (이벤트 발동 이후에 설정창을 열 때 missed-event 처리용)
+    public bool IsCameraReady { get; private set; } = false;
+
     // Config (코드에서 생성)
     private GestureConfig _config;
     public GestureConfig Config => _config;
@@ -109,6 +115,10 @@ namespace Demo.GestureDetection
         Debug.LogError("[GestureDetector] Failed to start ImageSource");
         yield break;
       }
+
+      // ImageSource 준비 완료 → 웹캠 텍스처 사용 가능
+      IsCameraReady = true;
+      OnCameraReady?.Invoke();
 
       // 4. TextureFramePool 초기화 (1개로 통합)
       _textureFramePool = new Experimental.TextureFramePool(

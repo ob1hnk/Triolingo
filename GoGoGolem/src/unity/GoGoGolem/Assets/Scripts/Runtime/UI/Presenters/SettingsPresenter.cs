@@ -42,7 +42,6 @@ public class SettingsPresenter : MonoBehaviour
     public void Show()
     {
         _isVisible = true;
-        Time.timeScale = 0f; // 게임 일시정지
         if (settingsPanel != null) settingsPanel.SetActive(true);
         InitializeVolumeSlider();
         InitializeCameraDropdown();
@@ -53,7 +52,6 @@ public class SettingsPresenter : MonoBehaviour
     public void Hide()
     {
         _isVisible = false;
-        Time.timeScale = 1f; // 게임 재개
         if (settingsPanel != null) settingsPanel.SetActive(false);
         OnVisibilityChanged?.Invoke(false);
     }

@@ -83,6 +83,8 @@ public class DialogueManager : MonoBehaviour
         if (dialogueCanvas != null) dialogueCanvas.SetActive(true);
         requestHideHUDEvent?.Raise();
 
+        InjectPlayerNamesToStorage();
+
         string nodeName = dialogueID.Replace('-', '_');
         RunDialogueAsync(nodeName);
     }
@@ -105,6 +107,15 @@ public class DialogueManager : MonoBehaviour
     {
         if (dialogueRunner != null && dialogueRunner.IsDialogueRunning)
             dialogueRunner.Stop();
+    }
+
+    private void InjectPlayerNamesToStorage()
+    {
+        var storage = dialogueRunner.VariableStorage;
+        if (GameManager.Instance.HasPlayerName)
+            storage.SetValue("$playerName", GameManager.Instance.PlayerName);
+        if (GameManager.Instance.HasGolemName)
+            storage.SetValue("$golemName", GameManager.Instance.GolemName);
     }
 
     private void HandleDialogueStart() => onDialogueStartedEvent?.Raise();
