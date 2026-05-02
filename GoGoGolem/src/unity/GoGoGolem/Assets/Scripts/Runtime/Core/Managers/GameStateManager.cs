@@ -6,7 +6,8 @@ public enum GameState
     InventoryUI,
     Paused,
     Dialogue,
-    LetterUI
+    LetterUI,
+    DebugConsole
 }
 
 public class GameStateManager : MonoBehaviour

@@ -67,6 +67,11 @@ public class QuestDatabase : ScriptableObject
         return new List<string>(questDataDictionary.Keys);
     }
 
+    public IReadOnlyList<QuestData> GetAllQuestDataInOrder()
+    {
+        return questDataList;
+    }
+
     public bool HasQuest(string questID)
     {
         if (questDataDictionary == null)
