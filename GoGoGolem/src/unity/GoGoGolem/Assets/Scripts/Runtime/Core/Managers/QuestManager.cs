@@ -419,6 +419,7 @@ public class QuestManager : MonoBehaviour
         progressTracker?.ClearAll();
     }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
     /// <summary>
     /// 디버그용: phaseID가 속한 quest를 찾아 그 이전 메인 퀘스트와 같은 quest 내 이전 phase를
     /// 모두 완료 처리하고, 해당 phase가 활성인 상태로 만든다.
@@ -515,6 +516,7 @@ public class QuestManager : MonoBehaviour
 
         Debug.Log($"[QuestManager] JumpTo {targetData.questID} / {phaseID} 완료 (이전 메인 퀘스트 {completedQuestCount}개, 동일 quest 내 phase {completedPhaseCount}개 완료). 씬 재진입 시 reconciler 적용.");
     }
+#endif
 
     #endregion
 
