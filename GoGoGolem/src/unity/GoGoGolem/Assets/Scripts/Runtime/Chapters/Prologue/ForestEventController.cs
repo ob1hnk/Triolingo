@@ -269,8 +269,9 @@ namespace Demo.Chapters.Prologue
             if (p04Done)
                 _state = ForestEventState.Complete;
 
-            // Zone 2 통과(P04 완료) + Zone 4 미통과(P05 미완료) → 비 즉시 활성화
-            if (p04Done && !_questController.IsPhaseCompleted("MQ-01-P05"))
+            // Zone 2 통과(P04 완료) + 나뭇잎 획득 미완료(P06 미완료) → 비 즉시 활성화
+            // P06 기준: P05만 완료된 경우(debug jumpto 등)에도 비가 유지돼야 하므로 P05 대신 P06 체크
+            if (p04Done && !_questController.IsPhaseCompleted("MQ-01-P06"))
                 RestoreRain();
         }
 
