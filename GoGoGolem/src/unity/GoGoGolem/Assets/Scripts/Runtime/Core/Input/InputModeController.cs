@@ -84,6 +84,12 @@ public class InputModeController : MonoBehaviour
 
         // 새 상태의 입력 활성화
         EnableInputForState(change.NewState);
+
+        // 디버그 콘솔에서는 Global(Q/ESC)까지 막아 입력이 새지 않도록 함
+        if (change.NewState == GameState.DebugConsole)
+            input.Global.Disable();
+        else if (change.OldState == GameState.DebugConsole)
+            input.Global.Enable();
     }
 
     private void EnableInputForState(GameState state)
@@ -100,6 +106,8 @@ public class InputModeController : MonoBehaviour
                 EnableDialogueInput();
                 break;
             case GameState.Paused:
+                break;
+            case GameState.DebugConsole:
                 break;
         }
     }

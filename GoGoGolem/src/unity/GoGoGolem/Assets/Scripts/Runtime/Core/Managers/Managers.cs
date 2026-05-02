@@ -11,7 +11,16 @@ using UnityEngine;
         public static InventoryManager Inventory => Instance?._inventory;
         public static UIManager UI => Instance?._ui;
         public static QuestManager Quest => Instance?._quest;
-        public static DialogueManager Dialogue => Instance?._dialogue;
+        public static DialogueManager Dialogue
+        {
+            get
+            {
+                if (Instance == null) return null;
+                if (Instance._dialogue == null)
+                    Instance._dialogue = FindObjectOfType<DialogueManager>();
+                return Instance._dialogue;
+            }
+        }
 
         private InventoryManager _inventory;
         private UIManager _ui;
@@ -60,11 +69,5 @@ using UnityEngine;
             }
             // QuestManager는 자체 Awake에서 Initialize를 호출하므로 별도 Init 불필요
 
-            // DialogueManager 초기화
-            _dialogue = FindObjectOfType<DialogueManager>();
-            if (_dialogue == null)
-            {
-                Debug.LogWarning("Managers: DialogueManager 컴포넌트가 없습니다.");
-            }
         }
     }

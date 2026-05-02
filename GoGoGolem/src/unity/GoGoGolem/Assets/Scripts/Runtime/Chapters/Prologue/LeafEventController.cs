@@ -146,13 +146,12 @@ namespace Demo.Chapters.Prologue
             _leafHandObject?.SetActive(false);
 
             // ── 씬 재진입 복원 ──
-            // MQ-01-P05 완료 = 나뭇잎 이벤트 끝남 → Complete 상태로 복원
-            if (_questController != null && _questController.IsPhaseCompleted("MQ-01-P05"))
+            // P06(나뭇잎 획득 완료)가 기준: P05만 완료된 경우(debug jumpto 등)는 Idle 유지 → 타임라인 재트리거 가능
+            if (_questController != null && _questController.IsPhaseCompleted("MQ-01-P06"))
             {
                 _state = LeafEventState.Complete;
-                // 바닥 나뭇잎도 이미 사라진 상태여야 함
                 _leafFloorObject?.SetActive(false);
-                Debug.Log("[LeafEventController] 씬 재진입: MQ-01-P05 완료 → Leaf 이벤트 Complete 상태 복원, LeafFloor 비활성화");
+                Debug.Log("[LeafEventController] 씬 재진입: MQ-01-P06 완료 → Leaf 이벤트 Complete 상태 복원, LeafFloor 비활성화");
             }
 
             if (_debugSkipToLeaf)

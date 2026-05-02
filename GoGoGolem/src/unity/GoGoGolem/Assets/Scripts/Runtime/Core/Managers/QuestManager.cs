@@ -1,5 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+using IngameDebugConsole;
+#endif
 
 /// <summary>
 /// 퀘스트 시스템의 중앙 관리자
@@ -416,6 +419,105 @@ public class QuestManager : MonoBehaviour
         progressTracker?.ClearAll();
     }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    /// <summary>
+    /// 디버그용: phaseID가 속한 quest를 찾아 그 이전 메인 퀘스트와 같은 quest 내 이전 phase를
+    /// 모두 완료 처리하고, 해당 phase가 활성인 상태로 만든다.
+    /// 인벤토리 등 부수효과는 씬의 reconciler가 담당.
+    /// </summary>
+    public void JumpToPhase(string phaseID)
+    {
+        if (!isInitialized)
+        {
+            Debug.LogError("[QuestManager] Cannot jump - not initialized!");
+            return;
+        }
+
+        if (questDatabase == null)
+        {
+            Debug.LogError("[QuestManager] QuestDatabase null");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(phaseID))
+        {
+            Debug.LogError("[QuestManager] phaseID가 비어있음.");
+            return;
+        }
+
+        // phaseID가 속한 quest 검색
+        var ordered = questDatabase.GetAllQuestDataInOrder();
+        QuestData targetData = null;
+        int targetIndex = -1;
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            var q = ordered[i];
+            if (q == null) continue;
+            foreach (var obj in q.objectives)
+            {
+                foreach (var phase in obj.phases)
+                {
+                    if (phase.phaseID == phaseID)
+                    {
+                        targetData = q;
+                        targetIndex = i;
+                        break;
+                    }
+                }
+                if (targetData != null) break;
+            }
+            if (targetData != null) break;
+        }
+
+        if (targetData == null)
+        {
+            Debug.LogError($"[QuestManager] phaseID '{phaseID}'가 어떤 quest에도 없음.");
+            return;
+        }
+
+        if (targetData.questType != QuestType.MainQuest)
+        {
+            Debug.LogError($"[QuestManager] {targetData.questID}는 MainQuest가 아님. jumpto는 메인 퀘스트만 지원.");
+            return;
+        }
+
+        progressTracker.ClearAll();
+
+        int completedQuestCount = 0;
+        for (int i = 0; i < targetIndex; i++)
+        {
+            var q = ordered[i];
+            if (q == null || q.questType != QuestType.MainQuest) continue;
+            RestoreCompletedQuest(q.questID);
+            completedQuestCount++;
+        }
+
+        StartQuest(targetData.questID);
+
+        // Quest.CompletePhase()를 직접 호출 (이벤트 안 터트림 → dialogue 스팸 방지)
+        int completedPhaseCount = 0;
+        var activeQuest = progressTracker.GetActiveQuest(targetData.questID);
+        if (activeQuest != null)
+        {
+            bool reachedTarget = false;
+            foreach (var obj in targetData.objectives)
+            {
+                foreach (var phase in obj.phases)
+                {
+                    if (phase.phaseID == phaseID) { reachedTarget = true; break; }
+                    activeQuest.CompletePhase(obj.objectiveID, phase.phaseID);
+                    completedPhaseCount++;
+                }
+                if (reachedTarget) break;
+            }
+        }
+
+        SaveProgress();
+
+        Debug.Log($"[QuestManager] JumpTo {targetData.questID} / {phaseID} 완료 (이전 메인 퀘스트 {completedQuestCount}개, 동일 quest 내 phase {completedPhaseCount}개 완료). 씬 재진입 시 reconciler 적용.");
+    }
+#endif
+
     #endregion
 
     #region Event Handlers (Notifications)
@@ -465,4 +567,49 @@ public class QuestManager : MonoBehaviour
     }
 
     #endregion
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    #region Debug Console Commands
+
+    [ConsoleMethod("quest.list", "메인 퀘스트 진행 순서와 현재 상태 출력")]
+    public static void Cmd_ListQuests()
+    {
+        var qm = Managers.Quest;
+        if (qm == null || qm.questDatabase == null)
+        {
+            Debug.LogError("[quest.list] QuestManager 또는 QuestDatabase 없음");
+            return;
+        }
+
+        var ordered = qm.questDatabase.GetAllQuestDataInOrder();
+        int idx = 0;
+        foreach (var q in ordered)
+        {
+            if (q == null || q.questType != QuestType.MainQuest) continue;
+            string status = qm.IsQuestCompleted(q.questID) ? "✓완료"
+                          : qm.IsQuestActive(q.questID) ? "▶진행중"
+                          : "·";
+            Debug.Log($"[{idx++:D2}] {q.questID} {status} - {q.questName}");
+        }
+    }
+
+    [ConsoleMethod("quest.jumpto", "phaseID 이전을 모두 완료 처리하고 해당 phase가 활성인 상태로 만듦. 예: quest.jumpto MQ-03-P04 (MQ-03의 첫 phase로 가려면 MQ-03-P01 입력)")]
+    public static void Cmd_JumpToPhase(string phaseID)
+    {
+        var qm = Managers.Quest;
+        if (qm == null) { Debug.LogError("[quest.jumpto] QuestManager 없음"); return; }
+        qm.JumpToPhase(phaseID);
+    }
+
+    [ConsoleMethod("quest.reset", "모든 퀘스트 진행 초기화 + 세이브 삭제")]
+    public static void Cmd_ResetQuests()
+    {
+        var qm = Managers.Quest;
+        if (qm == null) { Debug.LogError("[quest.reset] QuestManager 없음"); return; }
+        qm.DeleteSaveFile();
+        Debug.Log("[quest.reset] 모든 퀘스트 진행 초기화 및 세이브 삭제 완료. 씬 재진입 권장.");
+    }
+
+    #endregion
+#endif
 }

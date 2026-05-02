@@ -151,3 +151,7 @@ Assets/Scripts/Runtime/Multimodal/Examples.meta
 # SFX (에셋 스토어 - 각 팀원이 직접 설치, meta만 포함)
 /Assets/Leohpaz/RPG_Essentials_Free/8_Atk_Magic_SFX/25_Wind_01.wav
 !/Assets/Leohpaz/RPG_Essentials_Free/8_Atk_Magic_SFX/25_Wind_01.wav.meta
+
+/Assets/Plugins/IngameDebugConsole/**
+!/Assets/Plugins/IngameDebugConsole/**/
+!/Assets/Plugins/IngameDebugConsole/**/*.meta
