@@ -56,6 +56,12 @@ async def stream_openai_responses(
                 )
                 logger.debug(f"Speech started: {session_id}")
 
+            # 오디오 버퍼 커밋 완료 → 텍스트 전용 응답 요청
+            # GA API: modalities는 session 레벨에서 제거됨 → response.create에서 output_modalities 지정
+            elif event_type == realtime.EventType.INPUT_AUDIO_BUFFER_COMMITTED:
+                await realtime.request_response(output_modalities=["text"])
+                logger.debug(f"Response requested (text only): {session_id}")
+
             # 음성 인식 결과
             elif (
                 event_type
@@ -205,7 +211,6 @@ async def handle_realtime_websocket(
                     # 4. Server VAD 활성화된 세션 설정
                     await realtime.configure_session(
                         instructions=instructions,
-                        modalities=["text"],
                         input_audio_transcription={
                             "model": realtime.transcription_model,
                             "language": language,
@@ -215,8 +220,8 @@ async def handle_realtime_websocket(
                             "threshold": 0.5,
                             "prefix_padding_ms": 300,
                             "silence_duration_ms": 500,
+                            "create_response": False,
                         },
-                        temperature=realtime.temperature,
                     )
 
                     # 5. 응답 스트리밍 태스크 시작 (백그라운드)
