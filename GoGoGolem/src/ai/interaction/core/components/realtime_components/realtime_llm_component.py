@@ -1,8 +1,8 @@
 """
-OpenAI Realtime API를 위한 범용 LLM 컴포넌트
+OpenAI Realtime API (GA) 를 위한 범용 LLM 컴포넌트
 
 WebSocket 기반의 실시간 양방향 통신을 지원합니다.
-방식 B (실시간 스트리밍)를 지원합니다.
+GA Realtime API 스펙 기준으로 작성되었습니다.
 """
 
 import asyncio
@@ -19,10 +19,11 @@ logger = logging.getLogger(__name__)
 
 class RealtimeLLMComponent:
     """
-    OpenAI Realtime API 연결을 관리하는 범용 컴포넌트
+    OpenAI Realtime API (GA) 연결을 관리하는 범용 컴포넌트
     """
 
     class EventType:
+        # 클라이언트 → 서버
         SESSION_UPDATE = "session.update"
         INPUT_AUDIO_BUFFER_APPEND = "input_audio_buffer.append"
         INPUT_AUDIO_BUFFER_COMMIT = "input_audio_buffer.commit"
@@ -30,24 +31,28 @@ class RealtimeLLMComponent:
         RESPONSE_CREATE = "response.create"
         RESPONSE_CANCEL = "response.cancel"
 
+        # 서버 → 클라이언트
         SESSION_CREATED = "session.created"
         SESSION_UPDATED = "session.updated"
+        CONVERSATION_CREATED = "conversation.created"
         INPUT_AUDIO_BUFFER_COMMITTED = "input_audio_buffer.committed"
         INPUT_AUDIO_BUFFER_SPEECH_STARTED = "input_audio_buffer.speech_started"
         INPUT_AUDIO_BUFFER_SPEECH_STOPPED = "input_audio_buffer.speech_stopped"
+        # GA API: conversation.item.added (Beta: conversation.item.created)
+        CONVERSATION_ITEM_ADDED = "conversation.item.added"
         CONVERSATION_ITEM_CREATED = "conversation.item.created"
         CONVERSATION_ITEM_TRANSCRIPTION_COMPLETED = (
             "conversation.item.input_audio_transcription.completed"
         )
         RESPONSE_CREATED = "response.created"
         RESPONSE_DONE = "response.done"
-        RESPONSE_TEXT_DELTA = "response.text.delta"
-        RESPONSE_TEXT_DONE = "response.text.done"
-        RESPONSE_AUDIO_DELTA = "response.audio.delta"
-        RESPONSE_AUDIO_DONE = "response.audio.done"
+        # GA API 이벤트 이름 변경: response.text.* → response.output_text.*
+        RESPONSE_TEXT_DELTA = "response.output_text.delta"
+        RESPONSE_TEXT_DONE = "response.output_text.done"
+        # GA API 이벤트 이름 변경: response.audio.* → response.output_audio.*
+        RESPONSE_AUDIO_DELTA = "response.output_audio.delta"
+        RESPONSE_AUDIO_DONE = "response.output_audio.done"
         ERROR = "error"
-
-    DEFAULT_MAX_OUTPUT_TOKENS = 1024
 
     def __init__(
         self,
@@ -67,7 +72,6 @@ class RealtimeLLMComponent:
         url = f"{self.base_url}?model={self.model}"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "OpenAI-Beta": "realtime=v1",
         }
 
         self.ws = await asyncio.wait_for(
@@ -75,40 +79,54 @@ class RealtimeLLMComponent:
             timeout=self.timeout,
         )
 
-        response = await self._receive_event()
-        if response.get("type") != self.EventType.SESSION_CREATED:
-            raise RuntimeError("Failed to create realtime session")
+        # GA API는 session.created 후 conversation.created 등 추가 이벤트를 보낼 수 있음
+        # session.created 이벤트가 올 때까지 대기
+        while True:
+            response = await self._receive_event()
+            event_type = response.get("type")
+            if event_type == self.EventType.SESSION_CREATED:
+                return
+            if event_type == self.EventType.ERROR:
+                logger.error(f"OpenAI error during connect: {response}")
+                raise RuntimeError(
+                    f"Failed to create realtime session: {response.get('error', {}).get('message', 'unknown')}"
+                )
+            logger.debug(f"Skipping event during connect: {event_type}")
 
     async def configure_session(
         self,
         instructions: Optional[str] = None,
-        modalities: Optional[list] = None,
-        input_audio_format: str = "pcm16",
-        output_audio_format: str = "pcm16",
         input_audio_transcription: Optional[Dict[str, Any]] = None,
         turn_detection: Optional[Dict[str, Any]] = None,
-        temperature: float = 0.8,
-        max_response_output_tokens: Optional[int] = DEFAULT_MAX_OUTPUT_TOKENS,
     ) -> Dict[str, Any]:
+        """
+        GA Realtime API session.update 이벤트 전송
+
+        GA API 구조:
+        - instructions: session 최상위
+        - turn_detection → audio.input.turn_detection
+        - input_audio_transcription → audio.input.transcription
+        - temperature, modalities, input/output_audio_format: 제거됨
+        """
         if not self.ws:
             raise RuntimeError("WebSocket not connected")
 
         session_config: Dict[str, Any] = {
-            "input_audio_format": input_audio_format,
-            "output_audio_format": output_audio_format,
-            "temperature": temperature,
+            "type": "realtime",
+            "model": self.model,
         }
 
-        if modalities:
-            session_config["modalities"] = modalities
         if instructions:
-            session_config["instructions"] = instructions  # SYSTEM ONLY
-        if input_audio_transcription:
-            session_config["input_audio_transcription"] = input_audio_transcription
+            session_config["instructions"] = instructions
+
+        # GA API: turn_detection과 transcription은 audio.input 하위로 이동
+        audio_input: Dict[str, Any] = {}
         if turn_detection:
-            session_config["turn_detection"] = turn_detection
-        if max_response_output_tokens is not None:
-            session_config["max_response_output_tokens"] = max_response_output_tokens
+            audio_input["turn_detection"] = turn_detection
+        if input_audio_transcription:
+            audio_input["transcription"] = input_audio_transcription
+        if audio_input:
+            session_config["audio"] = {"input": audio_input}
 
         await self._send_event(
             {
@@ -117,11 +135,16 @@ class RealtimeLLMComponent:
             }
         )
 
-        response = await self._receive_event()
-        if response.get("type") != self.EventType.SESSION_UPDATED:
-            raise RuntimeError("Session update failed")
-
-        return response
+        while True:
+            response = await self._receive_event()
+            event_type = response.get("type")
+            if event_type == self.EventType.SESSION_UPDATED:
+                return response
+            if event_type == self.EventType.ERROR:
+                error_msg = response.get("error", {}).get("message", "unknown")
+                logger.error(f"OpenAI error during session update: {response}")
+                raise RuntimeError(f"Session update failed: {error_msg}")
+            logger.debug(f"Skipping intermediate event during configure_session: {event_type}")
 
     async def send_audio(self, audio_bytes: bytes) -> None:
         audio_base64 = base64.b64encode(audio_bytes).decode("utf-8")
@@ -137,11 +160,11 @@ class RealtimeLLMComponent:
 
     async def request_response(
         self,
-        modalities: Optional[list] = None,
+        output_modalities: Optional[list] = None,
     ) -> None:
         event: Dict[str, Any] = {"type": self.EventType.RESPONSE_CREATE}
-        if modalities:
-            event["response"] = {"modalities": modalities}
+        if output_modalities:
+            event["response"] = {"output_modalities": output_modalities}
         await self._send_event(event)
 
     async def receive_events(
@@ -166,7 +189,7 @@ class RealtimeLLMComponent:
     async def generate_response_from_audio(
         self,
         audio_bytes: bytes,
-        modalities: Optional[list] = None,
+        output_modalities: Optional[list] = None,
     ) -> Dict[str, Any]:
         result = {
             "transcript": "",
@@ -176,8 +199,7 @@ class RealtimeLLMComponent:
 
         await self.send_audio(audio_bytes)
         await self.commit_audio()
-
-        await self.request_response(modalities=modalities or ["text"])
+        await self.request_response(output_modalities=output_modalities or ["text"])
 
         audio_chunks = []
 
