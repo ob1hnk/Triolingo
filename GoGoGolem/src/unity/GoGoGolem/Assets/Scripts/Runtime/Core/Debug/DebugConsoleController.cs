@@ -76,5 +76,12 @@ public class DebugConsoleController : MonoBehaviour
         Debug.Log($"[scene.load] {sceneName} 로드 중...");
         SceneManager.LoadScene(sceneName);
     }
+
+    [ConsoleMethod("data.reset", "플레이어 데이터 및 인트로 시청 기록을 초기화한다.")]
+    public static void Cmd_ResetData()
+    {
+        GameManager.Instance.ResetAllData();
+        Debug.Log("[data.reset] 완료. 인트로 시청 기록 포함 playerpref 데이터 초기화됨.");
+    }
 #endif
 }

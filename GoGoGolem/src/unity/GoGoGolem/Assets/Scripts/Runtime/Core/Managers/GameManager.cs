@@ -103,6 +103,7 @@ public class GameManager : MonoBehaviour
     {
         _data = new PlayerData();
         PlayerPrefs.DeleteKey(SaveKey);
+        PlayerPrefs.DeleteKey("Intro_Watched");
         PlayerPrefs.Save();
         Debug.Log("[GameManager] All player data reset.");
     }
