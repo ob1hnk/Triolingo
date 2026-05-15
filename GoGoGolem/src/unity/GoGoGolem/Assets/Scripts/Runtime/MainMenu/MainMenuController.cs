@@ -37,7 +37,10 @@ public class MainMenuController : MonoBehaviour
 
     private void LoadStartScene()
     {
-        SceneManager.LoadScene(IntroSceneController.HasWatched ? postIntroSceneName : introSceneName);
+        bool introComplete = IntroSceneController.HasWatched
+            && GameManager.Instance.HasPlayerName
+            && GameManager.Instance.HasGolemName;
+        SceneManager.LoadScene(introComplete ? postIntroSceneName : introSceneName);
     }
 
     public void OnSettings()

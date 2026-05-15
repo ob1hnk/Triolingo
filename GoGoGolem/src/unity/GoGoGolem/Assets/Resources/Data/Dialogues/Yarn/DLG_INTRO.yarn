@@ -38,6 +38,16 @@ tags: phase:INTRO
 주인공: 어... 어라? 내 거대 골렘은 어디 가고 왜 이렇게 쪼끄만 애가... 설마 보석이 잘못됐나?
 골렘: 히히, 여기는 신기하네요! 저기... 당신의 이름은 뭔가요? 제일 먼저 알고 싶어요!
 
+<<jump DLG_INTRO_NAMES>>
+===
+
+title: DLG_INTRO_NAMES
+tags: phase:INTRO
+---
+// === 이름 입력 구간 — skip 버튼 비활성 ===
+<<show_image 4>>
+<<hide_skip>>
+
 // === 플레이어 이름 입력 ===
 <<request_name_input>>
 
@@ -46,6 +56,9 @@ tags: phase:INTRO
 
 // === 골렘 이름 입력 ===
 <<request_golem_name_input>>
+
+// === 이름 입력 완료 — 이후부터 skip 가능 ===
+<<show_skip>>
 
 주인공: 너는 이제부터 {$golemName}이야.
 골렘: {$golemName}! 우와아, 정말 마음에 쏙 들어요!

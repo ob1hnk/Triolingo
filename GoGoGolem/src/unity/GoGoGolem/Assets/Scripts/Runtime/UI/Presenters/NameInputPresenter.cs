@@ -37,6 +37,13 @@ public class NameInputPresenter : MonoBehaviour
         panel.SetActive(false);
     }
 
+    public void ForceCancel()
+    {
+        if (!panel.activeSelf) return;
+        panel.SetActive(false);
+        _confirmed = true; // WaitUntil 해제 (저장 없이)
+    }
+
     private void OnConfirm()
     {
         string input = nameInputField.text.Trim();

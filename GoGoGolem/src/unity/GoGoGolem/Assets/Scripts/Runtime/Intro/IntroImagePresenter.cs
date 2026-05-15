@@ -42,7 +42,13 @@ public class IntroImagePresenter : MonoBehaviour
             yield break;
         }
 
-        // 이미 표시 중이면 빠르게 페이드아웃 후 교체
+        // 이미 같은 이미지가 완전히 표시 중이면 불필요한 fade 없이 종료
+        if (imagePanel.gameObject.activeSelf
+            && imagePanel.alpha >= 1f
+            && displayImage.sprite == cardSprites[index])
+            yield break;
+
+        // 다른 이미지가 표시 중이면 페이드아웃 후 교체
         if (imagePanel.gameObject.activeSelf && imagePanel.alpha > 0f)
         {
             yield return FadeTo(0f);
@@ -58,6 +64,14 @@ public class IntroImagePresenter : MonoBehaviour
     private IEnumerator HideImage()
     {
         yield return FadeTo(0f);
+        imagePanel.gameObject.SetActive(false);
+    }
+
+    public void ForceHide()
+    {
+        if (_fadeCoroutine != null)
+            StopCoroutine(_fadeCoroutine);
+        imagePanel.alpha = 0f;
         imagePanel.gameObject.SetActive(false);
     }
 
