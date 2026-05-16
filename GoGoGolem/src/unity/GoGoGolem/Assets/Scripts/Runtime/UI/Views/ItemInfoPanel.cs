@@ -44,11 +44,6 @@ public class ItemInfoPanel : MonoBehaviour
 
         if (itemNameText != null)    itemNameText.text    = asset.itemName;
         if (descriptionText != null) descriptionText.text = asset.description;
-
-        // ContentSizeFitter는 빌드에서 자동 갱신되지 않아 강제 재계산 필요
-        Canvas.ForceUpdateCanvases();
-        if (descriptionText != null)
-            LayoutRebuilder.ForceRebuildLayoutImmediate(descriptionText.rectTransform);
     }
 
     public void ShowEmpty()
