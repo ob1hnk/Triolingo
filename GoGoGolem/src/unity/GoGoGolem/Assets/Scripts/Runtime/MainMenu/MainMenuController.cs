@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 public class MainMenuController : MonoBehaviour
 {
     [SerializeField] private string introSceneName = "Intro";
+    [SerializeField] private string postIntroSceneName = "Forest";
     [SerializeField] private SettingsPresenter settingsPresenter;
     [SerializeField] private PrivacyConsentPresenter privacyConsentPresenter;
 
@@ -31,7 +32,15 @@ public class MainMenuController : MonoBehaviour
             return;
         }
 
-        SceneManager.LoadScene(introSceneName);
+        LoadStartScene();
+    }
+
+    private void LoadStartScene()
+    {
+        bool introComplete = IntroSceneController.HasWatched
+            && GameManager.Instance.HasPlayerName
+            && GameManager.Instance.HasGolemName;
+        SceneManager.LoadScene(introComplete ? postIntroSceneName : introSceneName);
     }
 
     public void OnSettings()
@@ -60,7 +69,7 @@ public class MainMenuController : MonoBehaviour
         if (_pendingStart)
         {
             _pendingStart = false;
-            SceneManager.LoadScene(introSceneName);
+            LoadStartScene();
         }
     }
 }
