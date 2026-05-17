@@ -52,6 +52,8 @@ class RealtimeLLMComponent:
         # GA API 이벤트 이름 변경: response.audio.* → response.output_audio.*
         RESPONSE_AUDIO_DELTA = "response.output_audio.delta"
         RESPONSE_AUDIO_DONE = "response.output_audio.done"
+        RESPONSE_FUNCTION_CALL_ARGUMENTS_DELTA = "response.function_call_arguments.delta"
+        RESPONSE_FUNCTION_CALL_ARGUMENTS_DONE = "response.function_call_arguments.done"
         ERROR = "error"
 
     def __init__(
@@ -98,6 +100,8 @@ class RealtimeLLMComponent:
         instructions: Optional[str] = None,
         input_audio_transcription: Optional[Dict[str, Any]] = None,
         turn_detection: Optional[Dict[str, Any]] = None,
+        tools: Optional[list] = None,
+        tool_choice: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         GA Realtime API session.update 이벤트 전송
@@ -127,6 +131,11 @@ class RealtimeLLMComponent:
             audio_input["transcription"] = input_audio_transcription
         if audio_input:
             session_config["audio"] = {"input": audio_input}
+
+        if tools:
+            session_config["tools"] = tools
+        if tool_choice:
+            session_config["tool_choice"] = tool_choice
 
         await self._send_event(
             {
@@ -229,6 +238,16 @@ class RealtimeLLMComponent:
             result["response_audio"] = b"".join(audio_chunks)
 
         return result
+
+    async def send_function_call_output(self, call_id: str, output: str) -> None:
+        await self._send_event({
+            "type": "conversation.item.create",
+            "item": {
+                "type": "function_call_output",
+                "call_id": call_id,
+                "output": output,
+            },
+        })
 
     async def close(self) -> None:
         if self.ws:

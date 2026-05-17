@@ -5,13 +5,17 @@ OpenAI Realtime API를 사용하여 실시간 음성 처리를 수행합니다.
 Server VAD를 지원하며, 세션 내에서 자동으로 대화 컨텍스트를 유지합니다.
 """
 
+import json
 import logging
-from typing import Optional
+import os
+from typing import Any, Dict, Optional
 
 from interaction.core.components.realtime_components.realtime_llm_component import (
     RealtimeLLMComponent,
 )
 from interaction.speech.prompts.text_to_text_v2 import SYSTEM_PROMPT, MODEL_CONFIG
+
+_TOOL_PATH = os.path.join(os.path.dirname(__file__), "../../prompts/respond_with_expression_tool.json")
 
 logger = logging.getLogger(__name__)
 
@@ -62,4 +66,13 @@ class LLMRealtimeSpeechV1(RealtimeLLMComponent):
         logger.info(
             f"LLMRealtimeSpeechV1 initialized with model: {model}, "
             f"transcription: {transcription_model} ({transcription_language})"
+        )
+
+    async def configure_session(self, **kwargs) -> Dict[str, Any]:
+        with open(_TOOL_PATH, encoding="utf-8") as f:
+            tool = json.load(f)
+        return await super().configure_session(
+            tools=[tool],
+            tool_choice="required",
+            **kwargs
         )
