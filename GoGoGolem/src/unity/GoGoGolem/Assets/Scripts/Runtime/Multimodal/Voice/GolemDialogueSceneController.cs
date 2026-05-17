@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -56,6 +57,9 @@ public class GolemDialogueSceneController : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GolemDialogueUIView uiView;
 
+    [Header("표정")]
+    [SerializeField] private GolemFaceController golemFaceController;
+
     [Header("Event Channels")]
     [SerializeField] private GameEvent requestEnterDialogueEvent;
     [SerializeField] private GameEvent requestHideHUDEvent;
@@ -76,11 +80,12 @@ public class GolemDialogueSceneController : MonoBehaviour
         requestEnterDialogueEvent?.Register(EnterDialogueMode);
 
         if (voiceManager == null) return;
-        voiceManager.OnConnected       += HandleVoiceConnected;
-        voiceManager.OnSpeechDetected  += HandleSpeechDetected;
-        voiceManager.OnTranscript      += HandleTranscript;
-        voiceManager.OnStreamingText   += HandleStreamingText;
-        voiceManager.OnAIResponse      += HandleAIResponse;
+        voiceManager.OnConnected        += HandleVoiceConnected;
+        voiceManager.OnSpeechDetected   += HandleSpeechDetected;
+        voiceManager.OnTranscript       += HandleTranscript;
+        voiceManager.OnStreamingText    += HandleStreamingText;
+        voiceManager.OnAIResponse       += HandleAIResponse;
+        voiceManager.OnEmotionReceived  += HandleEmotionReceived;
     }
 
     private void OnDisable()
@@ -88,11 +93,12 @@ public class GolemDialogueSceneController : MonoBehaviour
         requestEnterDialogueEvent?.Unregister(EnterDialogueMode);
 
         if (voiceManager == null) return;
-        voiceManager.OnConnected       -= HandleVoiceConnected;
-        voiceManager.OnSpeechDetected  -= HandleSpeechDetected;
-        voiceManager.OnTranscript      -= HandleTranscript;
-        voiceManager.OnStreamingText   -= HandleStreamingText;
-        voiceManager.OnAIResponse      -= HandleAIResponse;
+        voiceManager.OnConnected        -= HandleVoiceConnected;
+        voiceManager.OnSpeechDetected   -= HandleSpeechDetected;
+        voiceManager.OnTranscript       -= HandleTranscript;
+        voiceManager.OnStreamingText    -= HandleStreamingText;
+        voiceManager.OnAIResponse       -= HandleAIResponse;
+        voiceManager.OnEmotionReceived  -= HandleEmotionReceived;
     }
 
     /// <summary>GolemInteractable의 requestEnterDialogueEvent SO를 통해 호출</summary>
@@ -316,5 +322,16 @@ public class GolemDialogueSceneController : MonoBehaviour
         }
         // 다음 응답의 첫 TEXT_DELTA에서 말풍선 초기화
         _needsClearGolemText = true;
+    }
+
+    /// <summary>EXPRESSION 메시지 수신 → 골렘 표정 변경 (TEXT_DELTA 스트리밍 시작 전)</summary>
+    private void HandleEmotionReceived(string emotionName)
+    {
+        if (golemFaceController == null) return;
+
+        if (Enum.TryParse<GolemFaceController.GolemEmotion>(emotionName, ignoreCase: true, out var emotion))
+            golemFaceController.SetFace(emotion);
+        else
+            golemFaceController.SetFace(GolemFaceController.GolemEmotion.Neutral);
     }
 }

@@ -543,6 +543,17 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7431533587824991313, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
   m_PrefabInstance: {fileID: 143030883}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &143030887 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9135575588382599449, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
+  m_PrefabInstance: {fileID: 143030883}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcbeeb907039eb8468900f62a1d33e6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &143030888 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2005445015085476028, guid: 828c255f9d6c1ca45b52360f112c64eb, type: 3}
@@ -9663,6 +9674,7 @@ MonoBehaviour:
   playerTransform: {fileID: 1697612975}
   voiceManager: {fileID: 147977249}
   uiView: {fileID: 1598776806}
+  golemFaceController: {fileID: 143030887}
   requestEnterDialogueEvent: {fileID: 11400000, guid: 7ab5d8b65d1adb9488a8ed88428bcbad, type: 2}
   requestHideHUDEvent: {fileID: 11400000, guid: 0721ea1755460b844a5ee06d7b5be039, type: 2}
   requestShowHUDEvent: {fileID: 11400000, guid: 342c4e1f9b5c74c44baf926a5ee4a790, type: 2}
@@ -13793,6 +13805,30 @@ PrefabInstance:
     - target: {fileID: 3167089661266411046, guid: d93896b5398afa341baffddea53e809f, type: 3}
       propertyPath: m_Name
       value: InventoryCanvas New
+      objectReference: {fileID: 0}
+    - target: {fileID: 3969570175738909590, guid: d93896b5398afa341baffddea53e809f, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3969570175738909590, guid: d93896b5398afa341baffddea53e809f, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3969570175738909590, guid: d93896b5398afa341baffddea53e809f, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3969570175738909590, guid: d93896b5398afa341baffddea53e809f, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 3969570175738909590, guid: d93896b5398afa341baffddea53e809f, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -40
+      objectReference: {fileID: 0}
+    - target: {fileID: 5511129074042963052, guid: d93896b5398afa341baffddea53e809f, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5612785563698385270, guid: d93896b5398afa341baffddea53e809f, type: 3}
       propertyPath: m_Pivot.x

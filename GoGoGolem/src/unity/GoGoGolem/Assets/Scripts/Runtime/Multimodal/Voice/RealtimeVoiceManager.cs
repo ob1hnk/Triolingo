@@ -67,6 +67,9 @@ namespace Multimodal.Voice
         /// AI 최종 응답 (전체 텍스트)
         public event Action<string> OnAIResponse;
 
+        /// AI 응답 직전 골렘 표정 (GolemEmotion enum 이름 문자열)
+        public event Action<string> OnEmotionReceived;
+
         /// 에러 발생 시 발생
         public event Action<string, string> OnError; // (error_code, error_message)
         #endregion
@@ -96,6 +99,7 @@ namespace Multimodal.Voice
             _realtimeClient.OnSpeechStarted += HandleSpeechStarted;
             _realtimeClient.OnTranscript += HandleTranscript;
             _realtimeClient.OnTextDelta += HandleTextDelta;
+            _realtimeClient.OnExpression += HandleExpression;
             _realtimeClient.OnResponseEnd += HandleResponseEnd;
             _realtimeClient.OnError += HandleError;
 
@@ -296,14 +300,18 @@ namespace Multimodal.Voice
             DebugLog($"Text delta: {delta}", verbose: true);
         }
 
+        private void HandleExpression(string emotion)
+        {
+            DebugLog($"Expression: {emotion}");
+            OnEmotionReceived?.Invoke(emotion);
+        }
+
         private void HandleResponseEnd(string fullText)
         {
             DebugLog($"Response complete: {fullText}");
 
-            // 최종 응답
             OnAIResponse?.Invoke(fullText);
 
-            // 초기화 (다음 턴 준비)
             _currentResponse = "";
         }
 
