@@ -329,7 +329,7 @@ public class GolemDialogueSceneController : MonoBehaviour
     {
         if (golemFaceController == null) return;
 
-        if (Enum.TryParse<GolemFaceController.GolemEmotion>(emotionName, out var emotion))
+        if (Enum.TryParse<GolemFaceController.GolemEmotion>(emotionName, ignoreCase: true, out var emotion))
             golemFaceController.SetFace(emotion);
         else
             golemFaceController.SetFace(GolemFaceController.GolemEmotion.Neutral);
