@@ -22,6 +22,9 @@ public class DebugConsoleController : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+#if DEVELOPMENT_BUILD
+        Debug.developerConsoleVisible = false;
+#endif
     }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
