@@ -60,6 +60,10 @@ public class GolemDialogueSceneController : MonoBehaviour
     [Header("표정")]
     [SerializeField] private GolemFaceController golemFaceController;
 
+    [Header("BGM")]
+    [Tooltip("BackgroundMusic 오브젝트의 AudioSource — 대화 중 음소거")]
+    [SerializeField] private AudioSource backgroundMusicSource;
+
     [Header("Event Channels")]
     [SerializeField] private GameEvent requestEnterDialogueEvent;
     [SerializeField] private GameEvent requestHideHUDEvent;
@@ -113,6 +117,7 @@ public class GolemDialogueSceneController : MonoBehaviour
         // 1. 플레이어 조작만 차단 (모델은 카메라 전환 시점에 숨김)
         if (playerController != null) playerController.enabled = false;
         if (playerInteraction != null) playerInteraction.enabled = false;
+        if (backgroundMusicSource != null) backgroundMusicSource.volume = 0f;
         requestHideHUDEvent?.Raise();
 
         // 2. 골렘 회전 시작 → 완료 후 카메라 전환 + UI 표시
@@ -253,6 +258,7 @@ public class GolemDialogueSceneController : MonoBehaviour
         if (playerController != null) playerController.enabled = true;
         if (playerInteraction != null) playerInteraction.enabled = true;
         if (playerModel != null) playerModel.SetActive(true);
+        if (backgroundMusicSource != null) backgroundMusicSource.volume = 1f;
         requestShowHUDEvent?.Raise();
 
         uiView.Hide();
