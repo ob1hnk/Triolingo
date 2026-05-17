@@ -8,7 +8,7 @@
       "expression": {
         "type": "string",
         "enum": ["Neutral", "Happy", "Sad", "Angry", "Surprise", "Fear"],
-        "description": "Golem's facial expression. Happy=joy/excitement, Sad=empathy/comfort, Angry=rare frustration, Surprise=unexpected discovery, Fear=danger, Neutral=default/thinking/hints"
+        "description": "Golem's facial expression. Happy=joy/excitement, Sad=empathy/comfort for player's internal struggle, Angry=solidarity when something unfair happened to the player (take their side!), Surprise=unexpected discovery, Fear=danger, Neutral=default/thinking/hints"
       },
       "text": {
         "type": "string",
