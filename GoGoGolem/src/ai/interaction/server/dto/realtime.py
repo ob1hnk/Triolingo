@@ -23,6 +23,7 @@ class RealtimeMessageType(str, Enum):
     SPEECH_STARTED = "SPEECH_STARTED"
     TRANSCRIPT = "TRANSCRIPT"
     TEXT_DELTA = "TEXT_DELTA"
+    EXPRESSION = "EXPRESSION"
     RESPONSE_END = "RESPONSE_END"
     STREAM_ERROR = "STREAM_ERROR"
 
@@ -126,6 +127,14 @@ class TextDeltaResponse(BaseModel):
     type: str = RealtimeMessageType.TEXT_DELTA
     session_id: str
     delta: str
+
+
+class ExpressionResponse(BaseModel):
+    """골렘 표정 (TEXT_DELTA 전에 먼저 전송)"""
+
+    type: str = RealtimeMessageType.EXPRESSION
+    session_id: str
+    emotion: str
 
 
 class ResponseEndResponse(BaseModel):

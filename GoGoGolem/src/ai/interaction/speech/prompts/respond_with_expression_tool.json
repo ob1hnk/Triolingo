@@ -1,0 +1,20 @@
+{
+  "type": "function",
+  "name": "respond_with_expression",
+  "description": "Deliver the golem's response to the player. Always use this function to send your response. Choose expression that matches the emotional tone of your text.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "expression": {
+        "type": "string",
+        "enum": ["Neutral", "Happy", "Sad", "Angry", "Surprise", "Fear"],
+        "description": "Golem's facial expression. Happy=joy/excitement, Sad=empathy/comfort, Angry=rare frustration, Surprise=unexpected discovery, Fear=danger, Neutral=default/thinking/hints"
+      },
+      "text": {
+        "type": "string",
+        "description": "The golem's response text in Korean"
+      }
+    },
+    "required": ["expression", "text"]
+  }
+}

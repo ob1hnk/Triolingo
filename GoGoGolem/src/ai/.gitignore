@@ -2,4 +2,5 @@
 .venv/*
 __pycache__/
 *.json
+!interaction/speech/prompts/*.json
 tests

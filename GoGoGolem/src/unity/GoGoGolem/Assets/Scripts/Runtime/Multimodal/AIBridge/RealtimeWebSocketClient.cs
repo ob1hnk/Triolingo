@@ -45,6 +45,7 @@ namespace Multimodal.AIBridge
             public const string SPEECH_STARTED = "SPEECH_STARTED";
             public const string TRANSCRIPT = "TRANSCRIPT";
             public const string TEXT_DELTA = "TEXT_DELTA";
+            public const string EXPRESSION = "EXPRESSION";
             public const string RESPONSE_END = "RESPONSE_END";
             public const string STREAM_ERROR = "STREAM_ERROR";
         }
@@ -61,7 +62,9 @@ namespace Multimodal.AIBridge
 
         public event Action<string> OnTextDelta;
 
-        public event Action<string> OnResponseEnd;
+        public event Action<string> OnExpression; // emotion 문자열
+
+        public event Action<string> OnResponseEnd; // full_text
 
         public event Action<string, string> OnError; // (error_code, error_message)
         #endregion
@@ -289,6 +292,10 @@ namespace Multimodal.AIBridge
                         HandleTextDelta(message);
                         break;
 
+                    case MessageType.EXPRESSION:
+                        HandleExpression(message);
+                        break;
+
                     case MessageType.RESPONSE_END:
                         HandleResponseEnd(message);
                         break;
@@ -338,6 +345,13 @@ namespace Multimodal.AIBridge
                 // 실시간 스트리밍 - UI 업데이트
                 OnTextDelta?.Invoke(delta);
             }
+        }
+
+        private void HandleExpression(JObject message)
+        {
+            var emotion = message["emotion"]?.ToString() ?? "Neutral";
+            Debug.Log($"[Realtime] Expression: {emotion}");
+            OnExpression?.Invoke(emotion);
         }
 
         private void HandleResponseEnd(JObject message)

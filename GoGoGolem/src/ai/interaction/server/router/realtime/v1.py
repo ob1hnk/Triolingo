@@ -78,21 +78,45 @@ async def stream_openai_responses(
                     )
                     logger.debug(f"Transcript: {transcript[:50]}...")
 
-            # 텍스트 델타
-            elif event_type == realtime.EventType.RESPONSE_TEXT_DELTA:
-                delta = event.get("delta", "")
-                if delta:
-                    full_text += delta
+            # function_call_arguments.delta — 무시 (arguments.done에서 전체 처리)
+            elif event_type == realtime.EventType.RESPONSE_FUNCTION_CALL_ARGUMENTS_DELTA:
+                pass
+
+            # function_call_arguments.done — 파싱, fake streaming, RESPONSE_END 전송
+            elif event_type == realtime.EventType.RESPONSE_FUNCTION_CALL_ARGUMENTS_DONE:
+                try:
+                    parsed = json.loads(event.get("arguments", "{}"))
+                except json.JSONDecodeError:
+                    parsed = {}
+                expression = parsed.get("expression", "Neutral")
+                full_text = parsed.get("text", "")
+                call_id = event.get("call_id", "")
+
+                # 표정 먼저 전송 (텍스트 스트리밍 시작 전)
+                await client_ws.send_json(
+                    {
+                        "type": MessageType.EXPRESSION,
+                        "session_id": session_id,
+                        "emotion": expression,
+                    }
+                )
+
+                # Fake streaming: 10글자씩, 10ms 간격
+                CHUNK = 10
+                DELAY = 0.01
+                for i in range(0, len(full_text), CHUNK):
+                    chunk = full_text[i:i + CHUNK]
                     await client_ws.send_json(
                         {
                             "type": MessageType.TEXT_DELTA,
                             "session_id": session_id,
-                            "delta": delta,
+                            "delta": chunk,
                         }
                     )
+                    if i + CHUNK < len(full_text):
+                        await asyncio.sleep(DELAY)
 
-            # 응답 완료
-            elif event_type == realtime.EventType.RESPONSE_DONE:
+                # RESPONSE_END (emotion 없음)
                 await client_ws.send_json(
                     {
                         "type": MessageType.RESPONSE_END,
@@ -100,8 +124,15 @@ async def stream_openai_responses(
                         "full_text": full_text,
                     }
                 )
-                logger.info(f"Response completed: {full_text[:50]}...")
-                full_text = ""  # 다음 응답을 위해 초기화
+                logger.info(f"Response completed (expression={expression}): {full_text[:50]}...")
+                full_text = ""
+
+                # OpenAI conversation context 클린업
+                await realtime.send_function_call_output(call_id, json.dumps({"status": "delivered"}))
+
+            # 응답 완료 (tool call 처리 후 상태 초기화용)
+            elif event_type == realtime.EventType.RESPONSE_DONE:
+                full_text = ""  # 혹시 남은 상태 초기화
                 # break 하지 않음 - 멀티턴을 위해 계속 대기
 
             # 에러 (OpenAI 에러 구조: error.type, error.code, error.message, error.param, error.event_id)
