@@ -10,10 +10,11 @@ namespace Demo.GestureDetection
   /// 골렘 팔/손 IK 애니메이션 컨트롤러 (Generic 리그 전용)
   /// HumanBodyBones 의존성 제거 - 모든 bone을 Inspector에서 직접 할당
   ///
-  /// [안정화] 떨림         : PositionFilter (이동평균 + deadzone)
+  /// [안정화] 떨림         : OneEuroFilter (속도 적응형 low-pass)
   /// [안정화] 손 꺾임      : MCP 4개 랜드마크로 palm normal 다중 평균
   /// [안정화] 화면 밖 복귀  : rest position lerp + IK weight 페이드
-  /// [인덱스] 스레드 안전   : UpdateAvatar에서 Vector3 배열로 즉시 값 복사
+  /// [안정화] 핸드니스 플립  : 프레임 카운트 hysteresis
+  /// [스레드] 스레드 안전   : UpdateAvatar에서 Vector3 배열로 즉시 값 복사
   ///                          → LateUpdate와 MediaPipe 콜백 간 경쟁 조건 제거
   /// </summary>
   public class GolemLandmarkAnimator : MonoBehaviour
@@ -35,48 +36,78 @@ namespace Demo.GestureDetection
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 떨림 보정용 필터
-    // 이동평균 버퍼 + deadzone: 미세 노이즈 무시, 큰 움직임만 반영
+    // 떨림 보정용 필터 (One Euro Filter)
+    // 속도가 낮을 때 강하게, 높을 때 약하게 필터링 → lag 없이 떨림 제거
+    // minCutoff: 정지 시 필터 강도 (낮을수록 떨림 더 제거)
+    // beta:      속도 민감도 (높을수록 빠른 동작에 더 즉각 반응)
     // ─────────────────────────────────────────────────────────────────────────
-    private class PositionFilter
+    private class OneEuroFilter1D
     {
-      private readonly int _bufferSize;
-      private readonly float _deadzone;
-      private readonly Vector3[] _buffer;
-      private int _index;
-      private int _count;
-      private Vector3 _filtered;
+      private readonly float _dCutoff = 1.0f;
+      private float _minCutoff;
+      private float _beta;
+      private float _prev;
+      private float _dPrev;
+      private bool  _initialized;
 
-      public PositionFilter(int bufferSize = 4, float deadzone = 0.005f)
+      public OneEuroFilter1D(float minCutoff, float beta)
       {
-        _bufferSize = bufferSize;
-        _deadzone   = deadzone;
-        _buffer     = new Vector3[bufferSize];
+        _minCutoff = minCutoff;
+        _beta      = beta;
       }
 
-      public Vector3 Update(Vector3 raw)
+      private float Alpha(float cutoff, float dt)
       {
-        _buffer[_index] = raw;
-        _index = (_index + 1) % _bufferSize;
-        if (_count < _bufferSize) _count++;
-
-        Vector3 avg = Vector3.zero;
-        for (int i = 0; i < _count; i++) avg += _buffer[i];
-        avg /= _count;
-
-        if (Vector3.Distance(avg, _filtered) > _deadzone)
-          _filtered = avg;
-
-        return _filtered;
+        float tau = 1.0f / (2.0f * Mathf.PI * cutoff);
+        return 1.0f / (1.0f + tau / dt);
       }
 
-      public void Reset(Vector3 initial)
+      public float Update(float raw, float dt, float maxDelta = float.MaxValue)
       {
-        for (int i = 0; i < _bufferSize; i++) _buffer[i] = initial;
-        _count    = _bufferSize;
-        _index    = 0;
-        _filtered = initial;
+        if (dt <= 0f) return _initialized ? _prev : raw;
+        if (!_initialized) { _prev = raw; _dPrev = 0f; _initialized = true; return raw; }
+
+        // 이상치 제거: _prev 기준 maxDelta 초과 시 입력 클램프
+        if (maxDelta < float.MaxValue)
+          raw = Mathf.Clamp(raw, _prev - maxDelta, _prev + maxDelta);
+
+        float dAlpha    = Alpha(_dCutoff, dt);
+        float dRaw      = (raw - _prev) / dt;
+        float dFiltered = dAlpha * dRaw + (1f - dAlpha) * _dPrev;
+
+        float cutoff    = _minCutoff + _beta * Mathf.Abs(dFiltered);
+        float alpha     = Alpha(cutoff, dt);
+        float filtered  = alpha * raw + (1f - alpha) * _prev;
+
+        _prev  = filtered;
+        _dPrev = dFiltered;
+        return filtered;
       }
+
+      public void Reset(float value) { _prev = value; _dPrev = 0f; _initialized = true; }
+    }
+
+    private class OneEuroFilter
+    {
+      private readonly OneEuroFilter1D _x, _y, _z;
+
+      public OneEuroFilter(float minCutoff, float beta)
+      {
+        _x = new OneEuroFilter1D(minCutoff, beta);
+        _y = new OneEuroFilter1D(minCutoff, beta);
+        _z = new OneEuroFilter1D(minCutoff, beta);
+      }
+
+      public Vector3 Update(Vector3 raw, float dt) =>
+        new Vector3(_x.Update(raw.x, dt), _y.Update(raw.y, dt), _z.Update(raw.z, dt));
+
+      public Vector3 Update(Vector3 raw, float dt, Vector3 maxDelta) =>
+        new Vector3(
+          _x.Update(raw.x, dt, maxDelta.x),
+          _y.Update(raw.y, dt, maxDelta.y),
+          _z.Update(raw.z, dt, maxDelta.z));
+
+      public void Reset(Vector3 v) { _x.Reset(v.x); _y.Reset(v.y); _z.Reset(v.z); }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -99,6 +130,8 @@ namespace Demo.GestureDetection
     [Header("Settings")]
     [SerializeField] private bool _mirrorMode = true;
     [SerializeField] private float _smoothing = 25f;
+    [Tooltip("손목 회전 전용 스무딩. _smoothing보다 낮게 설정해 MCP 노이즈로 인한 회전 떨림 감소 (권장: 8~15)")]
+    [SerializeField] private float _handRotationSmoothing = 10f;
 
     [Header("Hand Movement Amplification")]
     [SerializeField] private float _handReachMultiplier = 2.0f;
@@ -151,13 +184,27 @@ namespace Demo.GestureDetection
     [SerializeField] private Vector3 _leftHandOffset  = Vector3.zero;
     [SerializeField] private Vector3 _rightHandOffset = Vector3.zero;
 
-    [Header("Jitter Filter Settings")]
-    [Tooltip("이동평균 버퍼 크기. 클수록 부드럽지만 반응 느려짐 (권장: 3~6)")]
-    [SerializeField] private int _filterBufferSize = 4;
-    [Tooltip("이 거리 이하의 움직임은 무시 (Unity 월드 단위, 권장: 0.003~0.01)")]
-    [SerializeField] private float _positionDeadzone = 0.005f;
+    [Header("Jitter Filter Settings (One Euro Filter)")]
+    [Tooltip("정지 시 필터 강도. 낮을수록 떨림 더 제거 (권장: 0.5~3.0)")]
+    [SerializeField] private float _minCutoff = 1.0f;
+    [Tooltip("속도 민감도. 높을수록 빠른 동작에 더 즉각 반응 (권장: 0.01~0.3)")]
+    [SerializeField] private float _beta = 0.05f;
+
+    [Header("Arm Outlier Rejection")]
+    [Tooltip("프레임당 팔/팔꿈치 최대 이동량 (XYZ). Z를 작게 설정해 제스처 시 깊이 튐 방지. 0=비활성")]
+    [SerializeField] private Vector3 _maxArmJumpPerFrame = new Vector3(0.5f, 0.5f, 0.08f);
+
+    [Header("Arm Reach Settings")]
+    [Tooltip("바디 스케일(어깨 너비) 기준으로 팔 뻗음을 정규화. 카메라 거리 무관하게 동일한 팔 움직임 보장")]
+    [SerializeField] private bool _normalizeByBodyScale = true;
+
+    [Header("Handedness Stability")]
+    [Tooltip("MediaPipe 핸드니스 라벨이 이 프레임 수 이상 연속으로 바뀔 때만 좌우 할당 전환 (순간 flip 방지)")]
+    [SerializeField] private int _handednessFlipFrames = 8;
 
     [Header("Out-of-Frame Return Settings")]
+    [Tooltip("데이터 수신 중단 후 rest position 복귀를 시작하기까지의 유예 시간 (초)")]
+    [SerializeField] private float _dataTimeout = 1.0f;
     [Tooltip("화면 밖 시 IK weight 감소 속도")]
     [SerializeField] private float _ikFadeOutSpeed = 3f;
     [Tooltip("화면 밖 시 hand target을 rest position으로 이동시키는 속도")]
@@ -174,14 +221,17 @@ namespace Demo.GestureDetection
     private readonly object  _snapshotLock = new object();
     private bool  _hasNewSnapshot = false;
     private bool  _hasCachedData  = false;
-    private float _dataTimeout    = 1.0f;
     private float _lastDataTime;
 
     // 위치 필터
-    private PositionFilter _leftHandPosFilter;
-    private PositionFilter _rightHandPosFilter;
-    private PositionFilter _leftElbowPosFilter;
-    private PositionFilter _rightElbowPosFilter;
+    private OneEuroFilter _leftHandPosFilter;
+    private OneEuroFilter _rightHandPosFilter;
+    private OneEuroFilter _leftElbowPosFilter;
+    private OneEuroFilter _rightElbowPosFilter;
+
+    // handedness 안정화
+    private bool _lastIsHand0Left      = true;
+    private int  _handednessDisagreeCount = 0;
 
     // rest position
     private Vector3    _leftHandRestPos;
@@ -248,16 +298,17 @@ namespace Demo.GestureDetection
       InitializeFingerRotations();
 
       // 필터 초기화
-      _leftHandPosFilter   = new PositionFilter(_filterBufferSize, _positionDeadzone);
-      _rightHandPosFilter  = new PositionFilter(_filterBufferSize, _positionDeadzone);
-      _leftElbowPosFilter  = new PositionFilter(_filterBufferSize, _positionDeadzone);
-      _rightElbowPosFilter = new PositionFilter(_filterBufferSize, _positionDeadzone);
+      _leftHandPosFilter   = new OneEuroFilter(_minCutoff, _beta);
+      _rightHandPosFilter  = new OneEuroFilter(_minCutoff, _beta);
+      _leftElbowPosFilter  = new OneEuroFilter(_minCutoff, _beta);
+      _rightElbowPosFilter = new OneEuroFilter(_minCutoff, _beta);
 
-      // rest position/rotation 저장
-      if (_leftHandTarget  != null) { _leftHandRestPos  = _leftHandTarget.position;  _leftHandRestRot  = _leftHandTarget.rotation;  _leftHandPosFilter.Reset(_leftHandRestPos); }
-      if (_rightHandTarget != null) { _rightHandRestPos = _rightHandTarget.position; _rightHandRestRot = _rightHandTarget.rotation; _rightHandPosFilter.Reset(_rightHandRestPos); }
-      if (_leftElbowHint   != null) { _leftElbowRestPos  = _leftElbowHint.position;  _leftElbowPosFilter.Reset(_leftElbowRestPos); }
-      if (_rightElbowHint  != null) { _rightElbowRestPos = _rightElbowHint.position; _rightElbowPosFilter.Reset(_rightElbowRestPos); }
+      // rest position/rotation 저장. 필터는 Reset하지 않고 _initialized=false 유지.
+      // 첫 실제 데이터 프레임에서 outlier rejection 없이 즉시 그 위치로 초기화됨.
+      if (_leftHandTarget  != null) { _leftHandRestPos  = _leftHandTarget.position;  _leftHandRestRot  = _leftHandTarget.rotation; }
+      if (_rightHandTarget != null) { _rightHandRestPos = _rightHandTarget.position; _rightHandRestRot = _rightHandTarget.rotation; }
+      if (_leftElbowHint   != null) { _leftElbowRestPos  = _leftElbowHint.position; }
+      if (_rightElbowHint  != null) { _rightElbowRestPos = _rightElbowHint.position; }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -329,7 +380,7 @@ namespace Demo.GestureDetection
 
           if (_fingerLayerIndex >= 0)
           {
-            _fingerLayerWeight = Mathf.Lerp(_fingerLayerWeight, 0f, Time.deltaTime * _fingerLayerFadeSpeed);
+            _fingerLayerWeight = Mathf.Lerp(_fingerLayerWeight, 0f, 1f - Mathf.Exp(-_fingerLayerFadeSpeed * Time.deltaTime));
             _animator.SetLayerWeight(_fingerLayerIndex, _fingerLayerWeight);
           }
         }
@@ -340,7 +391,7 @@ namespace Demo.GestureDetection
 
           if (_fingerLayerIndex >= 0)
           {
-            _fingerLayerWeight = Mathf.Lerp(_fingerLayerWeight, 1f, Time.deltaTime * _fingerLayerFadeSpeed);
+            _fingerLayerWeight = Mathf.Lerp(_fingerLayerWeight, 1f, 1f - Mathf.Exp(-_fingerLayerFadeSpeed * Time.deltaTime));
             _animator.SetLayerWeight(_fingerLayerIndex, _fingerLayerWeight);
           }
         }
@@ -354,15 +405,16 @@ namespace Demo.GestureDetection
     // ─────────────────────────────────────────────────────────────────────────
     private void ReturnTargetsToRest()
     {
-      float t = Time.deltaTime * _restReturnSpeed;
+      float t = 1f - Mathf.Exp(-_restReturnSpeed * Time.deltaTime);
 
       if (_leftHandTarget  != null) { _leftHandTarget.position  = Vector3.Lerp(_leftHandTarget.position,   _leftHandRestPos,  t); _leftHandTarget.rotation  = Quaternion.Slerp(_leftHandTarget.rotation,  _leftHandRestRot,  t); }
       if (_rightHandTarget != null) { _rightHandTarget.position = Vector3.Lerp(_rightHandTarget.position,  _rightHandRestPos, t); _rightHandTarget.rotation = Quaternion.Slerp(_rightHandTarget.rotation, _rightHandRestRot, t); }
       if (_leftElbowHint   != null)   _leftElbowHint.position   = Vector3.Lerp(_leftElbowHint.position,   _leftElbowRestPos,  t);
       if (_rightElbowHint  != null)   _rightElbowHint.position  = Vector3.Lerp(_rightElbowHint.position,  _rightElbowRestPos, t);
 
-      if (_leftArmIK  != null) _leftArmIK.weight  = Mathf.Lerp(_leftArmIK.weight,  0f, Time.deltaTime * _ikFadeOutSpeed);
-      if (_rightArmIK != null) _rightArmIK.weight = Mathf.Lerp(_rightArmIK.weight, 0f, Time.deltaTime * _ikFadeOutSpeed);
+      float ikFadeT = 1f - Mathf.Exp(-_ikFadeOutSpeed * Time.deltaTime);
+      if (_leftArmIK  != null) _leftArmIK.weight  = Mathf.Lerp(_leftArmIK.weight,  0f, ikFadeT);
+      if (_rightArmIK != null) _rightArmIK.weight = Mathf.Lerp(_rightArmIK.weight, 0f, ikFadeT);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -391,20 +443,37 @@ namespace Demo.GestureDetection
       }
       if (string.IsNullOrEmpty(snap.hand0Label)) { Debug.LogWarning("[ProcessMovement] hand0Label empty"); return; }
 
-      if (_leftArmIK  != null) _leftArmIK.weight  = Mathf.Lerp(_leftArmIK.weight,  1f, Time.deltaTime * 5f);
-      if (_rightArmIK != null) _rightArmIK.weight = Mathf.Lerp(_rightArmIK.weight, 1f, Time.deltaTime * 5f);
+      float ikFadeInT = 1f - Mathf.Exp(-5f * Time.deltaTime);
+      if (_leftArmIK  != null) _leftArmIK.weight  = Mathf.Lerp(_leftArmIK.weight,  1f, ikFadeInT);
+      if (_rightArmIK != null) _rightArmIK.weight = Mathf.Lerp(_rightArmIK.weight, 1f, ikFadeInT);
 
-      bool isHand0Left = snap.hand0Label == "Right"; // MediaPipe 거울 반전
+      // 핸드니스: 라벨이 _handednessFlipFrames 프레임 이상 연속으로 달라질 때만 전환
+      bool labelIsHand0Left = snap.hand0Label == "Right"; // MediaPipe 거울 반전
+      if (labelIsHand0Left == _lastIsHand0Left)
+      {
+        _handednessDisagreeCount = 0;
+      }
+      else if (++_handednessDisagreeCount >= _handednessFlipFrames)
+      {
+        _lastIsHand0Left = labelIsHand0Left;
+        _handednessDisagreeCount = 0;
+      }
+      bool isHand0Left = _lastIsHand0Left;
+
+      // 어깨 너비: 바디 스케일 정규화 기준. 너무 작으면 팔 위치가 극단적으로 증폭됨.
+      float shoulderWidth = _normalizeByBodyScale
+        ? Mathf.Clamp(Vector3.Distance(pose[11], pose[12]), 0.05f, 0.6f)
+        : 1f;
 
       if (_mirrorMode)
       {
         // 미러 모드: pose index 12=오른어깨, 14=오른팔꿈치, 16=오른손목 → 골렘 왼팔
-        UpdateArmIK(pose[12], pose[14], pose[16], _leftHandTarget,  _leftElbowHint,  isLeft: true);
+        UpdateArmIK(pose[12], pose[14], pose[16], shoulderWidth, _leftHandTarget,  _leftElbowHint,  isLeft: true);
         var leftHandMarks = isHand0Left ? hand0 : hand1;
         UpdateHandRotation(leftHandMarks, _leftHandTarget, isLeftHand: true);
         UpdateFingerTargets(leftHandMarks, _leftHandFingers, isLeftHand: true);
 
-        UpdateArmIK(pose[11], pose[13], pose[15], _rightHandTarget, _rightElbowHint, isLeft: false);
+        UpdateArmIK(pose[11], pose[13], pose[15], shoulderWidth, _rightHandTarget, _rightElbowHint, isLeft: false);
         var rightHandMarks = isHand0Left ? hand1 : hand0;
         UpdateHandRotation(rightHandMarks, _rightHandTarget, isLeftHand: false);
         UpdateFingerTargets(rightHandMarks, _rightHandFingers, isLeftHand: false);
@@ -413,21 +482,21 @@ namespace Demo.GestureDetection
       {
         if (isHand0Left)
         {
-          UpdateArmIK(pose[12], pose[14], pose[16], _rightHandTarget, _rightElbowHint, isLeft: false);
+          UpdateArmIK(pose[12], pose[14], pose[16], shoulderWidth, _rightHandTarget, _rightElbowHint, isLeft: false);
           UpdateHandRotation(hand0, _rightHandTarget, isLeftHand: false);
           UpdateFingerTargets(hand0, _rightHandFingers, isLeftHand: false);
 
-          UpdateArmIK(pose[11], pose[13], pose[15], _leftHandTarget, _leftElbowHint, isLeft: true);
+          UpdateArmIK(pose[11], pose[13], pose[15], shoulderWidth, _leftHandTarget, _leftElbowHint, isLeft: true);
           UpdateHandRotation(hand1, _leftHandTarget, isLeftHand: true);
           UpdateFingerTargets(hand1, _leftHandFingers, isLeftHand: true);
         }
         else
         {
-          UpdateArmIK(pose[11], pose[13], pose[15], _leftHandTarget, _leftElbowHint, isLeft: true);
+          UpdateArmIK(pose[11], pose[13], pose[15], shoulderWidth, _leftHandTarget, _leftElbowHint, isLeft: true);
           UpdateHandRotation(hand0, _leftHandTarget, isLeftHand: true);
           UpdateFingerTargets(hand0, _leftHandFingers, isLeftHand: true);
 
-          UpdateArmIK(pose[12], pose[14], pose[16], _rightHandTarget, _rightElbowHint, isLeft: false);
+          UpdateArmIK(pose[12], pose[14], pose[16], shoulderWidth, _rightHandTarget, _rightElbowHint, isLeft: false);
           UpdateHandRotation(hand1, _rightHandTarget, isLeftHand: false);
           UpdateFingerTargets(hand1, _rightHandFingers, isLeftHand: false);
         }
@@ -436,36 +505,43 @@ namespace Demo.GestureDetection
 
     // ─────────────────────────────────────────────────────────────────────────
     // Arm IK - 어깨/팔꿈치/손목 Vector3로 IK target 위치 설정
-    // PositionFilter 적용
+    // OneEuroFilter 적용
     // ─────────────────────────────────────────────────────────────────────────
     private void UpdateArmIK(
       Vector3 shoulderPos, Vector3 elbowPos, Vector3 wristPos,
+      float shoulderWidth,
       Transform handTarget, Transform elbowHint, bool isLeft)
     {
       if (handTarget == null) return;
 
-      Vector3 shoulderToWrist = wristPos - shoulderPos;
+      // 바디 스케일 정규화: 어깨 너비로 나눠 카메라 거리 무관한 팔 뻗음
+      Vector3 shoulderToWrist = (wristPos - shoulderPos) / shoulderWidth;
       shoulderToWrist.x *= _handAxisMultiplier.x;
       shoulderToWrist.y *= _handAxisMultiplier.y;
       shoulderToWrist.z *= _handAxisMultiplier.z;
       shoulderToWrist   *= _handReachMultiplier;
 
-      // 필터로 위치 노이즈 제거
-      PositionFilter handFilter  = isLeft ? _leftHandPosFilter  : _rightHandPosFilter;
-      PositionFilter elbowFilter = isLeft ? _leftElbowPosFilter : _rightElbowPosFilter;
+      OneEuroFilter handFilter  = isLeft ? _leftHandPosFilter  : _rightHandPosFilter;
+      OneEuroFilter elbowFilter = isLeft ? _leftElbowPosFilter : _rightElbowPosFilter;
 
-      Vector3 filteredWrist = handFilter.Update(shoulderPos + shoulderToWrist);
-      handTarget.position = Vector3.Lerp(handTarget.position, filteredWrist, Time.deltaTime * _smoothing);
+      // 각 축 독립적으로 0이면 비활성 (float.MaxValue = 제한 없음)
+      Vector3 maxJump = new Vector3(
+        _maxArmJumpPerFrame.x > 0f ? _maxArmJumpPerFrame.x : float.MaxValue,
+        _maxArmJumpPerFrame.y > 0f ? _maxArmJumpPerFrame.y : float.MaxValue,
+        _maxArmJumpPerFrame.z > 0f ? _maxArmJumpPerFrame.z : float.MaxValue);
+      float smoothT = 1f - Mathf.Exp(-_smoothing * Time.deltaTime);
+      Vector3 filteredWrist = handFilter.Update(shoulderPos + shoulderToWrist, Time.deltaTime, maxJump);
+      handTarget.position = Vector3.Lerp(handTarget.position, filteredWrist, smoothT);
 
       if (elbowHint != null)
       {
-        Vector3 shoulderToElbow = elbowPos - shoulderPos;
+        Vector3 shoulderToElbow = (elbowPos - shoulderPos) / shoulderWidth;
         shoulderToElbow.x *= _elbowXMultiplier;
         shoulderToElbow.y *= _elbowYMultiplier;
         shoulderToElbow.z  = shoulderToElbow.z * _elbowZMultiplier + _elbowForwardOffset;
 
-        Vector3 filteredElbow = elbowFilter.Update(shoulderPos + shoulderToElbow);
-        elbowHint.position = Vector3.Lerp(elbowHint.position, filteredElbow, Time.deltaTime * _smoothing);
+        Vector3 filteredElbow = elbowFilter.Update(shoulderPos + shoulderToElbow, Time.deltaTime, maxJump);
+        elbowHint.position = Vector3.Lerp(elbowHint.position, filteredElbow, smoothT);
       }
     }
 
@@ -512,7 +588,7 @@ namespace Demo.GestureDetection
       Quaternion raw    = Quaternion.LookRotation(handDir, up);
       Quaternion final  = raw * Quaternion.Euler(_handRotationOffset) * Quaternion.Euler(isLeftHand ? _leftHandOffset : _rightHandOffset);
 
-      handTarget.rotation = Quaternion.Slerp(handTarget.rotation, final, Time.deltaTime * _smoothing);
+      handTarget.rotation = Quaternion.Slerp(handTarget.rotation, final, 1f - Mathf.Exp(-_handRotationSmoothing * Time.deltaTime));
 
       if (_showPalmNormalGizmo)
       {
@@ -680,7 +756,7 @@ namespace Demo.GestureDetection
         Quaternion current = _cachedFingerRotations[bone];
         if (Quaternion.Angle(current, target) > _minRotationThreshold)
         {
-          Quaternion next = Quaternion.Slerp(current, target, Time.deltaTime * _fingerSmoothingSpeed);
+          Quaternion next = Quaternion.Slerp(current, target, 1f - Mathf.Exp(-_fingerSmoothingSpeed * Time.deltaTime));
           _cachedFingerRotations[bone] = next;
           bone.localRotation = Quaternion.Inverse(bone.parent.rotation) * next;
         }

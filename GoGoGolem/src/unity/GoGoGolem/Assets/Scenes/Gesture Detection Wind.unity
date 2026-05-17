@@ -7960,9 +7960,9 @@ RectTransform:
   - {fileID: 1459076829}
   m_Father: {fileID: 8571076844006217398}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 240, y: -40}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 200, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2003177403
@@ -8743,8 +8743,20 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _beta
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _minCutoff
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _positionDeadzone
       value: 0.03
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _handReachMultiplier
+      value: 0.6
       objectReference: {fileID: 0}
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _handAxisMultiplier.x
@@ -8753,6 +8765,26 @@ PrefabInstance:
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _handAxisMultiplier.y
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _maxArmJumpPerFrame.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _maxArmJumpPerFrame.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _maxArmJumpPerFrame.z
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _handRotationSmoothing
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _handednessLockThreshold
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 5988756881348417786, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: m_Name

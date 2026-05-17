@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Mediapipe.Tasks.Vision.HandLandmarker;
 using Mediapipe.Tasks.Vision.PoseLandmarker;
@@ -24,6 +25,10 @@ namespace Demo.GestureDetection
     private float _fingerRatio;      // 손가락 펴짐 비율
     private int _minFingers;            // 최소 펴진 손가락 수
 
+    // 매 프레임 할당 방지용 스냅샷 버퍼
+    private readonly Vector3[] _hand0Snapshot = new Vector3[21];
+    private readonly Vector3[] _hand1Snapshot = new Vector3[21];
+
     public void Initialize(GestureThresholdData thresholds)
     {
       _forwardThreshold = thresholds.forwardThreshold;
@@ -40,25 +45,29 @@ namespace Demo.GestureDetection
     {
       // 1. 선행 조건: 양손이 감지되는가?
       if (handResult.handLandmarks == null || handResult.handLandmarks.Count < 2)
-      {
         return GestureResult.None;
-      }
 
-      // 1-1. 각 손의 landmark 개수 검증 (21개 필수)
-      if (handResult.handLandmarks[0].landmarks.Count < 21 ||
-          handResult.handLandmarks[1].landmarks.Count < 21)
+      // MediaPipe LIVE_STREAM은 백그라운드 콜백에서 컬렉션을 교체할 수 있음.
+      // Count 체크 통과 후 인덱스 접근 전에 교체되는 TOCTOU 방지를 위해
+      // 진입 시점에 로컬 배열로 즉시 스냅샷.
+      try
       {
-        Debug.LogWarning($"[WindGesture] Incomplete hand landmarks - Hand0: {handResult.handLandmarks[0].landmarks.Count}/21, Hand1: {handResult.handLandmarks[1].landmarks.Count}/21");
-        return GestureResult.None;
+        var lm0 = handResult.handLandmarks[0].landmarks;
+        var lm1 = handResult.handLandmarks[1].landmarks;
+        if (lm0 == null || lm0.Count < 21 || lm1 == null || lm1.Count < 21)
+          return GestureResult.None;
+        for (int i = 0; i < 21; i++) { _hand0Snapshot[i] = GetVector3(lm0[i]); _hand1Snapshot[i] = GetVector3(lm1[i]); }
       }
+      catch (ArgumentOutOfRangeException) { return GestureResult.None; }
+      Vector3[] hand0 = _hand0Snapshot, hand1 = _hand1Snapshot;
 
       // 2. 데이터 추출 - 각 손목, 중지 손끝, 손 방향
-      var wrist1 = GetVector3(handResult.handLandmarks[0].landmarks[0]);
-      var middleTip1 = GetVector3(handResult.handLandmarks[0].landmarks[12]);
+      var wrist1 = hand0[0];
+      var middleTip1 = hand0[12];
       Vector3 hand1_dir = (middleTip1 - wrist1).normalized;
 
-      var wrist2 = GetVector3(handResult.handLandmarks[1].landmarks[0]);
-      var middleTip2 = GetVector3(handResult.handLandmarks[1].landmarks[12]);
+      var wrist2 = hand1[0];
+      var middleTip2 = hand1[12];
       Vector3 hand2_dir = (middleTip2 - wrist2).normalized;
 
       // 3. 조건 검사
@@ -76,8 +85,8 @@ namespace Demo.GestureDetection
       bool wristsClose = wristDistance < _maxWristDistance;
 
       // 조건 4: 손가락들이 펴져있는가?
-      bool hand1FingersExtended = AreFingersExtended(handResult, 0);
-      bool hand2FingersExtended = AreFingersExtended(handResult, 1);
+      bool hand1FingersExtended = AreFingersExtended(hand0);
+      bool hand2FingersExtended = AreFingersExtended(hand1);
       bool bothHandsFingerExtended = hand1FingersExtended && hand2FingersExtended;
       
       // 최종 조건
@@ -93,24 +102,18 @@ namespace Demo.GestureDetection
     /// - 각 손가락의 TIP이 MCP보다 Wrist에서 멀리 있어야 함
     /// - 받아온 threshold 따라 조정
     /// </summary>
-    private bool AreFingersExtended(HandLandmarkerResult handResult, int handIndex)
-    { 
-      if (handResult.handLandmarks == null || handIndex >= handResult.handLandmarks.Count)
-      {
-        return false;
-      }
-
-      var handLandmarks = handResult.handLandmarks[handIndex];
-      var wrist = GetVector3(handLandmarks.landmarks[0]);
+    private bool AreFingersExtended(Vector3[] landmarks)
+    {
+      var wrist = landmarks[0];
 
       int[] fingerTips = {4, 8, 12, 16, 20};
       int[] fingerMCPs = {2, 5, 9, 13, 17};
       int extendedCount = 0;
 
-      for(int i = 0; i < fingerTips.Length; i++) // 각 손가락 확인
+      for(int i = 0; i < fingerTips.Length; i++)
       {
-        var fingerTip = GetVector3(handLandmarks.landmarks[fingerTips[i]]);
-        var fingerMCP = GetVector3(handLandmarks.landmarks[fingerMCPs[i]]);
+        var fingerTip = landmarks[fingerTips[i]];
+        var fingerMCP = landmarks[fingerMCPs[i]];
 
         float tipToWrist = Vector3.Distance(fingerTip, wrist);
         float mcpToWrist = Vector3.Distance(fingerMCP, wrist);
