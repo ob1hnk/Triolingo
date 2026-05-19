@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -70,6 +71,27 @@ public class SettingsPresenter : MonoBehaviour
     {
         if (!_isVisible) return;
         GameStateManager.Instance.ChangeState(GameState.Gameplay);
+    }
+
+    /// <summary>
+    /// 데모 초기화용. PlayerPref 데이터와 퀘스트 세이브를 모두 삭제한 뒤 Home 씬으로 이동한다.
+    /// Home 씬에서 호출 시 패널만 닫는다.
+    /// </summary>
+    public void ResetAllDataAndGoHome()
+    {
+        GameManager.Instance.ResetAllData();
+        Managers.Quest?.DeleteSaveFile();
+        Debug.Log("[Settings] Demo reset: all player and quest data cleared.");
+
+        if (SceneManager.GetActiveScene().name == "Home")
+        {
+            ClosePanel();
+            return;
+        }
+
+        Hide(); // 씬 전환 전 카메라 명시적 해제
+        GameStateManager.Instance.ChangeState(GameState.Gameplay);
+        SceneManager.LoadScene("Home");
     }
 
     private void InitializeVolumeSlider()
