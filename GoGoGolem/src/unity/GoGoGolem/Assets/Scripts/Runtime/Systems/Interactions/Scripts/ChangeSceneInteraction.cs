@@ -18,6 +18,10 @@ public class ChangeSceneInteraction : MonoBehaviour, IInteractable
     [Header("Prompt")]
     [SerializeField] private InteractionPromptData promptData;
 
+    [Header("Door Sound (선택)")]
+    [Tooltip("설정하면 퇴장 문 소리 재생 후 씬 전환.")]
+    [SerializeField] private DoorSoundController doorSound;
+
     [Header("Bark (선택)")]
     [Tooltip("설정하면 Bark 출력 후 씬 전환. 비워두면 즉시 전환.")]
     [SerializeField] private BarkTrigger bark;
@@ -45,19 +49,26 @@ public class ChangeSceneInteraction : MonoBehaviour, IInteractable
 
         Debug.Log($"[ChangeSceneInteraction] 상호작용: {sceneName}");
         OnInteracted?.Invoke();
+        _canInteract = false;
 
-        if (bark != null)
+        void LoadScene() => SceneManager.LoadScene(sceneName);
+
+        void AfterDoorSound()
         {
-            _canInteract = false; // Bark 중 재호출 방지
-            bark.Fire(() =>
+            if (bark != null)
             {
                 Debug.Log($"[ChangeSceneInteraction] Bark 완료. 씬 전환: {sceneName}");
-                SceneManager.LoadScene(sceneName);
-            });
+                bark.Fire(LoadScene);
+            }
+            else
+            {
+                LoadScene();
+            }
         }
+
+        if (doorSound != null)
+            doorSound.PlayExit(AfterDoorSound);
         else
-        {
-            SceneManager.LoadScene(sceneName);
-        }
+            AfterDoorSound();
     }
 }
