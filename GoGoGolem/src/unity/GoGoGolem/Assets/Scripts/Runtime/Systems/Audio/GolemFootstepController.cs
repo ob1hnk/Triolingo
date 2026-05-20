@@ -18,7 +18,6 @@ public class GolemFootstepController : MonoBehaviour
     // AnimationEvent에서 호출
     void PlayFootstepSound()
     {
-        Debug.Log($"[GolemFootstep] called. data={_footstepData}, clips={_footstepData?.clips?.Length}, audioSource={_audioSource}");
         if (_footstepData == null || _footstepData.clips.Length == 0) return;
 
         var clip = _footstepData.clips[Random.Range(0, _footstepData.clips.Length)];
