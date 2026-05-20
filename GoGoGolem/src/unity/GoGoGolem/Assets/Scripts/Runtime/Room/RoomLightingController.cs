@@ -37,6 +37,9 @@ public class RoomLightingController : MonoBehaviour
     [SerializeField] private Color morningRoomColor = new Color(1f, 0.95f, 0.85f);
     [SerializeField] private Color morningAmbientColor = new Color(0.6f, 0.6f, 0.7f);
 
+    [Header("Golem Face")]
+    [SerializeField] private GolemFaceController golemFaceController;
+
     [Header("Transition")]
     [SerializeField] private float fadeDuration = 1.5f;
 
@@ -61,6 +64,7 @@ public class RoomLightingController : MonoBehaviour
     public void SetNight()
     {
         StopFade();
+        golemFaceController?.FadeToNightColor(fadeDuration);
         ApplyLighting(
             nightRoomIntensity, nightRoomColor, 0.1f,
             nightWindowIntensity, nightWindowColor, 1f,
@@ -70,6 +74,7 @@ public class RoomLightingController : MonoBehaviour
     public void SetMorning()
     {
         StopFade();
+        golemFaceController?.FadeToDefaultColor(fadeDuration);
         ApplyLighting(
             morningRoomIntensity, morningRoomColor, 1f,
             0f, Color.white, 0f,
@@ -92,6 +97,7 @@ public class RoomLightingController : MonoBehaviour
     public void TransitionToNight(Action onComplete)
     {
         StopFade();
+        golemFaceController?.FadeToNightColor(fadeDuration);
         _fadeCoroutine = StartCoroutine(FadeToPreset(
             nightRoomIntensity, nightRoomColor, 0.1f,
             nightWindowIntensity, nightWindowColor, 1f,
@@ -102,6 +108,7 @@ public class RoomLightingController : MonoBehaviour
     public void TransitionToMorning(Action onComplete)
     {
         StopFade();
+        golemFaceController?.FadeToDefaultColor(fadeDuration);
         _fadeCoroutine = StartCoroutine(FadeToPreset(
             morningRoomIntensity, morningRoomColor, 1f,
             0f, Color.white, 0f,
