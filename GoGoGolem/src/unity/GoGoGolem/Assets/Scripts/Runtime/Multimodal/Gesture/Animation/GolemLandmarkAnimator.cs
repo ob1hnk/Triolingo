@@ -152,6 +152,8 @@ namespace Demo.GestureDetection
     [SerializeField] private float _palmOrientationWeight = 0.7f;
     [SerializeField] private bool _invertPalmNormal = false;
     [SerializeField] private bool _showPalmNormalGizmo = false;
+    [Tooltip("palm normal 부호가 이 프레임 수 이상 연속으로 뒤집힐 때만 손 뒤집기로 인정 (손바닥 정면 시 깜빡임 방지)")]
+    [SerializeField] private int _palmNormalFlipFrames = 6;
 
     [Header("Finger Bone Rotation Offset")]
     [SerializeField] private Vector3 _boneAxisCorrection = new Vector3(90, 0, 0);
@@ -232,6 +234,12 @@ namespace Demo.GestureDetection
     // handedness 안정화
     private bool _lastIsHand0Left      = true;
     private int  _handednessDisagreeCount = 0;
+
+    // palm normal 부호 안정화 (좌/우손 각각)
+    private Vector3 _lastLeftPalmNormal  = Vector3.zero;
+    private Vector3 _lastRightPalmNormal = Vector3.zero;
+    private int     _leftPalmFlipCount   = 0;
+    private int     _rightPalmFlipCount  = 0;
 
     // rest position
     private Vector3    _leftHandRestPos;
@@ -580,6 +588,9 @@ namespace Demo.GestureDetection
       if (!isLeftHand)      palmNormal = -palmNormal;
       if (_invertPalmNormal) palmNormal = -palmNormal;
 
+      // 손바닥 정면 시 z-노이즈로 인한 부호 플립 억제
+      palmNormal = StabilizePalmNormal(palmNormal, isLeftHand);
+
       // orthonormal basis
       Vector3 right = Vector3.Cross(handDir, palmNormal).normalized;
       Vector3 up    = Vector3.Cross(right, handDir).normalized;
@@ -595,6 +606,50 @@ namespace Demo.GestureDetection
         if (isLeftHand) { _debugLeftPalmNormal  = palmNormal; _debugLeftWrist  = wristPos; }
         else            { _debugRightPalmNormal = palmNormal; _debugRightWrist = wristPos; }
       }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // palm normal 부호 안정화
+    // 손바닥이 카메라에 평평할 때 MCP가 거의 한 평면에 놓여, MediaPipe의 불안정한
+    // z(깊이) 노이즈가 외적 normal의 부호를 매 프레임 뒤집는다 → 손이 손날을 거쳐 회전.
+    // 직전 normal과 90° 이상 벌어지면(부호 플립) 즉시 받지 않고, _palmNormalFlipFrames
+    // 프레임 연속 뒤집혔을 때만 전환 (handedness 플립 억제와 동일한 hysteresis).
+    // ─────────────────────────────────────────────────────────────────────────
+    private Vector3 StabilizePalmNormal(Vector3 palmNormal, bool isLeftHand)
+    {
+      Vector3 last      = isLeftHand ? _lastLeftPalmNormal : _lastRightPalmNormal;
+      int     flipCount = isLeftHand ? _leftPalmFlipCount  : _rightPalmFlipCount;
+
+      // 첫 프레임: 비교 대상 없음 → 그대로 채택
+      if (last == Vector3.zero)
+      {
+        if (isLeftHand) _lastLeftPalmNormal = palmNormal;
+        else            _lastRightPalmNormal = palmNormal;
+        return palmNormal;
+      }
+
+      if (Vector3.Dot(palmNormal, last) >= 0f)
+      {
+        // 부호 일치 → 카운터 리셋, 최신값 추적 (점진적 회전은 정상 반영)
+        flipCount = 0;
+        last      = palmNormal;
+      }
+      else if (++flipCount >= _palmNormalFlipFrames)
+      {
+        // 충분히 오래 뒤집힘 → 실제 손 뒤집기로 인정
+        flipCount = 0;
+        last      = palmNormal;
+      }
+      else
+      {
+        // 일시적 플립 → 무시하고 직전 부호 유지
+        palmNormal = -palmNormal;
+      }
+
+      if (isLeftHand) { _lastLeftPalmNormal = last;  _leftPalmFlipCount  = flipCount; }
+      else            { _lastRightPalmNormal = last; _rightPalmFlipCount = flipCount; }
+
+      return palmNormal;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
