@@ -7,7 +7,7 @@ using Yarn.Unity;
 /// DialogueRunner의 Dialogue Presenters 리스트에 추가 필요.
 ///
 /// Yarn 명령어:
-///   <<play_sfx "clipName">>  — 효과음 재생 (one-shot)
+///   <<play_sfx "clipName">>  — 효과음 루프 재생
 ///   <<stop_sfx>>             — 즉시 정지
 ///
 /// 대화를 넘기면 다음 라인 시작 시 자동 정지.
@@ -29,11 +29,6 @@ public class DialogueSFXController : DialoguePresenterBase
 
     void Awake()
     {
-        if (dialogueRunner == null)
-        {
-            Debug.LogError("[DialogueSFXController] DialogueRunner가 연결되지 않았습니다.");
-            return;
-        }
         dialogueRunner.AddCommandHandler<string>("play_sfx", PlaySFX);
         dialogueRunner.AddCommandHandler("stop_sfx", StopSFX);
     }
