@@ -906,7 +906,7 @@ MonoBehaviour:
   letterWritePresenter: {fileID: 2025068437}
   letterDesk: {fileID: 112640438}
   bedInteraction: {fileID: 987776660}
-  exitDoor: {fileID: 0}
+  exitDoor: {fileID: 520658544}
   enableDebugLogs: 1
 --- !u!4 &339390117
 Transform:

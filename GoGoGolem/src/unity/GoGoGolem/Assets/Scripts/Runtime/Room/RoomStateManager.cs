@@ -32,6 +32,11 @@ public class RoomStateManager : MonoBehaviour
     [Header("Exit Door")]
     [SerializeField] private ChangeSceneInteraction exitDoor;
 
+    // [DEMO 삭제 대상] letterReadPresenter 필드, OnEnable/OnDisable 구독 코드, HandleLetterReadPanelClosed 메서드,
+    //                  ApplyMorning의 exitDoor.SetCanInteract(false) → true 로 되돌릴 것
+    [Header("[DEMO] 데모 시연용 — 데모 후 삭제")]
+    [SerializeField] private LetterReadPresenter letterReadPresenter;
+
     [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = true;
 
@@ -47,6 +52,10 @@ public class RoomStateManager : MonoBehaviour
 
         if (bedInteraction != null)
             bedInteraction.OnSlept += HandleSlept;
+
+        // [DEMO 삭제 대상] 아래 구독 코드 제거
+        if (letterReadPresenter != null)
+            letterReadPresenter.OnPanelToggled += HandleLetterReadPanelClosed;
     }
 
     private void OnDisable()
@@ -59,12 +68,17 @@ public class RoomStateManager : MonoBehaviour
 
         if (bedInteraction != null)
             bedInteraction.OnSlept -= HandleSlept;
+
+        // [DEMO 삭제 대상] 아래 구독 해제 코드 제거
+        if (letterReadPresenter != null)
+            letterReadPresenter.OnPanelToggled -= HandleLetterReadPanelClosed;
     }
 
     private void Start()
     {
         // GameManager가 없는 씬에서도 자동 생성되도록 보장
         _ = GameManager.Instance;
+
         ApplyState(RoomState.BeforeLetter);
     }
 
@@ -180,9 +194,16 @@ public class RoomStateManager : MonoBehaviour
             letterDesk.SetCanInteract(true);
         }
 
-        // 문: 활성
+        // [DEMO 삭제 대상] false → true 로 되돌릴 것 (편지 읽기 전 차단용)
         if (exitDoor != null)
-            exitDoor.SetCanInteract(true);
+            exitDoor.SetCanInteract(false);
+    }
+
+    // [DEMO 삭제 대상] 이 메서드 전체 제거
+    private void HandleLetterReadPanelClosed(bool isOpen)
+    {
+        if (!isOpen)
+            exitDoor?.SetCanInteract(true);
     }
 
     // ── Debug ────────────────────────────────────────────────────
