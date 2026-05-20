@@ -108,7 +108,8 @@ public class RoomSoundController : MonoBehaviour
             src.volume = 0f;
             src.Play();
         }
-        else if (target <= 0f && src.volume <= 0f)
+        // 페이드 아웃 목표가 0이고 현재 볼륨이 0이면 그냥 Stop
+        if (target <= 0f && src.volume <= 0f)
         {
             src.Stop();
             _fades[idx] = null;
