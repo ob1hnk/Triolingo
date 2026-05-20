@@ -3915,11 +3915,11 @@ MonoBehaviour:
   audioSource: {fileID: 1992601203}
   clips:
   - name: thunder
-    clip: {fileID: 8300000, guid: 8512a3d2c628a7e4da2ce8a009ce251d, type: 3}
+    clip: {fileID: 8300000, guid: 575f8814a96025741958593f01be28d8, type: 3}
   - name: pop
-    clip: {fileID: 8300000, guid: b804c6ed23225f645bfaa10ec84ac9f0, type: 3}
+    clip: {fileID: 8300000, guid: 3921ed9b8e852a2469833b0b57744117, type: 3}
   - name: magic
-    clip: {fileID: 8300000, guid: d598fdbba717ab04d8a134a1bee4f3ac, type: 3}
+    clip: {fileID: 8300000, guid: f7c89585a85d6534988d68b1d375135d, type: 3}
   dialogueRunner: {fileID: 735145825}
 --- !u!1 &1518588230
 GameObject:

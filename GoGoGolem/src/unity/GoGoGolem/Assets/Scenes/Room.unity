@@ -2407,7 +2407,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 0c59bb89ef31bd248a64e6bc20500d24, type: 3}
+  m_Resource: {fileID: 8300000, guid: a94f3b2a8b7aad64b8b5111b055a80c3, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 0.5
   m_Pitch: 1
@@ -2895,7 +2895,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: bf432d8c3aa0742428b85b2cf8c7e6e5, type: 3}
+  m_Resource: {fileID: 8300000, guid: b463b533ef1a0544c94bf042904b50ca, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 0.5
   m_Pitch: 1
@@ -8620,8 +8620,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   view: {fileID: 2379942544161258664}
   audioSource: {fileID: 7196662553705329554}
-  questStartClip: {fileID: 8300000, guid: b804c6ed23225f645bfaa10ec84ac9f0, type: 3}
-  questCompleteClip: {fileID: 8300000, guid: c53483a46ae100741adb49a5f0d5d5b7, type: 3}
+  questStartClip: {fileID: 8300000, guid: 3921ed9b8e852a2469833b0b57744117, type: 3}
+  questCompleteClip: {fileID: 8300000, guid: 02944ddfe1a8bb14e8e3d563d1acc71c, type: 3}
   onQuestStartedEvent: {fileID: 11400000, guid: 224784a594f964b6ca024d4de7ab5ec9, type: 2}
   onQuestCompletedEvent: {fileID: 11400000, guid: 3e091b9c2e0d349f596030eccf58e5ca, type: 2}
   onObjectiveCompletedEvent: {fileID: 11400000, guid: a117d6b4ab93c42d584ad6b04d239c44, type: 2}

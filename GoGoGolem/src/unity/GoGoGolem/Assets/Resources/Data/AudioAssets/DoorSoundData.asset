@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5563310c8d8e87341ac1f15f81b76018, type: 3}
   m_Name: DoorSoundData
   m_EditorClassIdentifier: 
-  enterClip: {fileID: 8300000, guid: cd720c5fc25440e4797817abdbf27c76, type: 3}
-  exitClip: {fileID: 8300000, guid: cd720c5fc25440e4797817abdbf27c76, type: 3}
+  enterClip: {fileID: 8300000, guid: c6525f3d4d28fec40961e998a0cf4669, type: 3}
+  exitClip: {fileID: 8300000, guid: c6525f3d4d28fec40961e998a0cf4669, type: 3}
   volume: 1
