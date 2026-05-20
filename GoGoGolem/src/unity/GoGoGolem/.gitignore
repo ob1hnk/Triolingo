@@ -152,10 +152,6 @@ Assets/Scripts/Runtime/Multimodal/Examples.meta
 /Assets/Leohpaz/RPG_Essentials_Free/8_Atk_Magic_SFX/25_Wind_01.wav
 !/Assets/Leohpaz/RPG_Essentials_Free/8_Atk_Magic_SFX/25_Wind_01.wav.meta
 
-/Assets/SFX/**
-!/Assets/SFX/**/
-!/Assets/SFX/**/*.meta
-
 /Assets/Plugins/IngameDebugConsole/**
 !/Assets/Plugins/IngameDebugConsole/**/
 !/Assets/Plugins/IngameDebugConsole/**/*.meta

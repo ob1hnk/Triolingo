@@ -229,7 +229,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 7c1b7bbc412834d24b0900b6768572e6, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.7
+  m_Volume: 1
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -1283,7 +1283,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -366, y: 323.50073}
+  m_AnchoredPosition: {x: -366, y: 323.5006}
   m_SizeDelta: {x: 732, y: 500}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &566513968
@@ -5432,7 +5432,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   introSceneName: Scenes/Intro
-  postIntroSceneName: Forest
   settingsPresenter: {fileID: 1915448656}
   privacyConsentPresenter: {fileID: 1669792577}
 --- !u!4 &1763570767
@@ -5860,8 +5859,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1781199956}
   m_HandleRect: {fileID: 1781199955}
   m_Direction: 2
-  m_Value: -0.0000049824616
-  m_Size: 0.7059912
+  m_Value: -0.0000041520516
+  m_Size: 0.70596373
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

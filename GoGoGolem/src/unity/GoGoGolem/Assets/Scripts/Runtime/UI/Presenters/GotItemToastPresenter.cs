@@ -16,10 +16,6 @@ public class GotItemToastPresenter : MonoBehaviour
 
     [SerializeField] private float displayDuration = 2.5f;
 
-    [Header("Sound")]
-    [SerializeField] private AudioSource audioSource;
-    [SerializeField] private AudioClip toastClip;
-
     private InventoryLogic _inventoryLogic;
     private Coroutine _hideCoroutine;
 
@@ -68,7 +64,6 @@ public class GotItemToastPresenter : MonoBehaviour
             messageText.text = count > 1 ? $"{displayName} x{count} 획득!" : $"{displayName} 획득!";
 
         if (toastRoot != null) toastRoot.SetActive(true);
-        if (audioSource != null && toastClip != null) audioSource.PlayOneShot(toastClip);
 
         if (_hideCoroutine != null) StopCoroutine(_hideCoroutine);
         _hideCoroutine = StartCoroutine(HideAfterDelay());
