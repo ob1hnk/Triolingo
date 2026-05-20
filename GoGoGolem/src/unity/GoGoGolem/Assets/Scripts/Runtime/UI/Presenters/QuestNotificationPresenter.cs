@@ -10,6 +10,11 @@ public class QuestNotificationPresenter : MonoBehaviour
 {
     [SerializeField] private QuestNotificationView view;
 
+    [Header("Sound")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip questStartClip;
+    [SerializeField] private AudioClip questCompleteClip;
+
     [Header("Event Channels")]
     [SerializeField] private QuestGameEvent onQuestStartedEvent;
     [SerializeField] private QuestGameEvent onQuestCompletedEvent;
@@ -36,6 +41,7 @@ public class QuestNotificationPresenter : MonoBehaviour
     private void OnQuestStarted(Quest quest)
     {
         view.ShowNotification(FormatQuestHeader(quest));
+        PlaySound(questStartClip);
     }
 
     private void OnObjectiveCompleted(QuestObjective objective)
@@ -45,11 +51,18 @@ public class QuestNotificationPresenter : MonoBehaviour
         if (quest == null || quest.IsCompleted()) return;
 
         view.ShowNotification(FormatQuestHeader(quest), "새로운 목표!");
+        PlaySound(questStartClip);
     }
 
     private void OnQuestCompleted(Quest quest)
     {
         view.ShowNotification(FormatQuestHeader(quest), "완료!");
+        PlaySound(questCompleteClip);
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null) audioSource.PlayOneShot(clip);
     }
 
     private string FormatQuestHeader(Quest quest)
