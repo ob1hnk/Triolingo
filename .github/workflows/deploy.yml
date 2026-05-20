@@ -129,7 +129,10 @@ jobs:
             # 기존 컨테이너 중지 및 제거
             docker stop gogo-golem-ai-server || true
             docker rm gogo-golem-ai-server || true
-            
+
+            # 사용하지 않는 이미지 정리 (디스크 공간 확보)
+            docker image prune -af || true
+
             # 새 이미지 pull
             echo "Pulling image: ${IMAGE_TAG}"
             docker pull ${IMAGE_TAG}
