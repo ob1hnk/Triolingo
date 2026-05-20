@@ -41,6 +41,8 @@ public class ChangeSceneInteraction : MonoBehaviour, IInteractable
 
     public void Interact()
     {
+        if (!_canInteract) return;
+
         if (string.IsNullOrEmpty(sceneName))
         {
             Debug.LogError("[ChangeSceneInteraction] sceneName이 설정되지 않았습니다.");

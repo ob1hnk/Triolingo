@@ -50,7 +50,7 @@ public class PlayerInteraction : MonoBehaviour
 
     private void OnInteract(InputAction.CallbackContext ctx)
     {
-        if (currentInteractable == null) return;
+        if (currentInteractable == null || !currentInteractable.CanInteract) return;
     
         switch (currentInteractable.InteractionType)
         {
