@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.SceneManagement;
@@ -68,11 +69,30 @@ public class ForestAfternoonController : MonoBehaviour
         requestStartDialogueEvent?.Raise("DLG-012");
     }
 
-    // DLG-012 완료 → 씬 전환
+    // DLG-012 완료 → 타임라인 종료까지 대기 후 씬 전환
     private void OnDialogueCompleted()
     {
         if (!_waitingForDialogueComplete) return;
         _waitingForDialogueComplete = false;
+        StartCoroutine(LoadNextSceneAfterTimeline());
+    }
+
+    /// <summary>
+    /// Yarn 대화가 끝나도 컷씬 Timeline이 끝까지 재생될 때까지 대기한 뒤 씬을 전환한다.
+    /// extrapolationMode = Hold라 타임라인이 끝나도 stopped 이벤트가 발생하지 않으므로
+    /// time이 duration에 도달했는지로 종료를 판정한다.
+    /// </summary>
+    private IEnumerator LoadNextSceneAfterTimeline()
+    {
+        if (cutsceneDirector != null)
+        {
+            while (cutsceneDirector.state == PlayState.Playing &&
+                   cutsceneDirector.time < cutsceneDirector.duration)
+            {
+                yield return null;
+            }
+        }
+
         SceneManager.LoadScene(nextScene);
     }
 
