@@ -6249,7 +6249,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 906945670}
-  - component: {fileID: 906945673}
   - component: {fileID: 906945674}
   - component: {fileID: 906945672}
   - component: {fileID: 906945671}
@@ -6351,14 +6350,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
---- !u!81 &906945673
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 906945669}
-  m_Enabled: 0
 --- !u!20 &906945674
 Camera:
   m_ObjectHideFlags: 0
@@ -10100,6 +10091,8 @@ MonoBehaviour:
   uiView: {fileID: 1598776806}
   golemFaceController: {fileID: 143030887}
   backgroundMusicSource: {fileID: 637202865}
+  ambientSourcesToMute:
+  - {fileID: 1543394992}
   requestEnterDialogueEvent: {fileID: 11400000, guid: 7ab5d8b65d1adb9488a8ed88428bcbad, type: 2}
   requestHideHUDEvent: {fileID: 11400000, guid: 0721ea1755460b844a5ee06d7b5be039, type: 2}
   requestShowHUDEvent: {fileID: 11400000, guid: 342c4e1f9b5c74c44baf926a5ee4a790, type: 2}

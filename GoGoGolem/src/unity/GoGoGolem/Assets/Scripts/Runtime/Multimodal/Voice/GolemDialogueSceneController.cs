@@ -63,6 +63,8 @@ public class GolemDialogueSceneController : MonoBehaviour
     [Header("BGM")]
     [Tooltip("BackgroundMusic 오브젝트의 AudioSource — 대화 중 음소거")]
     [SerializeField] private AudioSource backgroundMusicSource;
+    [Tooltip("강 등 앰비언트 AudioSource 목록 — 대화 중 음소거")]
+    [SerializeField] private List<AudioSource> ambientSourcesToMute;
 
     [Header("Event Channels")]
     [SerializeField] private GameEvent requestEnterDialogueEvent;
@@ -117,7 +119,7 @@ public class GolemDialogueSceneController : MonoBehaviour
         // 1. 플레이어 조작만 차단 (모델은 카메라 전환 시점에 숨김)
         if (playerController != null) playerController.enabled = false;
         if (playerInteraction != null) playerInteraction.enabled = false;
-        if (backgroundMusicSource != null) backgroundMusicSource.volume = 0f;
+        SetDialogueAudioMuted(true);
         requestHideHUDEvent?.Raise();
 
         // 2. 골렘 회전 시작 → 완료 후 카메라 전환 + UI 표시
@@ -156,7 +158,9 @@ public class GolemDialogueSceneController : MonoBehaviour
         // 3. 카메라 전환 + 플레이어 모델 숨김 동시 처리
         if (dialogueVirtualCamera != null)
             dialogueVirtualCamera.Priority = dialogueCamPriority;
-        if (playerModel != null) playerModel.SetActive(false);
+        if (playerModel != null)
+            foreach (var r in playerModel.GetComponentsInChildren<Renderer>())
+                r.enabled = false;
 
         // 4. 초기 UI 표시 ("Space를 눌러 대화를 시작해보세요")
         uiView.ShowInitialState();
@@ -257,8 +261,10 @@ public class GolemDialogueSceneController : MonoBehaviour
 
         if (playerController != null) playerController.enabled = true;
         if (playerInteraction != null) playerInteraction.enabled = true;
-        if (playerModel != null) playerModel.SetActive(true);
-        if (backgroundMusicSource != null) backgroundMusicSource.volume = 1f;
+        if (playerModel != null)
+            foreach (var r in playerModel.GetComponentsInChildren<Renderer>())
+                r.enabled = true;
+        SetDialogueAudioMuted(false);
         requestShowHUDEvent?.Raise();
 
         uiView.Hide();
@@ -268,6 +274,21 @@ public class GolemDialogueSceneController : MonoBehaviour
         NotifyQuestPhaseComplete();
 
         GameStateManager.Instance?.ChangeState(GameState.Gameplay);
+    }
+
+    // ── 오디오 ─────────────────────────────────────
+
+    private void SetDialogueAudioMuted(bool muted)
+    {
+        if (backgroundMusicSource != null)
+            backgroundMusicSource.volume = muted ? 0f : 1f;
+
+        if (ambientSourcesToMute == null) return;
+        foreach (var src in ambientSourcesToMute)
+        {
+            if (src != null)
+                src.volume = muted ? 0f : 1f;
+        }
     }
 
     // ── Quest 연동 ─────────────────────────────────────

@@ -118,10 +118,15 @@ public class DialogueManager : MonoBehaviour
             storage.SetValue("$golemName", GameManager.Instance.GolemName);
     }
 
-    private void HandleDialogueStart() => onDialogueStartedEvent?.Raise();
+    private void HandleDialogueStart()
+    {
+        GameStateManager.Instance?.ChangeState(GameState.Dialogue);
+        onDialogueStartedEvent?.Raise();
+    }
 
     private void HandleDialogueComplete()
     {
+        GameStateManager.Instance?.ChangeState(GameState.Gameplay);
         requestShowHUDEvent?.Raise();
         onDialogueCompletedEvent?.Raise();
         if (dialogueCanvas != null) dialogueCanvas.SetActive(false);
