@@ -8846,11 +8846,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _minCutoff
-      value: 2
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _positionDeadzone
       value: 0.03
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _handReachZClamp.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _handReachZClamp.y
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _handReachMultiplier
@@ -8874,7 +8882,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _maxArmJumpPerFrame.z
-      value: 0.15
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
+      propertyPath: _normalizeByBodyScale
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _handRotationSmoothing
