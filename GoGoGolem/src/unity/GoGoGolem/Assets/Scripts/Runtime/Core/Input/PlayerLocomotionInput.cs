@@ -12,23 +12,33 @@ public class PlayerLocomotionInput
     public Vector2 LookInput { get; private set; }
     public bool SprintToggledOn { get; private set; }
 
-    private GameInputActions input;
+    private GameInputActions.PlayerMovementActions _movementActions;
+    private bool _initialized = false;
+
+    private void Start()
+    {
+        if (InputModeController.Instance == null)
+        {
+            Debug.LogError("[PlayerLocomotionInput] InputModeController를 찾을 수 없습니다.");
+            return;
+        }
+
+        _movementActions = InputModeController.Instance.GetPlayerMovementActions();
+        _movementActions.SetCallbacks(this);
+        _initialized = true;
+    }
 
     private void OnEnable()
     {
-        input = new GameInputActions();
-
-        input.PlayerMovement.SetCallbacks(this);
-        input.PlayerMovement.Enable();
+        if (!_initialized) return;
+        _movementActions.SetCallbacks(this);
     }
 
     private void OnDisable()
     {
-        if (input == null) return;
+        if (!_initialized) return;
 
-        input.PlayerMovement.RemoveCallbacks(this);
-        input.PlayerMovement.Disable();
-
+        _movementActions.RemoveCallbacks(this);
         MovementInput = Vector2.zero;
         LookInput = Vector2.zero;
         SprintToggledOn = false;

@@ -179,6 +179,7 @@ public class InputModeController : MonoBehaviour
     // 각 시스템이 접근할 수 있도록 제공
     public GameInputActions.GlobalActions GetGlobalActions() => input.Global;
     public GameInputActions.UIActions GetUIActions() => input.UI;
+    public GameInputActions.PlayerMovementActions GetPlayerMovementActions() => input.PlayerMovement;
     public GameInputActions.PlayerActionsActions GetPlayerActionsActions() => input.PlayerActions;
     public GameInputActions.DialogueActions GetDialogueActions() => input.Dialogue;
 }
