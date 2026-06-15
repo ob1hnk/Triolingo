@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 using Mediapipe.Tasks.Vision.HandLandmarker;
@@ -19,6 +22,12 @@ namespace Demo.GestureDetection
   /// </summary>
   public class GolemLandmarkAnimator : MonoBehaviour
   {
+    // 떨림 보정 필터 종류 (평가/비교 측정용)
+    public enum JitterFilterMode { None, MovingAverage, OneEuro }
+
+    // CSV로 기록할 손 (golem 기준 좌/우 hand target)
+    public enum RecordJoint { RightHand, LeftHand }
+
     // ─────────────────────────────────────────────────────────────────────────
     // 스레드 안전 스냅샷
     // MediaPipe 콜백은 백그라운드 스레드에서 실행.
@@ -33,6 +42,86 @@ namespace Demo.GestureDetection
       public Vector3[] hand1;      // Hand 1 landmarks [0..20]
       public string    hand0Label; // "Left" or "Right" (MediaPipe 기준)
       public bool      valid;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 위치 필터 공통 인터페이스 (런타임에 종류 교체 → 평가 비교)
+    // maxDelta(이상치 제거)는 세 모드 모두 동일 적용 → 스무딩 거동만 비교됨
+    // ─────────────────────────────────────────────────────────────────────────
+    private interface IPositionFilter
+    {
+      Vector3 Update(Vector3 raw, float dt, Vector3 maxDelta);
+      void Reset(Vector3 v);
+    }
+
+    // 스무딩 없음: 이상치 클램프만 적용 (필터 off 기준선)
+    private class NoFilter : IPositionFilter
+    {
+      private Vector3 _prev;
+      private bool    _init;
+
+      public Vector3 Update(Vector3 raw, float dt, Vector3 maxDelta)
+      {
+        if (!_init) { _prev = raw; _init = true; return raw; }
+        raw = ClampDelta(raw, _prev, maxDelta);
+        _prev = raw;
+        return raw;
+      }
+
+      public void Reset(Vector3 v) { _prev = v; _init = true; }
+    }
+
+    // 이전 구현: 이동평균 버퍼 + deadzone (미세 노이즈 무시, 큰 움직임만 반영)
+    private class MovingAverageFilter : IPositionFilter
+    {
+      private readonly int       _bufferSize;
+      private readonly float     _deadzone;
+      private readonly Vector3[] _buffer;
+      private int     _index;
+      private int     _count;
+      private Vector3 _filtered;
+      private bool    _init;
+
+      public MovingAverageFilter(int bufferSize, float deadzone)
+      {
+        _bufferSize = Mathf.Max(1, bufferSize);
+        _deadzone   = deadzone;
+        _buffer     = new Vector3[_bufferSize];
+      }
+
+      public Vector3 Update(Vector3 raw, float dt, Vector3 maxDelta)
+      {
+        if (_init) raw = ClampDelta(raw, _filtered, maxDelta);
+
+        _buffer[_index] = raw;
+        _index = (_index + 1) % _bufferSize;
+        if (_count < _bufferSize) _count++;
+
+        Vector3 avg = Vector3.zero;
+        for (int i = 0; i < _count; i++) avg += _buffer[i];
+        avg /= _count;
+
+        if (!_init || Vector3.Distance(avg, _filtered) > _deadzone)
+          _filtered = avg;
+
+        _init = true;
+        return _filtered;
+      }
+
+      public void Reset(Vector3 v)
+      {
+        for (int i = 0; i < _bufferSize; i++) _buffer[i] = v;
+        _count = _bufferSize; _index = 0; _filtered = v; _init = true;
+      }
+    }
+
+    // _prev 기준 ±maxDelta 클램프 (축별, float.MaxValue=비활성)
+    private static Vector3 ClampDelta(Vector3 raw, Vector3 prev, Vector3 maxDelta)
+    {
+      return new Vector3(
+        maxDelta.x >= float.MaxValue ? raw.x : Mathf.Clamp(raw.x, prev.x - maxDelta.x, prev.x + maxDelta.x),
+        maxDelta.y >= float.MaxValue ? raw.y : Mathf.Clamp(raw.y, prev.y - maxDelta.y, prev.y + maxDelta.y),
+        maxDelta.z >= float.MaxValue ? raw.z : Mathf.Clamp(raw.z, prev.z - maxDelta.z, prev.z + maxDelta.z));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -87,7 +176,7 @@ namespace Demo.GestureDetection
       public void Reset(float value) { _prev = value; _dPrev = 0f; _initialized = true; }
     }
 
-    private class OneEuroFilter
+    private class OneEuroFilter : IPositionFilter
     {
       private readonly OneEuroFilter1D _x, _y, _z;
 
@@ -186,11 +275,25 @@ namespace Demo.GestureDetection
     [SerializeField] private Vector3 _leftHandOffset  = Vector3.zero;
     [SerializeField] private Vector3 _rightHandOffset = Vector3.zero;
 
+    [Header("Jitter Filter Mode (평가/비교용)")]
+    [Tooltip("떨림 보정 필터 선택. 같은 씬·동작에서 필터만 바꿔 비교 측정. 런타임 변경 즉시 반영")]
+    [SerializeField] private JitterFilterMode _filterMode = JitterFilterMode.OneEuro;
+    [Tooltip("이동평균 버퍼 크기 (MovingAverage 모드 전용). 클수록 부드럽지만 반응 느려짐 (권장: 3~6)")]
+    [SerializeField] private int _maBufferSize = 4;
+    [Tooltip("이 거리 이하 움직임 무시 (MovingAverage 모드 전용, Unity 월드 단위, 권장: 0.003~0.01)")]
+    [SerializeField] private float _maDeadzone = 0.005f;
+
     [Header("Jitter Filter Settings (One Euro Filter)")]
     [Tooltip("정지 시 필터 강도. 낮을수록 떨림 더 제거 (권장: 0.5~3.0)")]
     [SerializeField] private float _minCutoff = 1.0f;
     [Tooltip("속도 민감도. 높을수록 빠른 동작에 더 즉각 반응 (권장: 0.01~0.3)")]
     [SerializeField] private float _beta = 0.05f;
+
+    [Header("Metrics Recording (CSV, 평가용)")]
+    [Tooltip("체크하면 raw/필터 좌표를 매 프레임 기록, 해제하면 CSV 파일로 저장")]
+    [SerializeField] private bool _recordMetrics = false;
+    [Tooltip("기록 대상 손. 측정 시 해당 손을 가만히(떨림) 또는 좌우로(지연) 움직일 것")]
+    [SerializeField] private RecordJoint _recordJoint = RecordJoint.RightHand;
 
     [Header("Arm Outlier Rejection")]
     [Tooltip("프레임당 팔/팔꿈치 최대 이동량 (XYZ). Z를 작게 설정해 제스처 시 깊이 튐 방지. 0=비활성")]
@@ -227,11 +330,17 @@ namespace Demo.GestureDetection
     private bool  _hasCachedData  = false;
     private float _lastDataTime;
 
-    // 위치 필터
-    private OneEuroFilter _leftHandPosFilter;
-    private OneEuroFilter _rightHandPosFilter;
-    private OneEuroFilter _leftElbowPosFilter;
-    private OneEuroFilter _rightElbowPosFilter;
+    // 위치 필터 (런타임에 _filterMode로 교체 가능)
+    private IPositionFilter _leftHandPosFilter;
+    private IPositionFilter _rightHandPosFilter;
+    private IPositionFilter _leftElbowPosFilter;
+    private IPositionFilter _rightElbowPosFilter;
+    private JitterFilterMode _activeFilterMode;
+
+    // 메트릭 CSV 기록 상태
+    private List<string> _csvRows;
+    private bool         _wasRecording;
+    private float        _recordStartTime;
 
     // handedness 안정화
     private bool _lastIsHand0Left      = true;
@@ -307,11 +416,8 @@ namespace Demo.GestureDetection
       CacheFingerBones();
       InitializeFingerRotations();
 
-      // 필터 초기화
-      _leftHandPosFilter   = new OneEuroFilter(_minCutoff, _beta);
-      _rightHandPosFilter  = new OneEuroFilter(_minCutoff, _beta);
-      _leftElbowPosFilter  = new OneEuroFilter(_minCutoff, _beta);
-      _rightElbowPosFilter = new OneEuroFilter(_minCutoff, _beta);
+      // 필터 초기화 (_filterMode에 따라 생성)
+      RebuildFilters();
 
       // rest position/rotation 저장. 필터는 Reset하지 않고 _initialized=false 유지.
       // 첫 실제 데이터 프레임에서 outlier rejection 없이 즉시 그 위치로 초기화됨.
@@ -366,6 +472,12 @@ namespace Demo.GestureDetection
     // ─────────────────────────────────────────────────────────────────────────
     private void LateUpdate()
     {
+      // 필터 모드가 Inspector에서 바뀌면 즉시 재생성
+      if (_filterMode != _activeFilterMode) RebuildFilters();
+
+      // 기록 체크박스 on/off 엣지 처리 (on→버퍼 시작, off→CSV 저장)
+      HandleRecordingEdge();
+
       // lock으로 스냅샷을 안전하게 읽어옴 (메인 스레드에서만 사용)
       LandmarkSnapshot snap;
       bool hasNew;
@@ -534,8 +646,8 @@ namespace Demo.GestureDetection
       // 손목을 모을 때 pose Z 추정이 튀어 손이 카메라로 돌진 → 깊이 뻗음에 절대 한계 적용
       shoulderToWrist.z = Mathf.Clamp(shoulderToWrist.z, _handReachZClamp.x, _handReachZClamp.y);
 
-      OneEuroFilter handFilter  = isLeft ? _leftHandPosFilter  : _rightHandPosFilter;
-      OneEuroFilter elbowFilter = isLeft ? _leftElbowPosFilter : _rightElbowPosFilter;
+      IPositionFilter handFilter  = isLeft ? _leftHandPosFilter  : _rightHandPosFilter;
+      IPositionFilter elbowFilter = isLeft ? _leftElbowPosFilter : _rightElbowPosFilter;
 
       // 각 축 독립적으로 0이면 비활성 (float.MaxValue = 제한 없음)
       Vector3 maxJump = new Vector3(
@@ -543,8 +655,13 @@ namespace Demo.GestureDetection
         _maxArmJumpPerFrame.y > 0f ? _maxArmJumpPerFrame.y : float.MaxValue,
         _maxArmJumpPerFrame.z > 0f ? _maxArmJumpPerFrame.z : float.MaxValue);
       float smoothT = 1f - Mathf.Exp(-_smoothing * Time.deltaTime);
-      Vector3 filteredWrist = handFilter.Update(shoulderPos + shoulderToWrist, Time.deltaTime, maxJump);
+      Vector3 rawWrist      = shoulderPos + shoulderToWrist;
+      Vector3 filteredWrist = handFilter.Update(rawWrist, Time.deltaTime, maxJump);
       handTarget.position = Vector3.Lerp(handTarget.position, filteredWrist, smoothT);
+
+      // 평가용: 선택한 손의 raw(필터 입력) vs filtered(필터 출력) 기록
+      if (_recordMetrics && isLeft == (_recordJoint == RecordJoint.LeftHand))
+        RecordRow(rawWrist, filteredWrist);
 
       if (elbowHint != null)
       {
@@ -755,6 +872,91 @@ namespace Demo.GestureDetection
       if (_leftArmIK  != null) _leftArmIK.weight  = 0f;
       if (_rightArmIK != null) _rightArmIK.weight = 0f;
       if (_fingerLayerIndex >= 0) _animator.SetLayerWeight(_fingerLayerIndex, 1f);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 필터 종류 교체 (평가/비교용)
+    // ─────────────────────────────────────────────────────────────────────────
+    private IPositionFilter CreateFilter()
+    {
+      switch (_filterMode)
+      {
+        case JitterFilterMode.None:          return new NoFilter();
+        case JitterFilterMode.MovingAverage: return new MovingAverageFilter(_maBufferSize, _maDeadzone);
+        default:                             return new OneEuroFilter(_minCutoff, _beta);
+      }
+    }
+
+    private void RebuildFilters()
+    {
+      _leftHandPosFilter   = CreateFilter();
+      _rightHandPosFilter  = CreateFilter();
+      _leftElbowPosFilter  = CreateFilter();
+      _rightElbowPosFilter = CreateFilter();
+      _activeFilterMode    = _filterMode;
+      Debug.Log($"[GolemLandmarkAnimator] Filter mode = {_filterMode}");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 메트릭 CSV 기록: _recordMetrics 체크 on→기록 시작, off→파일 저장
+    // 컬럼: time_s, dt_s, fps, filter_mode, raw_xyz, filt_xyz
+    //   떨림 = 손 정지 시 filt_xyz의 표준편차
+    //   지연 = 손 흔들 때 raw_xyz vs filt_xyz의 교차상관 offset
+    //   FPS  = fps 컬럼 평균
+    // ─────────────────────────────────────────────────────────────────────────
+    private void HandleRecordingEdge()
+    {
+      if (_recordMetrics && !_wasRecording)
+      {
+        _csvRows = new List<string>
+        {
+          "time_s,dt_s,fps,filter_mode,raw_x,raw_y,raw_z,filt_x,filt_y,filt_z"
+        };
+        _recordStartTime = Time.time;
+        Debug.Log($"[GestureMetrics] Recording START (mode={_filterMode}, joint={_recordJoint})");
+      }
+      else if (!_recordMetrics && _wasRecording)
+      {
+        WriteCsv();
+      }
+      _wasRecording = _recordMetrics;
+    }
+
+    private void RecordRow(Vector3 raw, Vector3 filtered)
+    {
+      if (_csvRows == null) return;
+      float dt  = Time.deltaTime;
+      float fps = dt > 0f ? 1f / dt : 0f;
+      var   c   = CultureInfo.InvariantCulture;
+      _csvRows.Add(string.Format(c,
+        "{0:F4},{1:F5},{2:F1},{3},{4:F5},{5:F5},{6:F5},{7:F5},{8:F5},{9:F5}",
+        Time.time - _recordStartTime, dt, fps, _filterMode,
+        raw.x, raw.y, raw.z, filtered.x, filtered.y, filtered.z));
+    }
+
+    private void WriteCsv()
+    {
+      if (_csvRows == null || _csvRows.Count <= 1)
+      {
+        Debug.LogWarning("[GestureMetrics] 기록된 데이터 없음 (손이 화면에 잡혔는지 확인)");
+        _csvRows = null;
+        return;
+      }
+
+      string dir = Path.Combine(Application.dataPath, "..", "GestureMetrics");
+      Directory.CreateDirectory(dir);
+      string file = Path.Combine(dir,
+        $"gesture_{_filterMode}_{_recordJoint}_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+      File.WriteAllLines(file, _csvRows);
+      Debug.Log($"[GestureMetrics] {_csvRows.Count - 1} rows 저장 → {Path.GetFullPath(file)}");
+      _csvRows = null;
+    }
+
+    private void OnDisable()
+    {
+      // 기록 중 플레이 종료/비활성 시 데이터 유실 방지
+      if (_wasRecording) WriteCsv();
+      _wasRecording = false;
     }
 
     private bool IsValidData(PoseLandmarkerResult poseResult, HandLandmarkerResult handResult)
