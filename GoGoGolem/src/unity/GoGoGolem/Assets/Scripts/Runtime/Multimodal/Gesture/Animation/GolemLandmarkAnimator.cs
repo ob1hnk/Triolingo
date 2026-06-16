@@ -1,6 +1,8 @@
-using System;
-using System.IO;
-using System.Globalization;
+#if GESTURE_METRICS
+using System;                 // DateTime (CSV 파일명)
+using System.IO;              // Path/File/Directory (CSV 저장)
+using System.Globalization;   // CultureInfo (CSV 숫자 포맷)
+#endif
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 using Mediapipe.Tasks.Vision.HandLandmarker;
@@ -289,11 +291,13 @@ namespace Demo.GestureDetection
     [Tooltip("속도 민감도. 높을수록 빠른 동작에 더 즉각 반응 (권장: 0.01~0.3)")]
     [SerializeField] private float _beta = 0.05f;
 
-    [Header("Metrics Recording (CSV, 평가용)")]
+#if GESTURE_METRICS
+    [Header("Metrics Recording (CSV, 평가용 — GESTURE_METRICS define 시에만 컴파일)")]
     [Tooltip("체크하면 raw/필터 좌표를 매 프레임 기록, 해제하면 CSV 파일로 저장")]
     [SerializeField] private bool _recordMetrics = false;
     [Tooltip("기록 대상 손. 측정 시 해당 손을 가만히(떨림) 또는 좌우로(지연) 움직일 것")]
     [SerializeField] private RecordJoint _recordJoint = RecordJoint.RightHand;
+#endif
 
     [Header("Arm Outlier Rejection")]
     [Tooltip("프레임당 팔/팔꿈치 최대 이동량 (XYZ). Z를 작게 설정해 제스처 시 깊이 튐 방지. 0=비활성")]
@@ -337,10 +341,12 @@ namespace Demo.GestureDetection
     private IPositionFilter _rightElbowPosFilter;
     private JitterFilterMode _activeFilterMode;
 
+#if GESTURE_METRICS
     // 메트릭 CSV 기록 상태
     private List<string> _csvRows;
     private bool         _wasRecording;
     private float        _recordStartTime;
+#endif
 
     // handedness 안정화
     private bool _lastIsHand0Left      = true;
@@ -475,8 +481,10 @@ namespace Demo.GestureDetection
       // 필터 모드가 Inspector에서 바뀌면 즉시 재생성
       if (_filterMode != _activeFilterMode) RebuildFilters();
 
+#if GESTURE_METRICS
       // 기록 체크박스 on/off 엣지 처리 (on→버퍼 시작, off→CSV 저장)
       HandleRecordingEdge();
+#endif
 
       // lock으로 스냅샷을 안전하게 읽어옴 (메인 스레드에서만 사용)
       LandmarkSnapshot snap;
@@ -659,9 +667,11 @@ namespace Demo.GestureDetection
       Vector3 filteredWrist = handFilter.Update(rawWrist, Time.deltaTime, maxJump);
       handTarget.position = Vector3.Lerp(handTarget.position, filteredWrist, smoothT);
 
+#if GESTURE_METRICS
       // 평가용: 선택한 손의 raw(필터 입력) vs filtered(필터 출력) 기록
       if (_recordMetrics && isLeft == (_recordJoint == RecordJoint.LeftHand))
         RecordRow(rawWrist, filteredWrist);
+#endif
 
       if (elbowHint != null)
       {
@@ -897,6 +907,7 @@ namespace Demo.GestureDetection
       Debug.Log($"[GolemLandmarkAnimator] Filter mode = {_filterMode}");
     }
 
+#if GESTURE_METRICS
     // ─────────────────────────────────────────────────────────────────────────
     // 메트릭 CSV 기록: _recordMetrics 체크 on→기록 시작, off→파일 저장
     // 컬럼: time_s, dt_s, fps, filter_mode, raw_xyz, filt_xyz
@@ -958,6 +969,7 @@ namespace Demo.GestureDetection
       if (_wasRecording) WriteCsv();
       _wasRecording = false;
     }
+#endif
 
     private bool IsValidData(PoseLandmarkerResult poseResult, HandLandmarkerResult handResult)
     {
