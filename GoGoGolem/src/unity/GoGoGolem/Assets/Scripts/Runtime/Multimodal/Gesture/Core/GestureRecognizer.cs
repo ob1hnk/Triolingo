@@ -116,15 +116,19 @@ namespace Demo.GestureDetection
       {
         // 실패: 유예 카운터 증가
         _gestureLostCount[_currentGestureType]++;
-        
+
         // 유예 프레임 초과 시 성공 카운터 리셋
         if (_gestureLostCount[_currentGestureType] > _maxLostFrames)
         {
           _gestureFrameCount[_currentGestureType] = 0;
           // Debug.Log($"[GestureRecognizer] {_currentGestureType} lost for {_maxLostFrames} frames, resetting counter");
         }
+
+        // 어떤 조건이 틀렸는지(FailReason)를 보존해서 반환 → 실패 피드백 집계용
+        return GestureResult.Fail(_currentGestureType, rawResult.FailReason);
       }
 
+      // 검출됐으나 holdFrames 누적 중(거의 성공 상태) → 실패 이유 없음
       return GestureResult.None;
     }
 
