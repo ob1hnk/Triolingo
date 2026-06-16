@@ -8731,6 +8731,7 @@ MonoBehaviour:
   _progressShowThreshold: 2
   _noHandTimeout: 7
   _holdFailTimeout: 25
+  _settingsPresenter: {fileID: 0}
   _failOverlay: {fileID: 1256679741}
   _failReasonText: {fileID: 1573427433}
   _retryButton: {fileID: 1465251208}
@@ -9770,11 +9771,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _beta
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _minCutoff
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3722908329779218347, guid: 03e78cf2e71498e4db7076fcde8690e4, type: 3}
       propertyPath: _positionDeadzone
