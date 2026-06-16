@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.UI;
@@ -12,6 +13,7 @@ namespace Demo.GestureDetection
     Entry,    // 진입 (초기화)
     Tutorial, // 튜토리얼 타임라인
     Playing,  // 플레이 중 (제스처 인식)
+    Paused,   // 실패 타임아웃 팝업 표시 중 (인식 일시정지)
     Success,  // 성공 (연출 준비)
     Exit      // 종료
   }
@@ -62,6 +64,36 @@ namespace Demo.GestureDetection
     [Tooltip("진행 바가 나타나기 시작하는 홀드 시간 (초)")]
     [SerializeField] private float _progressShowThreshold = 2f;
 
+    // ========== 실패 시 건너뛰기 ==========
+    [Header("Fail Skip - Timeout")]
+    [Tooltip("A: 손이 이 시간(초) 이상 안 보이면 위치 재조정 팝업")]
+    [SerializeField] private float _noHandTimeout = 5f;
+    [Tooltip("B: 양손은 보이지만 이 시간(초) 동안 한 번도 유지 성공 못하면 넘어가기 팝업")]
+    [SerializeField] private float _holdFailTimeout = 15f;
+
+    [Header("Fail Skip - UI")]
+    [Tooltip("설정 패널 Presenter. 비우면 자동 탐색. 설정창이 열려 있는 동안 타임아웃을 중단한다.")]
+    [SerializeField] private SettingsPresenter _settingsPresenter;
+    [Tooltip("반투명 실패 안내 오버레이 (기본 비활성)")]
+    [SerializeField] private GameObject _failOverlay;
+    [Tooltip("실패 이유 텍스트")]
+    [SerializeField] private TMP_Text _failReasonText;
+    [Tooltip("다시해보기 버튼 (인식 재개)")]
+    [SerializeField] private Button _retryButton;
+    [Tooltip("넘어가기 버튼 (성공 처리) — B(유지 실패)에서만 표시")]
+    [SerializeField] private Button _failSkipButton;
+
+    [Header("Fail Skip - Messages")]
+    [TextArea] [SerializeField] private string _msgNoHands         = "양손이 카메라 화면 안에 잘 보이도록 위치를 조정해 주세요.";
+    [TextArea] [SerializeField] private string _msgPoseMissing     = "몸 전체가 보이도록 카메라에서 조금 물러나 주세요.";
+    [TextArea] [SerializeField] private string _msgHandMissing     = "손이 화면 밖으로 자꾸 벗어나고 있어요. 손을 화면 안에 유지해 주세요.";
+    [TextArea] [SerializeField] private string _msgPalmsNotForward = "손바닥이 카메라를 향하도록 펴 주세요.";
+    [TextArea] [SerializeField] private string _msgHandsNotOpposite= "두 손을 마주보게 모아 주세요.";
+    [TextArea] [SerializeField] private string _msgWristsTooFar    = "두 손을 더 가까이 모아 주세요.";
+    [TextArea] [SerializeField] private string _msgFingersNotOpen  = "손가락을 쫙 펴 주세요.";
+    [TextArea] [SerializeField] private string _msgNotRising       = "두 팔을 위로 쭉 들어올려 주세요.";
+    [TextArea] [SerializeField] private string _msgGeneric         = "안내된 자세를 천천히 따라 해 보세요.";
+
     // Quest 연동 (읽기용)
     [Header("Quest - Objective IDs")]
     [SerializeField] private string _objectiveID_NoFly = "MQ-02-OBJ-02";
@@ -104,11 +136,34 @@ namespace Demo.GestureDetection
     private void Start()
     {
       SetupButtons();
+      HideFailOverlay();
+
+      // 설정창 가시성으로 타임아웃을 게이트 (열림 방식/씬 단독 실행과 무관하게 동작)
+      if (_settingsPresenter == null)
+        _settingsPresenter = FindFirstObjectByType<SettingsPresenter>(FindObjectsInactive.Include);
+
       EnterEntryState();
+    }
+
+    /// <summary>설정창 등으로 인식 타임아웃을 멈춰야 하는 상태인가</summary>
+    private bool IsRecognitionBlocked()
+    {
+      if (_settingsPresenter != null && _settingsPresenter.IsVisible)
+        return true;
+      if (GameStateManager.Instance != null && !GameStateManager.Instance.IsInState(GameState.Gameplay))
+        return true;
+      return false;
     }
     
     private void Update()
     {
+      // 설정창 등이 떠 있는 동안엔 타임아웃 타이머만 중단
+      // (Detector는 계속 동작 → 웹캠 미리보기 유지. 오버레이가 설정창 뒤에 뜨는 문제 방지)
+      if (_state == GestureSceneState.Playing && _gesturePlayPresenter != null)
+      {
+        _gesturePlayPresenter.SetTimersSuspended(IsRecognitionBlocked());
+      }
+
       // DEBUG: ESC 키로 강제 종료
       if (_debugOverride && Input.GetKeyDown(KeyCode.Escape) && _state != GestureSceneState.Exit)
       {
@@ -137,6 +192,12 @@ namespace Demo.GestureDetection
 
       if (_rewatchButton != null)
         _rewatchButton.onClick.AddListener(RewatchTutorial);
+
+      if (_retryButton != null)
+        _retryButton.onClick.AddListener(OnRetryClicked);
+
+      if (_failSkipButton != null)
+        _failSkipButton.onClick.AddListener(OnFailSkipClicked);
     }
 
     private void CleanupButtons()
@@ -146,6 +207,12 @@ namespace Demo.GestureDetection
 
       if (_rewatchButton != null)
         _rewatchButton.onClick.RemoveListener(RewatchTutorial);
+
+      if (_retryButton != null)
+        _retryButton.onClick.RemoveListener(OnRetryClicked);
+
+      if (_failSkipButton != null)
+        _failSkipButton.onClick.RemoveListener(OnFailSkipClicked);
     }
 
     // ========== 상태 전환 메서드 ==========
@@ -291,13 +358,94 @@ namespace Demo.GestureDetection
         thresholds: _sceneConfig?.thresholds,
         onSuccess: OnGestureSuccess,
         requiredHoldDuration:  _requiredHoldDuration,
-        progressShowThreshold: _progressShowThreshold
+        progressShowThreshold: _progressShowThreshold,
+        onTimeout: OnRecognitionTimeout,
+        noHandTimeout: _noHandTimeout,
+        holdFailTimeout: _holdFailTimeout
       );
       
       // 3. 플레이 시작
       _gesturePlayPresenter.StartPlay();
     }
     
+    // ========== 실패 시 건너뛰기 ==========
+
+    /// <summary>
+    /// 인식 타임아웃 콜백 (Presenter → Controller)
+    /// A(NoHands): 위치 재조정 안내 / B(HoldFail): 가장 큰 실패 이유 + 넘어가기
+    /// </summary>
+    private void OnRecognitionTimeout(UI.GestureTimeoutInfo info)
+    {
+      if (_state != GestureSceneState.Playing) return;
+
+      // 이중 안전장치: 설정창 등이 떠 있으면 오버레이를 띄우지 않음
+      // (복귀 시 Presenter.SetTimersSuspended(false)가 타이머를 리셋하므로 재무장됨)
+      if (IsRecognitionBlocked())
+        return;
+
+      // 모델 재로딩 없이 코루틴만 일시정지 (Stop 아님)
+      _gestureDetector?.Pause();
+      _gesturePlayPresenter?.PausePlay();
+
+      bool isNoHands = info.Type == UI.GestureTimeoutType.NoHands;
+      string message = isNoHands ? _msgNoHands : ReasonToText(info.Reason);
+
+      // A는 다시해보기만, B는 넘어가기까지 표시
+      ShowFailOverlay(message, showSkip: !isNoHands);
+      ChangeState(GestureSceneState.Paused);
+    }
+
+    /// <summary>다시해보기: 일시정지 해제 후 Playing 재개 (타이머 리셋)</summary>
+    private void OnRetryClicked()
+    {
+      if (_state != GestureSceneState.Paused) return;
+
+      HideFailOverlay();
+      _gestureDetector?.Resume();
+      _gesturePlayPresenter?.ResumePlay();
+      ChangeState(GestureSceneState.Playing);
+      Debug.Log("[GestureSceneController] Retry → recognition resumed");
+    }
+
+    /// <summary>넘어가기: 성공 처리로 전환 (Quest 완료 + 성공 연출)</summary>
+    private void OnFailSkipClicked()
+    {
+      if (_state != GestureSceneState.Paused) return;
+
+      HideFailOverlay();
+      Debug.Log("[GestureSceneController] Skip → forcing success");
+      // OnGestureSuccess가 Presenter.Cleanup()(=Detector.Stop)을 호출하므로 별도 정지 불필요
+      OnGestureSuccess(_targetGesture);
+    }
+
+    private void ShowFailOverlay(string message, bool showSkip)
+    {
+      if (_failReasonText != null) _failReasonText.text = message;
+      if (_failSkipButton != null) _failSkipButton.gameObject.SetActive(showSkip);
+      if (_failOverlay != null) _failOverlay.SetActive(true);
+    }
+
+    private void HideFailOverlay()
+    {
+      if (_failOverlay != null) _failOverlay.SetActive(false);
+    }
+
+    /// <summary>실패 이유 플래그 → 안내 문구 매핑</summary>
+    private string ReasonToText(GestureFailReason reason)
+    {
+      switch (reason)
+      {
+        case GestureFailReason.PoseMissing:      return _msgPoseMissing;
+        case GestureFailReason.HandMissing:      return _msgHandMissing;
+        case GestureFailReason.PalmsNotForward:  return _msgPalmsNotForward;
+        case GestureFailReason.HandsNotOpposite: return _msgHandsNotOpposite;
+        case GestureFailReason.WristsTooFar:     return _msgWristsTooFar;
+        case GestureFailReason.FingersNotOpen:   return _msgFingersNotOpen;
+        case GestureFailReason.NotRising:        return _msgNotRising;
+        default:                                 return _msgGeneric;
+      }
+    }
+
     /// <summary>
     /// 제스처 성공 콜백
     /// </summary>
