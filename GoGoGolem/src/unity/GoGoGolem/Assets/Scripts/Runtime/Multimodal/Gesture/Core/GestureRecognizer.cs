@@ -104,9 +104,11 @@ namespace Demo.GestureDetection
         {
           // confidence 계산: 프레임 카운트 기반
           float confidence = Mathf.Min(1f, _gestureFrameCount[_currentGestureType] / (float)_holdFrames);
-          
-          Debug.Log($"[GestureRecognizer] {_currentGestureType} detected! Count={_gestureFrameCount[_currentGestureType]}, Confidence={confidence:F2}");
-          
+
+          // holdFrames 도달 첫 프레임에만 로그 (매 프레임 출력 방지)
+          if (_gestureFrameCount[_currentGestureType] == _holdFrames)
+            Debug.Log($"[GestureRecognizer] {_currentGestureType} detected! Count={_gestureFrameCount[_currentGestureType]}, Confidence={confidence:F2}");
+
           return new GestureResult(_currentGestureType, confidence, true, rawResult.Direction);
         }
       }

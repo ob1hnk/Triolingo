@@ -63,10 +63,12 @@ namespace Demo.GestureDetection.UI
     /// </summary>
     public void UpdateDisplay(DisplayData data)
     {
-      // 1. 데이터 유효성에 따른 Avatar 업데이트
+      // 1. 데이터 유효성 체크
       if (!data.HasValidData)
       {
-        ResetAvatar();
+        // ResetAvatar() 호출 안 함: 두 손이 가까워 한쪽이 잠깐 미검출될 때마다
+        // IK weight가 0으로 즉시 스냅되어 팔이 깜빡인다. GolemLandmarkAnimator의
+        // _dataTimeout(1초) + ReturnTargetsToRest()가 데이터 끊김을 부드럽게 처리한다.
         UpdateHoldProgressBar(0f, false);
         return;
       }

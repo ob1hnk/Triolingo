@@ -199,6 +199,8 @@ namespace Demo.GestureDetection
     [Header("Arm Reach Settings")]
     [Tooltip("바디 스케일(어깨 너비) 기준으로 팔 뻗음을 정규화. 카메라 거리 무관하게 동일한 팔 움직임 보장")]
     [SerializeField] private bool _normalizeByBodyScale = true;
+    [Tooltip("어깨 기준 손 target의 Z(깊이) 뻗음 허용 범위 (min, max). 손목을 모을 때 pose 깊이 추정이 튀어 손이 카메라로 돌진/잘리는 현상 방지. 증폭 적용 후 값 기준.")]
+    [SerializeField] private Vector2 _handReachZClamp = new Vector2(-2f, 2f);
 
     [Header("Handedness Stability")]
     [Tooltip("MediaPipe 핸드니스 라벨이 이 프레임 수 이상 연속으로 바뀔 때만 좌우 할당 전환 (순간 flip 방지)")]
@@ -528,6 +530,9 @@ namespace Demo.GestureDetection
       shoulderToWrist.y *= _handAxisMultiplier.y;
       shoulderToWrist.z *= _handAxisMultiplier.z;
       shoulderToWrist   *= _handReachMultiplier;
+
+      // 손목을 모을 때 pose Z 추정이 튀어 손이 카메라로 돌진 → 깊이 뻗음에 절대 한계 적용
+      shoulderToWrist.z = Mathf.Clamp(shoulderToWrist.z, _handReachZClamp.x, _handReachZClamp.y);
 
       OneEuroFilter handFilter  = isLeft ? _leftHandPosFilter  : _rightHandPosFilter;
       OneEuroFilter elbowFilter = isLeft ? _leftElbowPosFilter : _rightElbowPosFilter;
