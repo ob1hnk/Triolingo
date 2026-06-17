@@ -37,6 +37,9 @@ namespace Demo.GestureDetection
     // LIVE_STREAM 모드용 최신 결과
     private HandLandmarkerResult _latestHandResult;
     private PoseLandmarkerResult _latestPoseResult;
+    // 이벤트 전달용 스냅샷: 콜백 스레드의 CloneTo와 경쟁하지 않도록 락 안에서 복사해 사용
+    private HandLandmarkerResult _handResultSnapshot;
+    private PoseLandmarkerResult _poseResultSnapshot;
     private readonly object _resultLock = new object();
     private bool _isHandResultDirty = false;
     private bool _isPoseResultDirty = false;
@@ -151,6 +154,8 @@ namespace Demo.GestureDetection
       {
         _latestHandResult = HandLandmarkerResult.Alloc(handOptions.numHands);
         _latestPoseResult = PoseLandmarkerResult.Alloc(poseOptions.numPoses, poseOptions.outputSegmentationMasks);
+        _handResultSnapshot = HandLandmarkerResult.Alloc(handOptions.numHands);
+        _poseResultSnapshot = PoseLandmarkerResult.Alloc(poseOptions.numPoses, poseOptions.outputSegmentationMasks);
       }
 
       Debug.Log("[GestureDetector] Entering main detection loop");
@@ -295,13 +300,18 @@ namespace Demo.GestureDetection
         {
           _isHandResultDirty = false;
           _isPoseResultDirty = false;
+
+          // 락 안에서 thread-private 스냅샷으로 복사 → 콜백 스레드의 CloneTo와 경쟁 제거
+          _latestHandResult.CloneTo(ref _handResultSnapshot);
+          _latestPoseResult.CloneTo(ref _poseResultSnapshot);
           shouldUpdate = true;
         }
       }
 
       if (shouldUpdate)
       {
-        OnLandmarksUpdated?.Invoke(_latestHandResult, _latestPoseResult);
+        // 스냅샷은 이 스레드(Run 코루틴)에서만 쓰고 Invoke는 동기 호출이라 안전
+        OnLandmarksUpdated?.Invoke(_handResultSnapshot, _poseResultSnapshot);
       }
     }
 
