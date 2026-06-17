@@ -287,9 +287,9 @@ namespace Demo.GestureDetection
 
     [Header("Jitter Filter Settings (One Euro Filter)")]
     [Tooltip("정지 시 필터 강도. 낮을수록 떨림 더 제거 (권장: 0.5~3.0)")]
-    [SerializeField] private float _minCutoff = 1.0f;
+    [SerializeField] private float _minCutoff = 2.0f;
     [Tooltip("속도 민감도. 높을수록 빠른 동작에 더 즉각 반응 (권장: 0.01~0.3)")]
-    [SerializeField] private float _beta = 0.05f;
+    [SerializeField] private float _beta = 2.0f;
 
 #if GESTURE_METRICS
     [Header("Metrics Recording (CSV, 평가용 — GESTURE_METRICS define 시에만 컴파일)")]
