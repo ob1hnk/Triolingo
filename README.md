@@ -530,8 +530,8 @@ Unity Editor에서 프로젝트를 연 뒤 **Assets → Import Package → Custo
 * `FirebaseFirestore.unitypackage` (편지 데이터 저장 및 조회)
 * `FirebaseAnalytics.unitypackage`
 
-**3) google-services.json 확인.**
-Firebase 콘솔에서 발급받은 `google-services.json` 파일을 `Assets/google-services.json` 경로에 추가합니다.
+**3) google-services.json 다운로드 및 배치.**
+[Firebase 콘솔](https://console.firebase.google.com/)에서 프로젝트를 연 뒤, 프로젝트 개요 페이지 중앙의 **Android 아이콘**(또는 **앱 추가**)을 클릭해 앱 등록 워크플로를 시작합니다. **Android 패키지 이름** 필드에 앱의 패키지 이름을 입력하고(앱 닉네임은 선택), **앱 등록**을 클릭합니다. 다음 단계에서 **google-services.json 다운로드** 버튼이 나타나면 클릭해 구성 파일을 내려받습니다. 내려받은 `google-services.json` 파일을 프로젝트의 `Assets/google-services.json` 경로에 배치하면 됩니다.
 
 **4) 초기화 확인.**
 Unity Editor의 Console 창에 Firebase 초기화 관련 오류가 출력되지 않으면 설정이 정상적으로 완료된 것입니다.
