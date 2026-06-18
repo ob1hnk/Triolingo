@@ -104,9 +104,11 @@ namespace Demo.GestureDetection
         {
           // confidence 계산: 프레임 카운트 기반
           float confidence = Mathf.Min(1f, _gestureFrameCount[_currentGestureType] / (float)_holdFrames);
-          
-          Debug.Log($"[GestureRecognizer] {_currentGestureType} detected! Count={_gestureFrameCount[_currentGestureType]}, Confidence={confidence:F2}");
-          
+
+          // holdFrames 도달 첫 프레임에만 로그 (매 프레임 출력 방지)
+          if (_gestureFrameCount[_currentGestureType] == _holdFrames)
+            Debug.Log($"[GestureRecognizer] {_currentGestureType} detected! Count={_gestureFrameCount[_currentGestureType]}, Confidence={confidence:F2}");
+
           return new GestureResult(_currentGestureType, confidence, true, rawResult.Direction);
         }
       }
@@ -114,15 +116,19 @@ namespace Demo.GestureDetection
       {
         // 실패: 유예 카운터 증가
         _gestureLostCount[_currentGestureType]++;
-        
+
         // 유예 프레임 초과 시 성공 카운터 리셋
         if (_gestureLostCount[_currentGestureType] > _maxLostFrames)
         {
           _gestureFrameCount[_currentGestureType] = 0;
           // Debug.Log($"[GestureRecognizer] {_currentGestureType} lost for {_maxLostFrames} frames, resetting counter");
         }
+
+        // 어떤 조건이 틀렸는지(FailReason)를 보존해서 반환 → 실패 피드백 집계용
+        return GestureResult.Fail(_currentGestureType, rawResult.FailReason);
       }
 
+      // 검출됐으나 holdFrames 누적 중(거의 성공 상태) → 실패 이유 없음
       return GestureResult.None;
     }
 

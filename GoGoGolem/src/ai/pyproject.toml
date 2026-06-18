@@ -18,4 +18,5 @@ dependencies = [
     "dependency-injector>=4.41.0",
     "ruff>=0.14.4",
     "firebase-admin>=6.5.0",
+    "matplotlib>=3.10.9",
 ]

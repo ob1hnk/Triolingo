@@ -62,20 +62,14 @@ namespace Demo.GestureDetection.UI
     /// </summary>
     public void UpdateGestureResult(GestureResult result)
     {
-      // 타겟 제스처만 반응
-      if (result.Type == _targetGesture && result.IsDetected)
-      {
-        _isActive = true;
+      bool wasActive = _isActive;
+
+      // Recognizer는 활성 전략 하나만 평가 → result.Type은 타겟 또는 None
+      _isActive = result.Type == _targetGesture && result.IsDetected;
+
+      // 비활성 → 활성 전환 시에만 로그 (매 프레임 출력 방지)
+      if (_isActive && !wasActive)
         Debug.Log($"[GestureUIController] {_targetGesture} detected - activating indicator");
-      }
-      else
-      {
-        _isActive = false;
-        if (result.Type != GestureType.None)
-        {
-          Debug.Log($"[GestureUIController] Detected {result.Type}, but target is {_targetGesture}");
-        }
-      }
     }
 
     /// <summary>

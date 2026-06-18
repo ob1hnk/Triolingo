@@ -88,9 +88,9 @@ namespace Demo.GestureDetection
 
       // Debug.Log($"[LiftUp] 손목: L({leftWrist.y:F3}) R({rightWrist.y:F3}) | 상승={isRisingMotion}, 기억={_risingFramesRemaining}, 최종={detected}");
 
-      return detected 
+      return detected
           ? new GestureResult(GestureType.Lift, 1.0f, true, Vector3.up)
-          : GestureResult.None;
+          : GestureResult.Fail(GestureType.Lift, GestureFailReason.NotRising);
     }
 
     /// <summary>

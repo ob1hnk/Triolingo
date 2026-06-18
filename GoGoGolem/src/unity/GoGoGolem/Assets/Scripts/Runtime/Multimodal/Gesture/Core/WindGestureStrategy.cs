@@ -91,10 +91,18 @@ namespace Demo.GestureDetection
       
       // 최종 조건
       bool success = bothHandsForward && angleIsOpposite_2D && wristsClose && bothHandsFingerExtended;
-      
-      return success 
-          ? new GestureResult(GestureType.Wind, 1.0f, true, Vector3.forward)
-          : GestureResult.None;
+
+      if (success)
+        return new GestureResult(GestureType.Wind, 1.0f, true, Vector3.forward);
+
+      // 실패한 조건들을 플래그로 모아서 반환 (가장 큰 실패 이유 집계용)
+      GestureFailReason reason = GestureFailReason.None;
+      if (!bothHandsForward)        reason |= GestureFailReason.PalmsNotForward;
+      if (!angleIsOpposite_2D)      reason |= GestureFailReason.HandsNotOpposite;
+      if (!wristsClose)             reason |= GestureFailReason.WristsTooFar;
+      if (!bothHandsFingerExtended) reason |= GestureFailReason.FingersNotOpen;
+
+      return GestureResult.Fail(GestureType.Wind, reason);
     }
 
     /// <summary>
