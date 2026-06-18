@@ -515,7 +515,7 @@ python optimize_oneeuro.py
 
 * **컬렉션**: `letters` — 플레이어가 작성한 편지와 이에 대한 NPC 답장이 문서 단위로 저장됩니다.
 * **서버 측 접근**: AI 서버는 Firebase Admin SDK 서비스 계정 키(`gogo-golem-firebase-adminsdk-fbsvc-*.json`)를 사용해 Firestore에 접근합니다. 이 키는 Firebase 콘솔의 **프로젝트 설정 → 서비스 계정 → 새 비공개 키 생성** 메뉴에서 발급할 수 있으며, `GoGoGolem/src/ai/` 경로에 배치한 뒤 `.env` 파일의 `FIREBASE_CREDENTIALS_PATH` 에서 해당 경로를 지정합니다.
-* **클라이언트 측 연결**: Unity 클라이언트는 `Assets/google-services.json` 에 포함된 프로젝트 설정을 이용해 Firestore에 연결합니다.
+* **클라이언트 측 연결**: Unity 클라이언트는 `Assets/google-services.json` 에 포함된 프로젝트 설정을 이용해 Firestore에 연결합니다. 이 파일은 Firebase 콘솔에서 앱을 등록할 때 내려받는 클라이언트용 설정 파일로, API 파일이기 때문에 `.gitignore` 포함되므로 직접 발급해야 됩니다.
 
 ### Firebase Unity SDK 설치 가이드
 
