@@ -534,7 +534,7 @@ python GoGoGolem/evaluation/speech/analyze_traces.py
 평가에 사용한 One Euro 필터 구현은 Unity 런타임의 `GolemLandmarkAnimator.cs` 와 동일한 수식을 Python으로 포팅한 버전입니다. 따라서 측정 결과가 실제 게임에서의 동작 특성을 그대로 반영하도록 구성했습니다.
 
 ```bash
-cd GoGoGolem/evaluation
+cd GoGoGolem/evaluation/motion_system
 
 # 필터 3종 비교 (정지=jitter / 왕복=lag / fps)
 python analyze_gestures.py
@@ -545,7 +545,7 @@ python optimize_oneeuro.py
 
 > 두 스크립트는 게임 내 제스처 로거가 생성한 `gesture_*.csv` 녹화 파일을 입력으로 사용합니다. 정지 상태 녹화(jitter 측정용)와 좌우 왕복 동작 녹화(lag 측정용)가 각각 최소 1개 이상 필요합니다. 실행 결과로 `summary.csv`, `plot_bars.png`, `plot_motion_raw_vs_filt.png`, `plot_still_jitter.png`, `plot_tradeoff.png` 가 생성됩니다.
 
-* 코드·방법론 상세: [`evaluation/analyze_gestures.py`](GoGoGolem/evaluation/analyze_gestures.py), [`evaluation/optimize_oneeuro.py`](GoGoGolem/evaluation/optimize_oneeuro.py)
+* 코드·방법론 상세: [`evaluation/motion_system/analyze_gestures.py`](GoGoGolem/evaluation/motion_system/analyze_gestures.py), [`evaluation/motion_system/optimize_oneeuro.py`](GoGoGolem/evaluation/motion_system/optimize_oneeuro.py)
 
 
 ---
