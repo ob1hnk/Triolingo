@@ -2,3 +2,4 @@ GoGoGolem/src/unity/GoGoGolem/Assets/Fonts/NotoSansKR-Regular[[:space:]]SDF.asse
 docs/1차보고서.pdf filter=lfs diff=lfs merge=lfs -text
 docs/2차보고서.pdf filter=lfs diff=lfs merge=lfs -text
 docs/최종보고서.pdf filter=lfs diff=lfs merge=lfs -text
+docs/GoGoGolem!-제품설명서.pdf filter=lfs diff=lfs merge=lfs -text
