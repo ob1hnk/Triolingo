@@ -252,8 +252,8 @@ docker compose version
 서버에서 저장소를 클론한 뒤 AI 서버 디렉터리로 이동합니다.
 
 ```bash
-git clone https://github.com/ob1hnk/GoGoGolem.git
-cd GoGoGolem/GoGoGolem/src/ai
+git clone https://github.com/ob1hnk/Triolingo.git
+cd Triolingo/GoGoGolem/src/ai
 ```
 
 이후 `.env` 파일을 생성하고 필요한 환경 변수를 입력합니다.
