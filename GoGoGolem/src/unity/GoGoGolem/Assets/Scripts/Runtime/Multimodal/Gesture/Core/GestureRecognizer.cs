@@ -141,6 +141,18 @@ namespace Demo.GestureDetection
     }
 
     /// <summary>
+    /// 유예 구간 여부 (holdFrames 충족 후 maxLostFrames 이내로 끊긴 상태)
+    /// </summary>
+    public bool IsInGracePeriod()
+    {
+      if (!_gestureFrameCount.ContainsKey(_currentGestureType)) return false;
+
+      int held = _gestureFrameCount[_currentGestureType];
+      int lost = _gestureLostCount[_currentGestureType];
+      return held >= _holdFrames && lost > 0 && lost <= _maxLostFrames;
+    }
+
+    /// <summary>
     /// 카운터 수동 리셋 (테스트용)
     /// </summary>
     public void ResetCounters()

@@ -212,7 +212,10 @@ namespace Demo.GestureDetection.UI
       else if (!isTargetDetected)
       {
         // 제스처 끊김 → 홀드 타이머 리셋 + 실패 이유 집계
-        ResetHoldTimer();
+        // 단, 유예 구간에는 타이머 유지
+        if (!_gestureRecognizer.IsInGracePeriod())
+          ResetHoldTimer();
+
         AccumulateFailReason(hasHandData, hasPoseData, gestureResult.FailReason);
       }
 
